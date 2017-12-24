@@ -4,14 +4,12 @@
 
 conf/*
 !conf/*.dist
-
-!modules/drassil
-modules/drassil/joiner
-!modules/hw-core
-!modules/acore
-!modules/worldengine
-
+env/dist/*
+env/user/*
 build*/
+var/*
+
+!.gitkeep
 
 #
 #Generic
