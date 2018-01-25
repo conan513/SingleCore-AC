@@ -92,11 +92,13 @@ void DpsHunterStrategy::InitTriggers(std::list<TriggerNode*> &triggers)
     triggers.push_back(new TriggerNode(
         "low mana",
         NextAction::array(0, new NextAction("viper sting", ACTION_EMERGENCY + 5), NULL)));
-
+    
+    //Stop annoying call pet spam until pets are fixed	
+    /*
     triggers.push_back(new TriggerNode(
         "no pet",
         NextAction::array(0, new NextAction("call pet", 60.0f), NULL)));
-
+    */
     triggers.push_back(new TriggerNode(
         "hunters pet low health",
         NextAction::array(0, new NextAction("mend pet", 60.0f), NULL)));
