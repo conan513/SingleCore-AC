@@ -41,7 +41,7 @@
 #include "ScriptMgr.h"
 #include "Language.h"
 #include <vector>
-#include "loader_VASAutoBalance.h"
+#include "loader_vASautobalance.h"
 #include "ScriptMgrMacros.h"
 #include "Group.h"
 
