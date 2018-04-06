@@ -12,7 +12,7 @@
 *
 * This program is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gene for
 * more details.
 *
 * You should have received a copy of the GNU General Public License along
@@ -41,7 +41,6 @@
 #include "ScriptMgr.h"
 #include "Language.h"
 #include <vector>
-#include "loader.h"
 #include "VASAutoBalance.h"
 #include "ScriptMgrMacros.h"
 #include "Group.h"
@@ -167,31 +166,33 @@ void getAreaLevel(Map *map, uint8 areaid, uint8 &min, uint8 &max) {
         }
     }
 }
-/* from skeleton module */
+
 class VAS_AutoBalance_WorldScript : public WorldScript
 {
-public:
-	VAS_AutoBalance_WorldScript()
-		: WorldScript("VAS_AutoBalance_WorldScript")
-	{
-	}
-
-	void OnBeforeConfigLoad(bool reload) override
-	{
-		if (!reload) {
-			std::string conf_path = _CONF_DIR;
-			std::string cfg_file = conf_path + "Settings/modules/VASAutoBalance.conf";
-            #ifdef WIN32
-			    cfg_file = "Settings/modules/VASAutoBalance.conf";
-            #endif
-			std::string cfg_def_file = cfg_file + ".dist";
-			sConfigMgr->LoadMore(cfg_def_file.c_str());
-
-			sConfigMgr->LoadMore(cfg_file.c_str());
-		}
+    public:
+    VAS_AutoBalance_WorldScript()
+        : WorldScript("VAS_AutoBalance_WorldScript")
+    {
     }
-/* end from skeleton module */
 
+    void OnBeforeConfigLoad(bool reload) override
+    {
+        /* from skeleton module */
+        if (!reload) {
+            std::string conf_path = _CONF_DIR;
+            std::string cfg_file = conf_path+"Settings/modules/VASAutoBalance.conf";
+#ifdef WIN32
+                cfg_file = "Settings/modules/VASAutoBalance.conf";
+#endif
+            std::string cfg_def_file = cfg_file + ".dist";
+            sConfigMgr->LoadMore(cfg_def_file.c_str());
+
+            sConfigMgr->LoadMore(cfg_file.c_str());
+        }
+
+        SetInitialWorldSettings();
+        /* end from skeleton module */
+    }
     void OnStartup() override
     {
     }
@@ -242,10 +243,13 @@ class VAS_AutoBalance_PlayerScript : public PlayerScript
         }
 
         void OnLogin(Player *Player)
+    {
+        // Announce Module
+        if (sConfigMgr->GetBoolDefault("VASAutoBalance.Announce", true))
         {
-            if (enabled)
-                ChatHandler(Player->GetSession()).PSendSysMessage("This server is running a VAS_AutoBalance Module.");
+            ChatHandler(Player->GetSession()).PSendSysMessage("This server is running a VAS_AutoBalance Module.");
         }
+    }
 
         virtual void OnLevelChanged(Player* player, uint8 /*oldlevel*/) {
             if (!enabled || !player)

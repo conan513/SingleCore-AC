@@ -29,6 +29,8 @@
 #                     Example: "25 35674 5623"
 #        Default:    ""
 
+Transmog.Announce=0
+
 Transmogrification.EnableTransmogInfo = 1
 Transmogrification.TransmogNpcText = 50000
 

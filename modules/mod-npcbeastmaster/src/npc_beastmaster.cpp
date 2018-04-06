@@ -83,7 +83,8 @@ on a Hunter in or out of dungeons.
 
 */
 
-#include "Config.h"
+#include "ScriptMgr.h"
+#include "Configuration/Config.h"
 #include "Pet.h"
 #include "ScriptPCH.h"
 #include "ScriptedGossip.h"
