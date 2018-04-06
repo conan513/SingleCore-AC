@@ -68,7 +68,9 @@ gold. Beware.. He doesn't like cheapskates!
 
 */
 
-//#include "Config.h"
+#include "Configuration/Config.h"
+#include "ScriptMgr.h"
+#include "ScriptPCH.h"
 
 class GamblerAnnounce : public PlayerScript
 {
@@ -80,8 +82,7 @@ public:
     void OnLogin(Player* player)
     {
         // Announce Module
-        //if (sConfigMgr->GetBoolDefault("GamblerNPC.Announce", true))
-        if (true)
+        if (sConfigMgr->GetBoolDefault("GamblerNPC.Announce", true))
         {
             ChatHandler(player->GetSession()).SendSysMessage("This server is running the |cff4CFF00GamblerNPC |rmodule.");
         }
@@ -379,7 +380,7 @@ public:
 	void OnBeforeConfigLoad(bool reload) override
 	{
 		if (!reload) {
-			/*std::string conf_path = _CONF_DIR;
+			std::string conf_path = _CONF_DIR;
 			std::string cfg_file = conf_path + "Settings/modules/npc_gambler.conf";
 #ifdef WIN32
 			cfg_file = "Settings/modules/npc_gambler.conf";
@@ -387,13 +388,14 @@ public:
 			std::string cfg_def_file = cfg_file + ".dist";
 			sConfigMgr->LoadMore(cfg_def_file.c_str());
 
-			sConfigMgr->LoadMore(cfg_file.c_str());*/
+			sConfigMgr->LoadMore(cfg_file.c_str());
 		}
 	}
 };
 
 void AddNPCGamblerScripts()
 {
-    new GamblerAnnounce();
+    new gamble_npc_world();
+	new GamblerAnnounce();
     new gamble_npc();
 }
