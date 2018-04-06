@@ -22,7 +22,7 @@ public:
 	{
 		sAnticheatMgr->HandlePlayerLogin(player);
 		if(sConfigMgr->GetBoolDefault("Anticheat.LoginMessage", true))
-			ChatHandler(player->GetSession()).PSendSysMessage("This server is running an Anticheat Module.");
+			ChatHandler(player->GetSession()).PSendSysMessage("This server is running the |cff4CFF00AntiCheat |rmodule.");
 	}
 };
 class AnticheatWorldScript : public WorldScript
@@ -55,9 +55,9 @@ public:
 		/* from skeleton module */
 		if (!reload) {
 			std::string conf_path = _CONF_DIR;
-			std::string cfg_file = conf_path + "/Anticheat.conf";
+			std::string cfg_file = conf_path + "Settings/modules/mod_anticheat.conf";
 			#ifdef WIN32
-				cfg_file = "Anticheat.conf";
+				cfg_file = "Settings/modules/mod_anticheat.conf";
 			#endif // WIN32
 			std::string cfg_def_file = cfg_file + ".dist";
 			sConfigMgr->LoadMore(cfg_def_file.c_str());

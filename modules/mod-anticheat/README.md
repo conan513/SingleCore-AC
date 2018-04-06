@@ -22,4 +22,4 @@ or you can manually [download the module](https://github.com/azerothcore/mod-ant
 
 ### (Optional) Edit module configuration
 
-If you need to change the module configuration, go to your server configuration folder (e.g. **etc**), copy `Anticheat.conf.dist` to `Anticheat.conf` and edit it as you prefer.
+If you need to change the module configuration, go to your server configuration folder (e.g. **etc**), copy `mod_anticheat.conf.dist` to `Anticheat.conf` and edit it as you prefer.
