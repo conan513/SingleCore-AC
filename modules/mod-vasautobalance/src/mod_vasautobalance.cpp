@@ -166,8 +166,7 @@ void getAreaLevel(Map *map, uint8 areaid, uint8 &min, uint8 &max) {
         }
     }
 }
-
-
+/* from skeleton module */
 class VAS_AutoBalance_WorldScript : public WorldScript
 {
 public:
@@ -178,7 +177,6 @@ public:
 
 	void OnBeforeConfigLoad(bool reload) override
 	{
-		/* from skeleton module */
 		if (!reload) {
 			std::string conf_path = _CONF_DIR;
 			std::string cfg_file = conf_path + "Settings/modules/mod_vasautobalance.conf";
@@ -190,8 +188,9 @@ public:
 
 			sConfigMgr->LoadMore(cfg_file.c_str());
 		}
-		/* end from skeleton module */
     }
+/* end from skeleton module */
+
     void OnStartup() override
     {
     }
