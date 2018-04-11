@@ -83,7 +83,8 @@ on a Hunter in or out of dungeons.
 
 */
 
-#include "Config.h"
+#include "ScriptMgr.h"
+#include "Configuration/Config.h"
 #include "Pet.h"
 #include "ScriptPCH.h"
 #include "ScriptedGossip.h"
@@ -547,9 +548,9 @@ public:
 		if (!reload) {
 			std::string conf_path = _CONF_DIR;
 			std::string cfg_file = conf_path + "Settings/modules/npc_beastmaster.conf";
-#ifdef WIN32
-			cfg_file = "Settings/modules/npc_beastmaster.conf";
-#endif
+            #ifdef WIN32
+			    cfg_file = "Settings/modules/npc_beastmaster.conf";
+            #endif
 			std::string cfg_def_file = cfg_file + ".dist";
 			sConfigMgr->LoadMore(cfg_def_file.c_str());
 
