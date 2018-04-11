@@ -12,7 +12,7 @@
 *
 * This program is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Gene for
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
 * more details.
 *
 * You should have received a copy of the GNU General Public License along
@@ -243,13 +243,10 @@ class VAS_AutoBalance_PlayerScript : public PlayerScript
         }
 
         void OnLogin(Player *Player)
-    {
-        // Announce Module
-        if (sConfigMgr->GetBoolDefault("VASAutoBalance.Announce", true))
         {
-            ChatHandler(Player->GetSession()).PSendSysMessage("This server is running a VAS_AutoBalance Module.");
+            if (enabled)
+                ChatHandler(Player->GetSession()).PSendSysMessage("This server is running a VAS_AutoBalance Module.");
         }
-    }
 
         virtual void OnLevelChanged(Player* player, uint8 /*oldlevel*/) {
             if (!enabled || !player)
@@ -825,11 +822,11 @@ class VAS_AutoBalance_GlobalScript : public GlobalScript {
 public:
     VAS_AutoBalance_GlobalScript() : GlobalScript("VAS_AutoBalance_GlobalScript") { }
     
-    void OnAfterUpdateEncounterState(Map* map, EncounterCreditType type,  uint32 /*creditEntry*/, Unit* source, Difficulty /*difficulty_fixed*/, DungeonEncounterList const* /*encounters*/, uint32 /*dungeonCompleted*/) override {
+    void OnAfterUpdateEncounterState(Map* map, EncounterCreditType type,  uint32 /*creditEntry*/, Unit* source, Difficulty /*difficulty_fixed*/, DungeonEncounterList const* /*encounters*/, uint32 /*dungeonCompleted*/, bool updated) override {
         //if (!dungeonCompleted)
         //    return;
 
-        if (!rewardEnabled)
+        if (!rewardEnabled || !updated)
             return;
 
         if (map->GetPlayersCountExceptGMs() < MinPlayerReward)
