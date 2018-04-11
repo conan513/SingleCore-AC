@@ -1,32 +1,32 @@
 ﻿/*
-* Copyright (C) 2018 AzerothCore <http://www.azerothcore.org>
-* Copyright (C) 2012 CVMagic <http://www.trinitycore.org/f/topic/6551-vas-autobalance/>
-* Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
-* Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
-* Copyright (C) 1985-2010 {VAS} KalCorp  <http://vasserver.dyndns.org/>
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms of the GNU General Public License as published by the
-* Free Software Foundation; either version 2 of the License, or (at your
-* option) any later version.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along
-* with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2018 AzerothCore <http://www.azerothcore.org>
+ * Copyright (C) 2012 CVMagic <http://www.trinitycore.org/f/topic/6551-vas-autobalance/>
+ * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 1985-2010 {VAS} KalCorp  <http://vasserver.dyndns.org/>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-/*
-* Script Name: AutoBalance
-* Original Authors: KalCorp and Vaughner
-* Maintainer(s): AzerothCore
-* Original Script Name: VAS.AutoBalance
-* Description: This script is intended to scale based on number of players,
-* instance mobs & world bosses' level, health, mana, and damage.
-*/
+ /*
+ * Script Name: AutoBalance
+ * Original Authors: KalCorp and Vaughner
+ * Maintainer(s): AzerothCore
+ * Original Script Name: VAS.AutoBalance
+ * Description: This script is intended to scale based on number of players,
+ * instance mobs & world bosses' level, health, mana, and damage.
+ */
 
 
 #include "Configuration/Config.h"
@@ -45,31 +45,31 @@
 #include "ScriptMgrMacros.h"
 #include "Group.h"
 
-bool VasScriptMgr::OnBeforeModifyAttributes(Creature *creature, uint32 & instancePlayerCount) {
-    bool ret=true;
+    bool VasScriptMgr::OnBeforeModifyAttributes(Creature *creature, uint32 & instancePlayerCount) {
+    bool ret = true;
     FOR_SCRIPTS_RET(VasModuleScript, itr, end, ret) // return true by default if not scripts
         if (!itr->second->OnBeforeModifyAttributes(creature, instancePlayerCount))
-            ret=false; // we change ret value only when scripts return false
+            ret = false; // we change ret value only when scripts return false
 
     return ret;
 }
 
 bool VasScriptMgr::OnAfterDefaultMultiplier(Creature *creature, float & defaultMultiplier) {
-    bool ret=true;
+    bool ret = true;
     FOR_SCRIPTS_RET(VasModuleScript, itr, end, ret) // return true by default if not scripts
-    if (!itr->second->OnAfterDefaultMultiplier(creature, defaultMultiplier))
-        ret=false; // we change ret value only when scripts return false
-        
-        return ret;
+        if (!itr->second->OnAfterDefaultMultiplier(creature, defaultMultiplier))
+            ret = false; // we change ret value only when scripts return false
+
+    return ret;
 }
 
 bool VasScriptMgr::OnBeforeUpdateStats(Creature* creature, uint32& scaledHealth, uint32& scaledMana, float& damageMultiplier, uint32& newBaseArmor) {
-    bool ret=true;
+    bool ret = true;
     FOR_SCRIPTS_RET(VasModuleScript, itr, end, ret)
-    if (!itr->second->OnBeforeUpdateStats(creature, scaledHealth, scaledMana, damageMultiplier, newBaseArmor))
-        ret=false;
+        if (!itr->second->OnBeforeUpdateStats(creature, scaledHealth, scaledMana, damageMultiplier, newBaseArmor))
+            ret = false;
 
-        return ret;
+    return ret;
 }
 
 VasModuleScript::VasModuleScript(const char* name)
@@ -84,7 +84,7 @@ class AutoBalanceCreatureInfo : public DataMap::Base
 public:
     AutoBalanceCreatureInfo() {}
     AutoBalanceCreatureInfo(uint32 count, float dmg, float hpRate, float manaRate, float armorRate, uint8 selLevel) :
-    instancePlayerCount(count),selectedLevel(selLevel), DamageMultiplier(dmg),HealthMultiplier(hpRate),ManaMultiplier(manaRate),ArmorMultiplier(armorRate) {}
+        instancePlayerCount(count), selectedLevel(selLevel), DamageMultiplier(dmg), HealthMultiplier(hpRate), ManaMultiplier(manaRate), ArmorMultiplier(armorRate) {}
     uint32 instancePlayerCount = 0;
     uint8 selectedLevel = 0;
     // this is used to detect creatures that update their entry
@@ -99,7 +99,7 @@ class AutoBalanceMapInfo : public DataMap::Base
 {
 public:
     AutoBalanceMapInfo() {}
-    AutoBalanceMapInfo(uint32 count, uint8 selLevel) : playerCount(count),mapLevel(selLevel) {}
+    AutoBalanceMapInfo(uint32 count, uint8 selLevel) : playerCount(count), mapLevel(selLevel) {}
     uint32 playerCount = 0;
     uint8 mapLevel = 0;
 };
@@ -118,9 +118,9 @@ int GetValidDebugLevel()
     int debugLevel = sConfigMgr->GetIntDefault("VASAutoBalance.DebugLevel", 2);
 
     if ((debugLevel < 0) || (debugLevel > 3))
-        {
+    {
         return 1;
-        }
+    }
     return debugLevel;
 }
 
@@ -153,10 +153,10 @@ int GetForcedCreatureId(int creatureId)
 void getAreaLevel(Map *map, uint8 areaid, uint8 &min, uint8 &max) {
     LFGDungeonEntry const* dungeon = GetLFGDungeon(map->GetId(), map->GetDifficulty());
     if (dungeon && (map->IsDungeon() || map->IsRaid())) {
-        min  = dungeon->minlevel;
-        max  = dungeon->reclevel ? dungeon->reclevel : dungeon->maxlevel;
+        min = dungeon->minlevel;
+        max = dungeon->reclevel ? dungeon->reclevel : dungeon->maxlevel;
     }
-    
+
     if (!min && !max)
     {
         AreaTableEntry const* areaEntry = sAreaTableStore.LookupEntry(areaid);
@@ -169,7 +169,7 @@ void getAreaLevel(Map *map, uint8 areaid, uint8 &min, uint8 &max) {
 
 class VAS_AutoBalance_WorldScript : public WorldScript
 {
-    public:
+public:
     VAS_AutoBalance_WorldScript()
         : WorldScript("VAS_AutoBalance_WorldScript")
     {
@@ -180,9 +180,9 @@ class VAS_AutoBalance_WorldScript : public WorldScript
         /* from skeleton module */
         if (!reload) {
             std::string conf_path = _CONF_DIR;
-            std::string cfg_file = conf_path+"Settings/modules/VASAutoBalance.conf";
+            std::string cfg_file = conf_path + "Settings/modules/VASAutoBalance.conf";
 #ifdef WIN32
-                cfg_file = "Settings/modules/VASAutoBalance.conf";
+            cfg_file = "Settings/modules/VASAutoBalance.conf";
 #endif
             std::string cfg_def_file = cfg_file + ".dist";
             sConfigMgr->LoadMore(cfg_def_file.c_str());
@@ -228,7 +228,7 @@ class VAS_AutoBalance_WorldScript : public WorldScript
         manaMultiplier = sConfigMgr->GetFloatDefault("VASAutoBalance.rate.mana", 1.0f);
         armorMultiplier = sConfigMgr->GetFloatDefault("VASAutoBalance.rate.armor", 1.0f);
         damageMultiplier = sConfigMgr->GetFloatDefault("VASAutoBalance.rate.damage", 1.0f);
-        numPlayerConf=sConfigMgr->GetFloatDefault("VASAutoBalance.numPlayer", 1.0f);
+        numPlayerConf = sConfigMgr->GetFloatDefault("VASAutoBalance.numPlayer", 1.0f);
         MinHPModifier = sConfigMgr->GetFloatDefault("VASAutoBalance.MinHPModifier", 0.1f);
         MinDamageModifier = sConfigMgr->GetFloatDefault("VASAutoBalance.MinDamageModifier", 0.1f);
     }
@@ -236,35 +236,29 @@ class VAS_AutoBalance_WorldScript : public WorldScript
 
 class VAS_AutoBalance_PlayerScript : public PlayerScript
 {
-    public:
-        VAS_AutoBalance_PlayerScript()
-            : PlayerScript("VAS_AutoBalance_PlayerScript")
-        {
-        }
+public:
+    VAS_AutoBalance_PlayerScript()
+        : PlayerScript("VAS_AutoBalance_PlayerScript")
+    {
+    }
 
-        void OnLogin(Player *Player)
-        {
-            if (enabled)
-                ChatHandler(Player->GetSession()).PSendSysMessage("This server is running a VAS_AutoBalance Module.");
-        }
+    virtual void OnLevelChanged(Player* player, uint8 /*oldlevel*/) {
+        if (!enabled || !player)
+            return;
 
-        virtual void OnLevelChanged(Player* player, uint8 /*oldlevel*/) {
-            if (!enabled || !player)
-                return;
+        if (LevelScaling == 0)
+            return;
 
-            if (LevelScaling == 0)
-                return;
+        AutoBalanceMapInfo *mapVasInfo = player->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
 
-            AutoBalanceMapInfo *mapVasInfo=player->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
-
-            if (mapVasInfo->mapLevel < player->getLevel())
-                mapVasInfo->mapLevel = player->getLevel();
-        }
+        if (mapVasInfo->mapLevel < player->getLevel())
+            mapVasInfo->mapLevel = player->getLevel();
+    }
 };
 
 class VAS_AutoBalance_UnitScript : public UnitScript
 {
-    public:
+public:
     VAS_AutoBalance_UnitScript()
         : UnitScript("VAS_AutoBalance_UnitScript", true)
     {
@@ -309,8 +303,8 @@ class VAS_AutoBalance_UnitScript : public UnitScript
             return damage;
 
         if (!((DungeonsOnly < 1
-                || (target->GetMap()->IsDungeon() && attacker->GetMap()->IsDungeon()) || (attacker->GetMap()->IsBattleground()
-                     && target->GetMap()->IsBattleground()))))
+            || (target->GetMap()->IsDungeon() && attacker->GetMap()->IsDungeon()) || (attacker->GetMap()->IsBattleground()
+                && target->GetMap()->IsBattleground()))))
             return damage;
 
 
@@ -324,28 +318,50 @@ class VAS_AutoBalance_UnitScript : public UnitScript
 
 class VAS_AutoBalance_AllMapScript : public AllMapScript
 {
-    public:
+public:
     VAS_AutoBalance_AllMapScript()
         : AllMapScript("VAS_AutoBalance_AllMapScript")
-        {
+    {
+    }
+
+    void OnPlayerEnterAll(Map* map, Player* player)
+    {
+        if (!enabled)
+            return;
+
+        if (player->IsGameMaster())
+            return;
+
+        AutoBalanceMapInfo *mapVasInfo = map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+
+        // always check level, even if not conf enabled
+        // because we can enable at runtime and we need this information
+        if (player) {
+            if (player->getLevel() > mapVasInfo->mapLevel)
+                mapVasInfo->mapLevel = player->getLevel();
+        }
+        else {
+            Map::PlayerList const &playerList = map->GetPlayers();
+            if (!playerList.isEmpty())
+            {
+                for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
+                {
+                    if (Player* playerHandle = playerIteration->GetSource())
+                    {
+                        if (!playerHandle->IsGameMaster() && playerHandle->getLevel() > mapVasInfo->mapLevel)
+                            mapVasInfo->mapLevel = playerHandle->getLevel();
+                    }
+                }
+            }
         }
 
-        void OnPlayerEnterAll(Map* map, Player* player)
+        // mapVasInfo->playerCount++; (maybe we've to found a safe solution to avoid player recount each time)
+        mapVasInfo->playerCount = map->GetPlayersCountExceptGMs();
+
+        if (PlayerChangeNotify > 0)
         {
-            if (!enabled)
-                return;
-
-            if (player->IsGameMaster())
-                return;
-            
-            AutoBalanceMapInfo *mapVasInfo=map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
-
-            // always check level, even if not conf enabled
-            // because we can enable at runtime and we need this information
-            if (player) {
-                if (player->getLevel() > mapVasInfo->mapLevel)
-                    mapVasInfo->mapLevel = player->getLevel();
-            } else {
+            if (map->GetEntry()->IsDungeon() && player)
+            {
                 Map::PlayerList const &playerList = map->GetPlayers();
                 if (!playerList.isEmpty())
                 {
@@ -353,75 +369,54 @@ class VAS_AutoBalance_AllMapScript : public AllMapScript
                     {
                         if (Player* playerHandle = playerIteration->GetSource())
                         {
-                            if (!playerHandle->IsGameMaster() && playerHandle->getLevel() > mapVasInfo->mapLevel)
-                                mapVasInfo->mapLevel = playerHandle->getLevel();
-                        }
-                    }
-                }
-            }
-
-            // mapVasInfo->playerCount++; (maybe we've to found a safe solution to avoid player recount each time)
-            mapVasInfo->playerCount = map->GetPlayersCountExceptGMs();
-
-            if (PlayerChangeNotify > 0)
-            {
-                if (map->GetEntry()->IsDungeon() && player)
-                {
-                    Map::PlayerList const &playerList = map->GetPlayers();
-                    if (!playerList.isEmpty())
-                    {
-                        for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
-                        {
-                            if (Player* playerHandle = playerIteration->GetSource())
-                            {
-                                ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
-                                chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 %s entered the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapVasInfo->playerCount + PlayerCountDifficultyOffset, PlayerCountDifficultyOffset);
-                            }
+                            ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                            chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 %s entered the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapVasInfo->playerCount + PlayerCountDifficultyOffset, PlayerCountDifficultyOffset);
                         }
                     }
                 }
             }
         }
+    }
 
-        void OnPlayerLeaveAll(Map* map, Player* player)
+    void OnPlayerLeaveAll(Map* map, Player* player)
+    {
+        if (!enabled)
+            return;
+
+        if (player->IsGameMaster())
+            return;
+
+        AutoBalanceMapInfo *mapVasInfo = map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+
+        // mapVasInfo->playerCount--; (maybe we've to found a safe solution to avoid player recount each time)
+        mapVasInfo->playerCount = map->GetPlayersCountExceptGMs();
+
+        // always check level, even if not conf enabled
+        // because we can enable at runtime and we need this information
+        if (!mapVasInfo->playerCount) {
+            mapVasInfo->mapLevel = 0;
+            return;
+        }
+
+        if (PlayerChangeNotify > 0)
         {
-            if (!enabled)
-                return;
-            
-            if (player->IsGameMaster())
-                return;
-
-            AutoBalanceMapInfo *mapVasInfo=map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
-
-            // mapVasInfo->playerCount--; (maybe we've to found a safe solution to avoid player recount each time)
-            mapVasInfo->playerCount = map->GetPlayersCountExceptGMs();
-
-            // always check level, even if not conf enabled
-            // because we can enable at runtime and we need this information
-            if (!mapVasInfo->playerCount) {
-                mapVasInfo->mapLevel = 0;
-                return;
-            }
-
-            if (PlayerChangeNotify > 0)
+            if (map->GetEntry()->IsDungeon() && player)
             {
-                if (map->GetEntry()->IsDungeon() && player)
+                Map::PlayerList const &playerList = map->GetPlayers();
+                if (!playerList.isEmpty())
                 {
-                    Map::PlayerList const &playerList = map->GetPlayers();
-                    if (!playerList.isEmpty())
+                    for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
                     {
-                        for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
+                        if (Player* playerHandle = playerIteration->GetSource())
                         {
-                            if (Player* playerHandle = playerIteration->GetSource())
-                            {
-                                ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
-                                chatHandle.PSendSysMessage("|cffFF0000 [VAS-AutoBalance]|r|cffFF8000 %s left the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapVasInfo->playerCount, PlayerCountDifficultyOffset);
-                            }
+                            ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                            chatHandle.PSendSysMessage("|cffFF0000 [VAS-AutoBalance]|r|cffFF8000 %s left the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapVasInfo->playerCount, PlayerCountDifficultyOffset);
                         }
                     }
                 }
             }
         }
+    }
 };
 
 class VAS_AutoBalance_AllCreatureScript : public AllCreatureScript
@@ -450,7 +445,7 @@ public:
     }
 
     bool checkLevelOffset(uint8 selectedLevel, uint8 targetLevel) {
-        return selectedLevel && ((targetLevel >= selectedLevel && targetLevel <= (selectedLevel + higherOffset) ) || (targetLevel <= selectedLevel && targetLevel >= (selectedLevel - lowerOffset)));
+        return selectedLevel && ((targetLevel >= selectedLevel && targetLevel <= (selectedLevel + higherOffset)) || (targetLevel <= selectedLevel && targetLevel >= (selectedLevel - lowerOffset)));
     }
 
     void ModifyCreatureAttributes(Creature* creature, bool resetSelLevel = false)
@@ -465,15 +460,15 @@ public:
         {
             return;
         }
-        
-        AutoBalanceMapInfo *mapVasInfo=creature->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+
+        AutoBalanceMapInfo *mapVasInfo = creature->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
         if (!mapVasInfo->mapLevel)
             return;
 
         CreatureTemplate const *creatureTemplate = creature->GetCreatureTemplate();
 
-        AutoBalanceCreatureInfo *creatureVasInfo=creature->CustomData.GetDefault<AutoBalanceCreatureInfo>("VAS_AutoBalanceCreatureInfo");
-        
+        AutoBalanceCreatureInfo *creatureVasInfo = creature->CustomData.GetDefault<AutoBalanceCreatureInfo>("VAS_AutoBalanceCreatureInfo");
+
         // force resetting selected level.
         // this is also a "workaround" to fix bug of not recalculated
         // attributes when UpdateEntry has been used.
@@ -486,7 +481,7 @@ public:
         if (!creature->IsAlive())
             return;
 
-        uint32 curCount=mapVasInfo->playerCount + PlayerCountDifficultyOffset;
+        uint32 curCount = mapVasInfo->playerCount + PlayerCountDifficultyOffset;
 
         uint8 bonusLevel = creatureTemplate->rank == CREATURE_ELITE_WORLDBOSS ? 3 : 0;
         // already scaled
@@ -497,8 +492,9 @@ public:
                     creatureVasInfo->instancePlayerCount == curCount) {
                     return;
                 }
-            } else if (creatureVasInfo->instancePlayerCount == curCount) {
-                    return;
+            }
+            else if (creatureVasInfo->instancePlayerCount == curCount) {
+                return;
             }
         }
 
@@ -513,12 +509,12 @@ public:
         uint8 originalLevel = creatureTemplate->maxlevel;
 
         uint8 level = mapVasInfo->mapLevel;
-        
+
         uint8 areaMinLvl, areaMaxLvl;
         getAreaLevel(creature->GetMap(), creature->GetAreaId(), areaMinLvl, areaMaxLvl);
-        
+
         // avoid level changing for critters and special creatures (spell summons etc.) in instances
-        bool skipLevel=false;
+        bool skipLevel = false;
         if (originalLevel <= 1 && areaMinLvl >= 5)
             skipLevel = true;
 
@@ -528,10 +524,11 @@ public:
                 creatureVasInfo->selectedLevel = level + bonusLevel;
                 creature->SetLevel(creatureVasInfo->selectedLevel);
             }
-        } else {
+        }
+        else {
             creatureVasInfo->selectedLevel = creature->getLevel();
         }
-        
+
         creatureVasInfo->entry = creature->GetEntry();
 
         bool useDefStats = false;
@@ -545,7 +542,7 @@ public:
         uint32 baseMana = origCreatureStats->GenerateMana(creatureTemplate);
         uint32 scaledHealth = 0;
         uint32 scaledMana = 0;
-        
+
         uint32 maxNumberOfPlayers = ((InstanceMap*)sMapMgr->FindMap(creature->GetMapId(), creature->GetInstanceId()))->GetMaxPlayers();
         //   VAS SOLO  - By MobID
         if (GetForcedCreatureId(creatureTemplate->Entry) > 0)
@@ -566,102 +563,102 @@ public:
         //
         float defaultMultiplier = 1.0f;
         if (creatureVasInfo->instancePlayerCount < maxNumberOfPlayers) {
-            float inflectionValue  = (float)maxNumberOfPlayers * InflectionPoint;
-            float diff = ((float)maxNumberOfPlayers/5)*1.5f;
+            float inflectionValue = (float)maxNumberOfPlayers * InflectionPoint;
+            float diff = ((float)maxNumberOfPlayers / 5)*1.5f;
             defaultMultiplier = (tanh(((float)creatureVasInfo->instancePlayerCount - inflectionValue) / diff) + 1.0f) / 2.0f;
         }
 
         if (!sVasScriptMgr->OnAfterDefaultMultiplier(creature, defaultMultiplier))
             return;
-        
-        creatureVasInfo->HealthMultiplier =   healthMultiplier * defaultMultiplier * globalRate;
-        
+
+        creatureVasInfo->HealthMultiplier = healthMultiplier * defaultMultiplier * globalRate;
+
         if (creatureVasInfo->HealthMultiplier <= MinHPModifier)
         {
             creatureVasInfo->HealthMultiplier = MinHPModifier;
         }
 
-        float hpStatsRate  = 1.0f;
+        float hpStatsRate = 1.0f;
         if (!useDefStats && LevelScaling && !skipLevel) {
             float newBaseHealth = 0;
             if (level <= 60)
-                newBaseHealth=creatureStats->BaseHealth[0];
-            else if(level <= 70)
-                newBaseHealth=creatureStats->BaseHealth[1];
+                newBaseHealth = creatureStats->BaseHealth[0];
+            else if (level <= 70)
+                newBaseHealth = creatureStats->BaseHealth[1];
             else {
-                newBaseHealth=creatureStats->BaseHealth[2];
+                newBaseHealth = creatureStats->BaseHealth[2];
                 // special increasing for end-game contents
                 if (LevelEndGameBoost == 1)
-                    newBaseHealth *= creatureVasInfo->selectedLevel >= 75 && originalLevel < 75 ? float(creatureVasInfo->selectedLevel-70) * 0.3f : 1;
+                    newBaseHealth *= creatureVasInfo->selectedLevel >= 75 && originalLevel < 75 ? float(creatureVasInfo->selectedLevel - 70) * 0.3f : 1;
             }
 
-            float newHealth =  newBaseHealth * creatureTemplate->ModHealth;
+            float newHealth = newBaseHealth * creatureTemplate->ModHealth;
 
             // allows health to be different with creatures that originally
             // differentiate their health by different level instead of multiplier field.
             // expecially in dungeons. The health reduction decrease if original level is similar to the area max level
             if (originalLevel >= areaMinLvl && originalLevel < areaMaxLvl) {
-                float reduction = newHealth / float(areaMaxLvl-areaMinLvl) * (float(areaMaxLvl-originalLevel)*0.3f); // never more than 30%
+                float reduction = newHealth / float(areaMaxLvl - areaMinLvl) * (float(areaMaxLvl - originalLevel)*0.3f); // never more than 30%
                 if (reduction > 0 && reduction < newHealth)
                     newHealth -= reduction;
             }
 
             hpStatsRate = newHealth / float(baseHealth);
         }
-        
+
         creatureVasInfo->HealthMultiplier *= hpStatsRate;
-        
-        scaledHealth = round(((float) baseHealth * creatureVasInfo->HealthMultiplier) + 1.0f);
+
+        scaledHealth = round(((float)baseHealth * creatureVasInfo->HealthMultiplier) + 1.0f);
 
         //Getting the list of Classes in this group - this will be used later on to determine what additional scaling will be required based on the ratio of tank/dps/healer
         //GetPlayerClassList(creature, playerClassList); // Update playerClassList with the list of all the participating Classes
 
-        float manaStatsRate  = 1.0f;
+        float manaStatsRate = 1.0f;
         if (!useDefStats && LevelScaling && !skipLevel) {
-            float newMana =  creatureStats->GenerateMana(creatureTemplate);
-            manaStatsRate = newMana/float(baseMana);
+            float newMana = creatureStats->GenerateMana(creatureTemplate);
+            manaStatsRate = newMana / float(baseMana);
         }
 
-        creatureVasInfo->ManaMultiplier =  manaStatsRate * manaMultiplier * defaultMultiplier * globalRate;
+        creatureVasInfo->ManaMultiplier = manaStatsRate * manaMultiplier * defaultMultiplier * globalRate;
         scaledMana = round(baseMana * creatureVasInfo->ManaMultiplier);
 
         float damageMul = defaultMultiplier * globalRate * damageMultiplier;
-        
+
         // Can not be less then Min_D_Mod
         if (damageMul <= MinDamageModifier)
         {
             damageMul = MinDamageModifier;
         }
-        
+
         if (!useDefStats && LevelScaling && !skipLevel) {
             float origDmgBase = origCreatureStats->GenerateBaseDamage(creatureTemplate);
             float newDmgBase = 0;
             if (level <= 60)
-                newDmgBase=creatureStats->BaseDamage[0];
-            else if(level <= 70)
-                newDmgBase=creatureStats->BaseDamage[1];
+                newDmgBase = creatureStats->BaseDamage[0];
+            else if (level <= 70)
+                newDmgBase = creatureStats->BaseDamage[1];
             else {
-                newDmgBase=creatureStats->BaseDamage[2];
+                newDmgBase = creatureStats->BaseDamage[2];
                 // special increasing for end-game contents
                 if (LevelEndGameBoost == 1 && !creature->GetMap()->IsRaid())
-                    newDmgBase *= creatureVasInfo->selectedLevel >= 75 && originalLevel < 75 ? float(creatureVasInfo->selectedLevel-70) * 0.3f : 1;
+                    newDmgBase *= creatureVasInfo->selectedLevel >= 75 && originalLevel < 75 ? float(creatureVasInfo->selectedLevel - 70) * 0.3f : 1;
             }
-            
-            damageMul *= newDmgBase/origDmgBase;
+
+            damageMul *= newDmgBase / origDmgBase;
         }
 
         creatureVasInfo->ArmorMultiplier = globalRate * armorMultiplier;
-        uint32 newBaseArmor= round(creatureVasInfo->ArmorMultiplier * (useDefStats || !LevelScaling || skipLevel ? origCreatureStats->GenerateArmor(creatureTemplate) : creatureStats->GenerateArmor(creatureTemplate)));
+        uint32 newBaseArmor = round(creatureVasInfo->ArmorMultiplier * (useDefStats || !LevelScaling || skipLevel ? origCreatureStats->GenerateArmor(creatureTemplate) : creatureStats->GenerateArmor(creatureTemplate)));
 
         if (!sVasScriptMgr->OnBeforeUpdateStats(creature, scaledHealth, scaledMana, damageMul, newBaseArmor))
             return;
-        
+
         uint32 prevMaxHealth = creature->GetMaxHealth();
         uint32 prevMaxPower = creature->GetMaxPower(POWER_MANA);
         uint32 prevHealth = creature->GetHealth();
         uint32 prevPower = creature->GetPower(POWER_MANA);
-        
-        Powers pType= creature->getPowerType();
+
+        Powers pType = creature->getPowerType();
 
         creature->SetArmor(newBaseArmor);
         creature->SetModifierValue(UNIT_MOD_ARMOR, BASE_VALUE, (float)newBaseArmor);
@@ -676,9 +673,9 @@ public:
         creature->SetModifierValue(UNIT_MOD_MANA, BASE_VALUE, (float)scaledMana);
         creatureVasInfo->DamageMultiplier = damageMul;
 
-        uint32 scaledCurHealth=prevHealth && prevMaxHealth ? float(scaledHealth)/float(prevMaxHealth)*float(prevHealth) : 0;
-        uint32 scaledCurPower=prevPower && prevMaxPower  ? float(scaledMana)/float(prevMaxPower)*float(prevPower) : 0;
-        
+        uint32 scaledCurHealth = prevHealth && prevMaxHealth ? float(scaledHealth) / float(prevMaxHealth)*float(prevHealth) : 0;
+        uint32 scaledCurPower = prevPower && prevMaxPower ? float(scaledMana) / float(prevMaxPower)*float(prevPower) : 0;
+
         creature->SetHealth(scaledCurHealth);
         if (pType == POWER_MANA)
             creature->SetPower(POWER_MANA, scaledCurPower);
@@ -751,7 +748,7 @@ public:
             return false;
         }
 
-        AutoBalanceMapInfo *mapVasInfo=pl->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+        AutoBalanceMapInfo *mapVasInfo = pl->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
 
         mapVasInfo->playerCount = pl->GetMap()->GetPlayersCountExceptGMs();
 
@@ -785,7 +782,7 @@ public:
             return false;
         }
 
-        AutoBalanceMapInfo *mapVasInfo=pl->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+        AutoBalanceMapInfo *mapVasInfo = pl->GetMap()->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
 
         handler->PSendSysMessage("Players on map: %u", mapVasInfo->playerCount);
         handler->PSendSysMessage("Max level of players in this map: %u", mapVasInfo->mapLevel);
@@ -804,7 +801,7 @@ public:
             return false;
         }
 
-        AutoBalanceCreatureInfo *creatureVasInfo=target->CustomData.GetDefault<AutoBalanceCreatureInfo>("VAS_AutoBalanceCreatureInfo");
+        AutoBalanceCreatureInfo *creatureVasInfo = target->CustomData.GetDefault<AutoBalanceCreatureInfo>("VAS_AutoBalanceCreatureInfo");
 
         handler->PSendSysMessage("Instance player Count: %u", creatureVasInfo->instancePlayerCount);
         handler->PSendSysMessage("Selected level: %u", creatureVasInfo->selectedLevel);
@@ -821,8 +818,8 @@ public:
 class VAS_AutoBalance_GlobalScript : public GlobalScript {
 public:
     VAS_AutoBalance_GlobalScript() : GlobalScript("VAS_AutoBalance_GlobalScript") { }
-    
-    void OnAfterUpdateEncounterState(Map* map, EncounterCreditType type,  uint32 /*creditEntry*/, Unit* source, Difficulty /*difficulty_fixed*/, DungeonEncounterList const* /*encounters*/, uint32 /*dungeonCompleted*/, bool updated) override {
+
+    void OnAfterUpdateEncounterState(Map* map, EncounterCreditType type, uint32 /*creditEntry*/, Unit* source, Difficulty /*difficulty_fixed*/, DungeonEncounterList const* /*encounters*/, uint32 /*dungeonCompleted*/, bool updated) override {
         //if (!dungeonCompleted)
         //    return;
 
@@ -831,9 +828,9 @@ public:
 
         if (map->GetPlayersCountExceptGMs() < MinPlayerReward)
             return;
-        
-        AutoBalanceMapInfo *mapVasInfo=map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
-        
+
+        AutoBalanceMapInfo *mapVasInfo = map->CustomData.GetDefault<AutoBalanceMapInfo>("VAS_AutoBalanceMapInfo");
+
         uint8 areaMinLvl, areaMaxLvl;
         getAreaLevel(map, source->GetAreaId(), areaMinLvl, areaMaxLvl);
 
@@ -859,7 +856,7 @@ public:
         {
             if (!itr->GetSource() || itr->GetSource()->IsGameMaster() || itr->GetSource()->getLevel() < DEFAULT_MAX_LEVEL)
                 continue;
-            
+
             itr->GetSource()->AddItem(reward, 1 + difficulty); // difficulty boost
         }
     }
