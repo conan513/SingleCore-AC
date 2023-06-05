@@ -26,11 +26,11 @@
 // AggressorAI
 /////////////////
 
-int AggressorAI::Permissible(const Creature* creature)
+int32 AggressorAI::Permissible(Creature const* creature)
 {
     // have some hostile factions, it will be selected by IsHostileTo check at MoveInLineOfSight
     if (!creature->IsCivilian() && !creature->IsNeutralToAll())
-        return PERMIT_BASE_PROACTIVE;
+        return PERMIT_BASE_REACTIVE;
 
     return PERMIT_BASE_NO;
 }
@@ -68,7 +68,12 @@ void CombatAI::JustDied(Unit* killer)
             me->CastSpell(killer, *i, true);
 }
 
-void CombatAI::EnterCombat(Unit* who)
+/**
+ * @brief Called for reaction when initially engaged
+ *
+ * @param who Who 'me' Engaged combat with
+ */
+void CombatAI::JustEngagedWith(Unit* who)
 {
     for (SpellVct::iterator i = spells.begin(); i != spells.end(); ++i)
     {
@@ -114,7 +119,12 @@ void CasterAI::InitializeAI()
         m_attackDist = MELEE_RANGE;
 }
 
-void CasterAI::EnterCombat(Unit* who)
+/**
+ * @brief Called for reaction when initially engaged
+ *
+ * @param who Who 'me' Engaged combat with
+ */
+void CasterAI::JustEngagedWith(Unit* who)
 {
     if (spells.empty())
         return;
@@ -169,7 +179,7 @@ void CasterAI::UpdateAI(uint32 diff)
 ArcherAI::ArcherAI(Creature* c) : CreatureAI(c)
 {
     if (!me->m_spells[0])
-        LOG_ERROR("entities.unit.ai", "ArcherAI set for creature (entry = %u) with spell1=0. AI will do nothing", me->GetEntry());
+        LOG_ERROR("entities.unit.ai", "ArcherAI set for creature (entry = {}) with spell1=0. AI will do nothing", me->GetEntry());
 
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0]);
     m_minRange = spellInfo ? spellInfo->GetMinRange(false) : 0;
@@ -218,7 +228,7 @@ void ArcherAI::UpdateAI(uint32 /*diff*/)
 TurretAI::TurretAI(Creature* c) : CreatureAI(c)
 {
     if (!me->m_spells[0])
-        LOG_ERROR("entities.unit.ai", "TurretAI set for creature (entry = %u) with spell1=0. AI will do nothing", me->GetEntry());
+        LOG_ERROR("entities.unit.ai", "TurretAI set for creature (entry = {}) with spell1=0. AI will do nothing", me->GetEntry());
 
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0]);
     m_minRange = spellInfo ? spellInfo->GetMinRange(false) : 0;
@@ -226,9 +236,9 @@ TurretAI::TurretAI(Creature* c) : CreatureAI(c)
     me->m_SightDistance = me->m_CombatDistance;
 }
 
-bool TurretAI::CanAIAttack(const Unit* /*who*/) const
+bool TurretAI::CanAIAttack(Unit const* /*who*/) const
 {
-    // TODO: use one function to replace it
+    /// @todo: use one function to replace it
     if (!me->IsWithinCombatRange(me->GetVictim(), me->m_CombatDistance)
             || (m_minRange && me->IsWithinCombatRange(me->GetVictim(), m_minRange)))
         return false;
@@ -292,7 +302,7 @@ void VehicleAI::LoadConditions()
 {
     conditions = sConditionMgr->GetConditionsForNotGroupedEntry(CONDITION_SOURCE_TYPE_CREATURE_TEMPLATE_VEHICLE, me->GetEntry());
     if (!conditions.empty())
-        LOG_DEBUG("condition", "VehicleAI::LoadConditions: loaded %u conditions", uint32(conditions.size()));
+        LOG_DEBUG("condition", "VehicleAI::LoadConditions: loaded {} conditions", uint32(conditions.size()));
 }
 
 void VehicleAI::CheckConditions(uint32 diff)
@@ -319,4 +329,12 @@ void VehicleAI::CheckConditions(uint32 diff)
     }
     else
         m_ConditionsTimer -= diff;
+}
+
+int32 VehicleAI::Permissible(Creature const* creature)
+{
+    if (creature->IsVehicle())
+        return PERMIT_BASE_SPECIAL;
+
+    return PERMIT_BASE_NO;
 }

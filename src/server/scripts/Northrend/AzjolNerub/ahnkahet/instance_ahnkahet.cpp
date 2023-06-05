@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Player.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
-#include "ahnkahet.h"
-#include "Player.h"
 #include "SpellScript.h"
+#include "ahnkahet.h"
 #include <array>
 
 class instance_ahnkahet : public InstanceMapScript
@@ -31,6 +31,7 @@ public:
     {
         instance_ahnkahet_InstanceScript(Map* pMap) : InstanceScript(pMap), canSaveBossStates(false)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTER);
             teldaramSpheres.fill(NOT_STARTED);
         }
@@ -77,11 +78,11 @@ public:
                     if (teldaramSpheres.at(pGo->GetEntry() == GO_TELDARAM_SPHERE1 ? 0 : 1) == DONE || GetBossState(DATA_PRINCE_TALDARAM) == DONE)
                     {
                         pGo->SetGoState(GO_STATE_ACTIVE);
-                        pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->SetGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     else
                     {
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
 
                     break;
@@ -172,62 +173,18 @@ public:
             return ObjectGuid::Empty;
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            // Encounter states
-            saveStream << "A K " << GetBossSaveData();
-
-            // Extra data
-            saveStream << teldaramSpheres[0] << ' ' << teldaramSpheres[1];
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
-        }
-
-        void Load(const char* in) override
-        {
-            if (!in)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2;
-
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'A' && dataHead2 == 'K')
-            {
-                // Encounter states
-                for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                    {
-                        tmpState = NOT_STARTED;
-                    }
-
-                    SetBossState(i, EncounterState(tmpState));
-                }
-
-                // Extra data
-                loadStream >> teldaramSpheres[0] >> teldaramSpheres[1];
-            }
-            else
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
+            data >> teldaramSpheres[0];
+            data >> teldaramSpheres[1];
 
             canSaveBossStates = true;
-            OUT_LOAD_INST_DATA_COMPLETE;
+        }
+
+        void WriteSaveDataMore(std::ostringstream& data) override
+        {
+            data << teldaramSpheres[0] << ' '
+                << teldaramSpheres[1];
         }
 
     private:
@@ -257,34 +214,23 @@ public:
 
 // 56702 Shadow Sickle
 // 59103 Shadow Sickle
-class spell_shadow_sickle_periodic_damage : public SpellScriptLoader
+class spell_shadow_sickle_periodic_damage : public AuraScript
 {
-public:
-    spell_shadow_sickle_periodic_damage() : SpellScriptLoader("spell_shadow_sickle_periodic_damage") { }
+    PrepareAuraScript(spell_shadow_sickle_periodic_damage);
 
-    class spell_shadow_sickle_periodic_damage_AuraScript : public AuraScript
+    void HandlePeriodic(AuraEffect const*  /*aurEff*/)
     {
-        PrepareAuraScript(spell_shadow_sickle_periodic_damage_AuraScript);
+        GetCaster()->CastSpell(nullptr, SPELL_SHADOW_SICKLE);
+    }
 
-        void HandlePeriodic(AuraEffect const*  /*aurEff*/)
-        {
-            GetCaster()->CastSpell(nullptr, SPELL_SHADOW_SICKLE);
-        }
-
-        void Register() override
-        {
-            OnEffectPeriodic += AuraEffectPeriodicFn(spell_shadow_sickle_periodic_damage_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
-        }
-    };
-
-    AuraScript* GetAuraScript() const override
+    void Register() override
     {
-        return new spell_shadow_sickle_periodic_damage_AuraScript();
+        OnEffectPeriodic += AuraEffectPeriodicFn(spell_shadow_sickle_periodic_damage::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
     }
 };
 
 void AddSC_instance_ahnkahet()
 {
     new instance_ahnkahet;
-    new spell_shadow_sickle_periodic_damage();
+    RegisterSpellScript(spell_shadow_sickle_periodic_damage);
 }

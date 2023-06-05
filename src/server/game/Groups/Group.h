@@ -23,6 +23,7 @@
 #include "LootMgr.h"
 #include "QueryResult.h"
 #include "SharedDefines.h"
+#include <functional>
 
 class Battlefield;
 class Battleground;
@@ -213,7 +214,9 @@ public:
     bool isBFGroup()   const;
     bool isBGGroup()   const;
     bool IsCreated()   const;
+    GroupType GetGroupType() const;
     ObjectGuid GetLeaderGUID() const;
+    Player* GetLeader();
     ObjectGuid GetGUID() const;
     const char* GetLeaderName() const;
     LootMethod GetLootMethod() const;
@@ -243,6 +246,7 @@ public:
     uint8 GetMemberGroup(ObjectGuid guid) const;
 
     void ConvertToLFG(bool restricted = true);
+    bool CheckLevelForRaid();
     void ConvertToRaid();
 
     void SetBattlegroundGroup(Battleground* bg);
@@ -269,8 +273,8 @@ public:
     void SendUpdateToPlayer(ObjectGuid playerGUID, MemberSlot* slot = nullptr);
     void UpdatePlayerOutOfRange(Player* player);
     // ignore: GUID of player that will be ignored
-    void BroadcastPacket(WorldPacket* packet, bool ignorePlayersInBGRaid, int group = -1, ObjectGuid ignore = ObjectGuid::Empty);
-    void BroadcastReadyCheck(WorldPacket* packet);
+    void BroadcastPacket(WorldPacket const* packet, bool ignorePlayersInBGRaid, int group = -1, ObjectGuid ignore = ObjectGuid::Empty);
+    void BroadcastReadyCheck(WorldPacket const* packet);
     void OfflineReadyCheck();
 
     /*********************************************************/
@@ -309,13 +313,10 @@ public:
     bool IsLfgHeroic() const { return isLFGGroup() && (m_lfgGroupFlags & GROUP_LFG_FLAG_IS_HEROIC); }
 
     // Difficulty Change
-    uint32 GetDifficultyChangePreventionTime() const { return _difficultyChangePreventionTime > time(nullptr) ? _difficultyChangePreventionTime - time(nullptr) : 0; }
+    uint32 GetDifficultyChangePreventionTime() const;
     DifficultyPreventionChangeType GetDifficultyChangePreventionReason() const { return _difficultyChangePreventionType; }
-    void SetDifficultyChangePrevention(DifficultyPreventionChangeType type)
-    {
-        _difficultyChangePreventionTime = time(nullptr) + MINUTE;
-        _difficultyChangePreventionType = type;
-    }
+    void SetDifficultyChangePrevention(DifficultyPreventionChangeType type);
+    void DoForAllMembers(std::function<void(Player*)> const& worker);
 
 protected:
     void _homebindIfInstance(Player* player);

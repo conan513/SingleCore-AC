@@ -1,28 +1,29 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.creature_questender
+-- Dumping structure for table acore_world.creature_questender
 DROP TABLE IF EXISTS `creature_questender`;
 CREATE TABLE IF NOT EXISTS `creature_questender` (
-  `id` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'Identifier',
-  `quest` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'Quest Identifier',
+  `id` int unsigned NOT NULL DEFAULT '0' COMMENT 'Identifier',
+  `quest` int unsigned NOT NULL DEFAULT '0' COMMENT 'Quest Identifier',
   PRIMARY KEY (`id`,`quest`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 ROW_FORMAT=FIXED COMMENT='Creature System';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Creature System';
 
--- Дамп данных таблицы _acore_world.creature_questender: 7 861 rows
+-- Dumping data for table acore_world.creature_questender: ~7,899 rows (approximately)
 DELETE FROM `creature_questender`;
-/*!40000 ALTER TABLE `creature_questender` DISABLE KEYS */;
 INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(196, 33),
 	(196, 5261),
@@ -2488,7 +2489,6 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(10837, 5096),
 	(10837, 5098),
 	(10837, 5238),
-	(10837, 5511),
 	(10837, 10374),
 	(10838, 211),
 	(10838, 5066),
@@ -2497,7 +2497,6 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(10838, 5092),
 	(10838, 5097),
 	(10838, 5237),
-	(10838, 5505),
 	(10838, 8415),
 	(10838, 8416),
 	(10838, 8418),
@@ -2584,12 +2583,14 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(11055, 5232),
 	(11055, 5234),
 	(11055, 5236),
+	(11056, 5505),
 	(11056, 5533),
 	(11056, 5537),
 	(11056, 5801),
 	(11056, 5803),
 	(11057, 838),
 	(11057, 964),
+	(11057, 5511),
 	(11057, 5802),
 	(11057, 5804),
 	(11063, 5168),
@@ -2823,7 +2824,12 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(13236, 7385),
 	(13257, 6781),
 	(13257, 7223),
+	(13278, 6804),
 	(13278, 6805),
+	(13278, 6821),
+	(13278, 6822),
+	(13278, 6823),
+	(13278, 6824),
 	(13377, 6861),
 	(13377, 6862),
 	(13417, 6964),
@@ -2839,16 +2845,16 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(13441, 7002),
 	(13442, 6881),
 	(13442, 7386),
-	(13444, 7021),
 	(13444, 7022),
 	(13444, 7023),
-	(13444, 7024),
 	(13444, 7025),
 	(13444, 7045),
 	(13444, 8827),
 	(13445, 6961),
 	(13445, 6962),
 	(13445, 6984),
+	(13445, 7021),
+	(13445, 7024),
 	(13445, 8828),
 	(13446, 6846),
 	(13448, 7401),
@@ -3186,6 +3192,7 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(14905, 8073),
 	(14905, 8141),
 	(14905, 8142),
+	(14905, 8143),
 	(14905, 8144),
 	(14905, 8145),
 	(14905, 8146),
@@ -3582,6 +3589,7 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(15534, 8613),
 	(15534, 8614),
 	(15535, 8615),
+	(15535, 8616),
 	(15540, 8507),
 	(15540, 8731),
 	(15540, 9338),
@@ -3644,7 +3652,34 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(15700, 8792),
 	(15700, 8793),
 	(15700, 8794),
+	(15700, 8851),
+	(15700, 8852),
+	(15700, 8853),
+	(15700, 8854),
+	(15700, 8855),
 	(15700, 10500),
+	(15701, 8846),
+	(15701, 8847),
+	(15701, 8848),
+	(15701, 8849),
+	(15701, 8850),
+	(15731, 8811),
+	(15731, 8819),
+	(15733, 8812),
+	(15733, 8820),
+	(15734, 8813),
+	(15734, 8821),
+	(15735, 8814),
+	(15735, 8822),
+	(15736, 8815),
+	(15736, 8823),
+	(15737, 8816),
+	(15737, 8824),
+	(15738, 8815),
+	(15738, 8826),
+	(15738, 8842),
+	(15739, 8818),
+	(15739, 8825),
 	(15761, 8818),
 	(15761, 8826),
 	(15761, 8844),
@@ -4903,6 +4938,7 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(19935, 11106),
 	(19935, 13432),
 	(19937, 10258),
+	(19942, 10259),
 	(20066, 10266),
 	(20066, 10267),
 	(20066, 10310),
@@ -5215,6 +5251,10 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(21955, 10685),
 	(21955, 11094),
 	(21962, 10705),
+	(21968, 10693),
+	(21968, 10698),
+	(21969, 10699),
+	(21969, 10700),
 	(21983, 10717),
 	(21983, 10747),
 	(21984, 10709),
@@ -6884,7 +6924,6 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(28914, 12754),
 	(28914, 12756),
 	(28919, 12716),
-	(28919, 12717),
 	(29006, 12726),
 	(29006, 12735),
 	(29006, 12736),
@@ -7885,8 +7924,8 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 	(40391, 25470),
 	(40391, 25480),
 	(40429, 26013);
-/*!40000 ALTER TABLE `creature_questender` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

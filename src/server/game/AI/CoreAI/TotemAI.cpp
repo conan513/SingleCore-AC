@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "TotemAI.h"
 #include "CellImpl.h"
 #include "Creature.h"
 #include "DBCStores.h"
@@ -23,9 +24,8 @@
 #include "ObjectAccessor.h"
 #include "SpellMgr.h"
 #include "Totem.h"
-#include "TotemAI.h"
 
-int TotemAI::Permissible(Creature const* creature)
+int32 TotemAI::Permissible(Creature const* creature)
 {
     if (creature->IsTotem())
         return PERMIT_BASE_PROACTIVE;
@@ -38,7 +38,7 @@ TotemAI::TotemAI(Creature* c) : CreatureAI(c)
     ASSERT(c->IsTotem());
 }
 
-void TotemAI::SpellHit(Unit* /*caster*/, const SpellInfo* /*spellInfo*/)
+void TotemAI::SpellHit(Unit* /*caster*/, SpellInfo const* /*spellInfo*/)
 {
 }
 
@@ -50,7 +50,7 @@ void TotemAI::MoveInLineOfSight(Unit* /*who*/)
 {
 }
 
-void TotemAI::EnterEvadeMode()
+void TotemAI::EnterEvadeMode(EvadeReason /*why*/)
 {
     me->CombatStop(true);
 }
@@ -60,8 +60,23 @@ void TotemAI::UpdateAI(uint32 /*diff*/)
     if (me->ToTotem()->GetTotemType() != TOTEM_ACTIVE)
         return;
 
-    if (!me->IsAlive() || me->IsNonMeleeSpellCast(false))
+    if (!me->IsAlive())
+    {
         return;
+    }
+
+    if (me->IsNonMeleeSpellCast(false))
+    {
+        if (Unit* victim = ObjectAccessor::GetUnit(*me, i_victimGuid))
+        {
+            if (!victim || !victim->IsAlive())
+            {
+                me->InterruptNonMeleeSpells(false);
+            }
+        }
+
+        return;
+    }
 
     // Search spell
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->ToTotem()->GetSpell());

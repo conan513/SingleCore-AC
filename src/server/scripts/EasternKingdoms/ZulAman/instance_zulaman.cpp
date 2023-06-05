@@ -91,6 +91,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
             QuestTimer = 0;
@@ -186,7 +187,7 @@ public:
                 return;
 
             Map::PlayerList const& PlayerList = instance->GetPlayers();
-            if (PlayerList.isEmpty())
+            if (PlayerList.IsEmpty())
                 return;
 
             Map::PlayerList::const_iterator i = PlayerList.begin();
@@ -194,8 +195,8 @@ public:
             {
                 if (Unit* Hostage = i_pl->SummonCreature(HostageInfo[num].npc, HostageInfo[num].x, HostageInfo[num].y, HostageInfo[num].z, HostageInfo[num].o, TEMPSUMMON_DEAD_DESPAWN, 0))
                 {
-                    Hostage->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    Hostage->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    Hostage->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                    Hostage->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 }
             }
         }

@@ -15,12 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scholomance.h"
-#include "ScriptedCreature.h"
-#include "ScriptMgr.h"
-#include "SpellScript.h"
 #include "Map.h"
 #include "Player.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "scholomance.h"
 
 enum Spells
 {
@@ -174,7 +174,7 @@ public:
             {
                 for (uint8 i = 0; i < 3; i++)
                 {
-                    if (Guardians[room][i] == nullptr)
+                    if (!Guardians[room][i])
                     {
                         Guardians[room][i] = cr;
                         break;
@@ -183,7 +183,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             DoZoneInCombat();
             instance->SetData(DATA_DARKMASTER_GANDLING, IN_PROGRESS);
@@ -293,19 +293,21 @@ public:
         }
 
         // used for shadow portal
-        void SpellHitTarget(Unit* target, const SpellInfo* spellinfo) override
+        void SpellHitTarget(Unit* target, SpellInfo const* spellinfo) override
         {
             uint32 room = 0;
-            if (spellinfo && spellinfo->Id == SPELL_SHADOW_PORTAL)
+            if (spellinfo && spellinfo->Id == SPELL_SHADOW_PORTAL && target)
             {
                 room = GetData(GANDLING_ROOM_TO_USE);
                 SetGate(room, CLOSED);
                 SpawnMobsInRoom(room);
                 DoCast(target, GandlingPortalSpells[room], true); // needs triggered somehow.
-                if (target->GetGUID() == me->GetVictim()->GetGUID())
+
+                auto victim = me->GetVictim();
+                if (victim && (target->GetGUID() == victim->GetGUID()))
                 {
-                    me->AddThreat(me->GetVictim(), -1000000); // drop current player, add a ton to second. This should guarantee that we don't end up with both 1 and 2 in a cage...
-                    if (Unit* newTarget = SelectTarget(SELECT_TARGET_TOPAGGRO, 1, 200.0f)) // search in whole room
+                    me->AddThreat(victim, -1000000); // drop current player, add a ton to second. This should guarantee that we don't end up with both 1 and 2 in a cage...
+                    if (Unit* newTarget = SelectTarget(SelectTargetMethod::MaxThreat, 1, 200.0f)) // search in whole room
                     {
                         me->AddThreat(newTarget, 1000000);
                     }
@@ -336,7 +338,7 @@ public:
                     events.ScheduleEvent(SPELL_ARCANE_MISSILES, urand(TIMER_ARCANE_MIN, TIMER_ARCANE_MAX));
                     break;
                 case SPELL_CURSE_DARKMASTER:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true))
                     {
                         DoCast(target, SPELL_CURSE_DARKMASTER);
                     }
@@ -348,7 +350,7 @@ public:
                     break;
 
                 case SPELL_SHADOW_PORTAL:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 15.0, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 15.0, true))
                     {
                         room = FindRoom();
                         if (room < 6)
@@ -385,9 +387,14 @@ public:
         int room;
         Unit* Gandling;
 
-        void IsSummonedBy(Unit* summoner) override
+        void IsSummonedBy(WorldObject* summoner) override
         {
-            Gandling = summoner;
+            if (summoner->GetTypeId() != TYPEID_UNIT)
+            {
+                return;
+            }
+
+            Gandling = summoner->ToCreature();
             if (instance)
             {
                 room = Gandling->GetAI()->GetData(GANDLING_ROOM_TO_USE); // it's set just before my spawn

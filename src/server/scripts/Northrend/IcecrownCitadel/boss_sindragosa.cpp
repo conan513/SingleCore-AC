@@ -15,12 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "GameTime.h"
 #include "GridNotifiers.h"
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -162,7 +163,6 @@ Position const RimefangFlyPos      = {4413.309f, 2456.421f, 233.3795f, 2.890186f
 Position const RimefangLandPos     = {4413.309f, 2456.421f, 203.3848f, 2.890186f};
 Position const SpinestalkerFlyPos  = {4418.895f, 2514.233f, 230.4864f, 3.396045f};
 Position const SpinestalkerLandPos = {4418.895f, 2514.233f, 203.3848f, 3.396045f};
-Position const SindragosaSpawnPos  = {4818.700f, 2483.710f, 287.0650f, 3.089233f};
 Position const SindragosaFlyInPos  = {4420.190f, 2484.360f, 232.5150f, 3.141593f};
 Position const SindragosaLandPos   = {4419.190f, 2484.570f, 203.3848f, 3.141593f};
 Position const SindragosaAirPos    = {4475.990f, 2484.430f, 247.9340f, 3.141593f};
@@ -237,7 +237,7 @@ private:
     ObjectGuid _sindragosaGUID;
 };
 
-struct LastPhaseIceTombTargetSelector : public Acore::unary_function<Unit*, bool>
+struct LastPhaseIceTombTargetSelector
 {
 public:
     LastPhaseIceTombTargetSelector(Creature* source) : _source(source) { }
@@ -272,7 +272,7 @@ public:
 
     struct boss_sindragosaAI : public BossAI
     {
-        boss_sindragosaAI(Creature* creature) : BossAI(creature, DATA_SINDRAGOSA), _summoned(false)
+        boss_sindragosaAI(Creature* creature) : BossAI(creature, DATA_SINDRAGOSA)
         {
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         }
@@ -282,19 +282,13 @@ public:
             _didFirstFlyPhase = false;
             _isBelow20Pct = false;
             _isThirdPhase = false;
+            _isLanding = false;
             _bombCount = 0;
             _mysticBuffetStack = 0;
             _Reset();
-            me->DisableRotate(false);
-            me->SetControlled(false, UNIT_STATE_ROOT);
             me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
             me->SetReactState(REACT_AGGRESSIVE);
             me->CastSpell(me, SPELL_TANK_MARKER, true);
-
-            if (!_summoned)
-            {
-                me->SetDisableGravity(true);
-            }
         }
 
         void MoveInLineOfSight(Unit* who) override
@@ -319,11 +313,11 @@ public:
             instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_ASPHYXIATION);
         }
 
-        void EnterCombat(Unit* victim) override
+        void JustEngagedWith(Unit* who) override
         {
-            if (!instance->CheckRequiredBosses(DATA_SINDRAGOSA, victim->ToPlayer()) || !me->IsVisible())
+            if (!instance->CheckRequiredBosses(DATA_SINDRAGOSA, who->ToPlayer()) || !me->IsVisible())
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 instance->DoCastSpellOnPlayers(LIGHT_S_HAMMER_TELEPORT);
                 return;
             }
@@ -336,13 +330,13 @@ public:
 
             summons.DespawnAll();
             events.Reset();
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
-            events.ScheduleEvent(EVENT_AIR_PHASE, 50000);
-            events.ScheduleEvent(EVENT_CLEAVE, 10000, EVENT_GROUP_LAND_PHASE);
-            events.ScheduleEvent(EVENT_TAIL_SMASH, 20000, EVENT_GROUP_LAND_PHASE);
-            events.ScheduleEvent(EVENT_FROST_BREATH, urand(8000, 12000), EVENT_GROUP_LAND_PHASE);
-            events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, urand(9000, 14000), EVENT_GROUP_LAND_PHASE);
-            events.ScheduleEvent(EVENT_ICY_GRIP, 33500, EVENT_GROUP_LAND_PHASE);
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
+            events.ScheduleEvent(EVENT_AIR_PHASE, 50s);
+            events.ScheduleEvent(EVENT_CLEAVE, 10s, EVENT_GROUP_LAND_PHASE);
+            events.ScheduleEvent(EVENT_TAIL_SMASH, 20s, EVENT_GROUP_LAND_PHASE);
+            events.ScheduleEvent(EVENT_FROST_BREATH, 8s, 12s, EVENT_GROUP_LAND_PHASE);
+            events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, 9s, 14s, EVENT_GROUP_LAND_PHASE);
+            events.ScheduleEvent(EVENT_ICY_GRIP, 33s + 500ms, EVENT_GROUP_LAND_PHASE);
 
             me->setActive(true);
             me->SetInCombatWithZone();
@@ -353,34 +347,15 @@ public:
             Talk(SAY_AGGRO);
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return me->IsVisible() && target->GetEntry() != NPC_CROK_SCOURGEBANE;
         }
 
-        void JustReachedHome() override
+        void EnterEvadeMode(EvadeReason why) override
         {
-            _JustReachedHome();
             instance->SetBossState(DATA_SINDRAGOSA, FAIL);
-            if (_summoned)
-            {
-                me->SetDisableGravity(false);
-            }
-        }
-
-        void EnterEvadeMode() override
-        {
-            if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE)) // this flag is removed after she lands and can be engaged
-            {
-                const Map::PlayerList& pl = me->GetMap()->GetPlayers();
-                for (Map::PlayerList::const_iterator itr = pl.begin(); itr != pl.end(); ++itr)
-                    if (Player* p = itr->GetSource())
-                        if (p->IsAlive() && !p->IsGameMaster() && p->GetExactDist(&SindragosaLandPos) < 200.0f && !p->IsImmunedToDamageOrSchool(SPELL_SCHOOL_MASK_ALL))
-                            Unit::Kill(me, p);
-            }
-            me->DisableRotate(false);
-            me->SetControlled(false, UNIT_STATE_ROOT);
-            BossAI::EnterEvadeMode();
+            BossAI::EnterEvadeMode(why);
         }
 
         void KilledUnit(Unit* victim) override
@@ -391,12 +366,10 @@ public:
 
         void DoAction(int32 action) override
         {
-            if (action == ACTION_START_FROSTWYRM)
+            if (action == ACTION_START_FROSTWYRM && !_isLanding)
             {
-                if (_summoned)
-                    return;
+                _isLanding = true;
 
-                _summoned = true;
                 if (TempSummon* summon = me->ToTempSummon())
                     summon->SetTempSummonType(TEMPSUMMON_DEAD_DESPAWN);
 
@@ -405,12 +378,16 @@ public:
 
                 me->setActive(true);
                 me->SetDisableGravity(true);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 me->SetSpeed(MOVE_RUN, 4.28571f);
                 float moveTime = me->GetExactDist(&SindragosaFlyInPos) / (me->GetSpeed(MOVE_RUN) * 0.001f);
                 me->m_Events.AddEvent(new FrostwyrmLandEvent(*me, SindragosaLandPos), me->m_Events.CalculateTime(uint64(moveTime) + 250));
                 me->GetMotionMaster()->MovePoint(POINT_FROSTWYRM_FLY_IN, SindragosaFlyInPos);
-                me->CastSpell(me, SPELL_SINDRAGOSA_S_FURY, true);
+
+                if (!instance->GetData(DATA_SINDRAGOSA_INTRO))
+                {
+                    DoCastAOE(SPELL_SINDRAGOSA_S_FURY);
+                }
             }
         }
 
@@ -433,26 +410,26 @@ public:
                     me->SetDisableGravity(false);
                     me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
                     me->SetHomePosition(SindragosaLandPos);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
 
                     // Sindragosa enters combat as soon as she lands
                     me->SetInCombatWithZone();
                     break;
                 case POINT_TAKEOFF:
-                    events.ScheduleEvent(EVENT_AIR_MOVEMENT, 0);
+                    events.ScheduleEvent(EVENT_AIR_MOVEMENT, 0ms);
                     break;
                 case POINT_AIR_PHASE:
                     me->CastCustomSpell(SPELL_ICE_TOMB_TARGET, SPELLVALUE_MAX_TARGETS, RAID_MODE<int32>(2, 5, 2, 6), nullptr);
                     me->SetFacingTo(float(M_PI));
-                    events.ScheduleEvent(EVENT_AIR_MOVEMENT_FAR, 0); // won't be processed during cast time anyway, so 0
-                    events.ScheduleEvent(EVENT_FROST_BOMB, 7000);
+                    events.ScheduleEvent(EVENT_AIR_MOVEMENT_FAR, 0ms); // won't be processed during cast time anyway, so 0
+                    events.ScheduleEvent(EVENT_FROST_BOMB, 7s);
                     _bombCount = 0;
                     break;
                 case POINT_AIR_PHASE_FAR:
                     me->SetFacingTo(float(M_PI));
                     break;
                 case POINT_LAND:
-                    events.ScheduleEvent(EVENT_LAND_GROUND, 0);
+                    events.ScheduleEvent(EVENT_LAND_GROUND, 0ms);
                     break;
                 case POINT_LAND_GROUND:
                     {
@@ -483,7 +460,7 @@ public:
                 {
                     _isThirdPhase = true;
                     events.CancelEvent(EVENT_AIR_PHASE);
-                    events.ScheduleEvent(EVENT_THIRD_PHASE_CHECK, 1000);
+                    events.ScheduleEvent(EVENT_THIRD_PHASE_CHECK, 1s);
                 }
             }
             else if (!_isBelow20Pct)
@@ -522,7 +499,7 @@ public:
 
         void UpdateAI(uint32 diff) override
         {
-            if (!UpdateVictim() || !CheckInRoom())
+            if (!UpdateVictim())
                 return;
 
             events.Update(diff);
@@ -539,7 +516,7 @@ public:
                     break;
                 case EVENT_CLEAVE:
                     me->CastSpell(me->GetVictim(), SPELL_CLEAVE, false);
-                    events.ScheduleEvent(EVENT_CLEAVE, urand(10000, 15000), EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_CLEAVE, 10s, 15s, EVENT_GROUP_LAND_PHASE);
                     break;
                 case EVENT_TAIL_SMASH:
                     me->DisableRotate(true);
@@ -547,8 +524,8 @@ public:
                     me->SendMovementFlagUpdate();
                     me->CastSpell(me->GetVictim(), SPELL_TAIL_SMASH, false);
                     events.DelayEventsToMax(1, 0);
-                    events.ScheduleEvent(EVENT_UNROOT, 0);
-                    events.ScheduleEvent(EVENT_TAIL_SMASH, urand(22000, 27000), EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_UNROOT, 0ms);
+                    events.ScheduleEvent(EVENT_TAIL_SMASH, 22s, 27s, EVENT_GROUP_LAND_PHASE);
                     break;
                 case EVENT_FROST_BREATH:
                     me->DisableRotate(true);
@@ -556,8 +533,8 @@ public:
                     me->SendMovementFlagUpdate();
                     me->CastSpell(me->GetVictim(), _isThirdPhase ? SPELL_FROST_BREATH_P2 : SPELL_FROST_BREATH_P1, false);
                     events.DelayEventsToMax(1, 0);
-                    events.ScheduleEvent(EVENT_UNROOT, 0);
-                    events.ScheduleEvent(EVENT_FROST_BREATH, urand(20000, 25000), EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_UNROOT, 0ms);
+                    events.ScheduleEvent(EVENT_FROST_BREATH, 20s, 25s, EVENT_GROUP_LAND_PHASE);
                     break;
                 case EVENT_UNROOT:
                     me->DisableRotate(false);
@@ -566,22 +543,22 @@ public:
                 case EVENT_UNCHAINED_MAGIC:
                     Talk(SAY_UNCHAINED_MAGIC);
                     me->CastSpell((Unit*)nullptr, SPELL_UNCHAINED_MAGIC, false);
-                    events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, urand(30000, 35000), EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, 30s, 35s, EVENT_GROUP_LAND_PHASE);
                     break;
                 case EVENT_ICY_GRIP:
                     me->CastSpell((Unit*)nullptr, SPELL_ICY_GRIP, false);
                     events.DelayEventsToMax(1001, 0);
-                    events.ScheduleEvent(EVENT_BLISTERING_COLD, 1000, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_BLISTERING_COLD, 1s, EVENT_GROUP_LAND_PHASE);
                     if (uint32 evTime = events.GetNextEventTime(EVENT_ICE_TOMB))
                         if (events.GetTimer() > evTime || evTime - events.GetTimer() < 7000)
-                            events.RescheduleEvent(EVENT_ICE_TOMB, 7000);
+                            events.RescheduleEvent(EVENT_ICE_TOMB, 7s);
                     break;
                 case EVENT_BLISTERING_COLD:
                     Talk(EMOTE_WARN_BLISTERING_COLD);
                     me->CastSpell(me, SPELL_BLISTERING_COLD, false);
-                    events.ScheduleEvent(EVENT_BLISTERING_COLD_YELL, 5000, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_BLISTERING_COLD_YELL, 5s, EVENT_GROUP_LAND_PHASE);
                     if (_isThirdPhase)
-                        events.RescheduleEvent(EVENT_ICY_GRIP, urand(65000, 70000));
+                        events.RescheduleEvent(EVENT_ICY_GRIP, 65s, 70s);
                     break;
                 case EVENT_BLISTERING_COLD_YELL:
                     Talk(SAY_BLISTERING_COLD);
@@ -589,7 +566,7 @@ public:
 
                 // AIR PHASE EVENTS BELOW:
                 case EVENT_AIR_PHASE:
-                    // pussywizard: unroot may be scheduled after this event cos of events shitness (time must be unique)
+                    // pussywizard: unroot may be scheduled after this event cos of events (time must be unique)
                     if (me->HasUnitState(UNIT_STATE_ROOT))
                     {
                         events.CancelEvent(EVENT_UNROOT);
@@ -609,7 +586,7 @@ public:
                     me->SetDisableGravity(true);
                     me->GetMotionMaster()->MoveTakeoff(POINT_TAKEOFF, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 20.0f, 10.0f);
                     events.CancelEventGroup(EVENT_GROUP_LAND_PHASE);
-                    events.ScheduleEvent(EVENT_AIR_PHASE, 110000);
+                    events.ScheduleEvent(EVENT_AIR_PHASE, 110s);
                     break;
                 case EVENT_AIR_MOVEMENT:
                     me->GetMotionMaster()->MovePoint(POINT_AIR_PHASE, SindragosaAirPos);
@@ -643,44 +620,44 @@ public:
 
                         me->CastSpell(destX, destY, destZ, SPELL_FROST_BOMB_TRIGGER, false);
                         if (_bombCount >= 4)
-                            events.ScheduleEvent(EVENT_LAND, 5500);
+                            events.ScheduleEvent(EVENT_LAND, 5500ms);
                         else
-                            events.ScheduleEvent(EVENT_FROST_BOMB, 6000);
+                            events.ScheduleEvent(EVENT_FROST_BOMB, 6s);
                         break;
                     }
                 case EVENT_LAND:
                     me->GetMotionMaster()->MovePoint(POINT_LAND, SindragosaFlyInPos);
                     break;
                 case EVENT_LAND_GROUND:
-                    events.ScheduleEvent(EVENT_CLEAVE, urand(13000, 15000), EVENT_GROUP_LAND_PHASE);
-                    events.ScheduleEvent(EVENT_TAIL_SMASH, urand(19000, 23000), EVENT_GROUP_LAND_PHASE);
-                    events.ScheduleEvent(EVENT_FROST_BREATH, urand(7000, 10000), EVENT_GROUP_LAND_PHASE);
-                    events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, urand(12000, 17000), EVENT_GROUP_LAND_PHASE);
-                    events.ScheduleEvent(EVENT_ICY_GRIP, urand(35000, 40000), EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_CLEAVE, 13s, 15s, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_TAIL_SMASH, 19s, 23s, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_FROST_BREATH, 7s, 10s, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_UNCHAINED_MAGIC, 12s, 17s, EVENT_GROUP_LAND_PHASE);
+                    events.ScheduleEvent(EVENT_ICY_GRIP, 35s, 40s, EVENT_GROUP_LAND_PHASE);
                     me->GetMotionMaster()->MoveLand(POINT_LAND_GROUND, SindragosaLandPos, 10.0f);
                     break;
                 case EVENT_THIRD_PHASE_CHECK:
                     if (!_isInAirPhase)
                     {
                         Talk(SAY_PHASE_2);
-                        events.ScheduleEvent(EVENT_ICE_TOMB, urand(7000, 10000));
-                        events.RescheduleEvent(EVENT_ICY_GRIP, urand(35000, 40000), EVENT_GROUP_LAND_PHASE);
+                        events.ScheduleEvent(EVENT_ICE_TOMB, 7s, 10s);
+                        events.RescheduleEvent(EVENT_ICY_GRIP, 35s, 40s, EVENT_GROUP_LAND_PHASE);
                         me->CastSpell(me, SPELL_MYSTIC_BUFFET, true);
                     }
                     else
-                        events.ScheduleEvent(EVENT_THIRD_PHASE_CHECK, 5000);
+                        events.ScheduleEvent(EVENT_THIRD_PHASE_CHECK, 5s);
                     break;
                 case EVENT_ICE_TOMB:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, LastPhaseIceTombTargetSelector(me)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, LastPhaseIceTombTargetSelector(me)))
                     {
                         Talk(EMOTE_WARN_FROZEN_ORB, target);
                         me->CastSpell(target, SPELL_ICE_TOMB_DUMMY, true);
                         me->CastSpell(target, SPELL_FROST_BEACON, true);
                         if (uint32 evTime = events.GetNextEventTime(EVENT_ICY_GRIP))
                             if (events.GetTimer() > evTime || evTime - events.GetTimer() < 8000)
-                                events.RescheduleEvent(EVENT_ICY_GRIP, 8000, EVENT_GROUP_LAND_PHASE);
+                                events.RescheduleEvent(EVENT_ICY_GRIP, 8s, EVENT_GROUP_LAND_PHASE);
                     }
-                    events.ScheduleEvent(EVENT_ICE_TOMB, urand(18000, 22000));
+                    events.ScheduleEvent(EVENT_ICE_TOMB, 18s, 22s);
                     break;
                 default:
                     break;
@@ -692,13 +669,13 @@ public:
         }
 
     private:
-        bool _summoned;
         uint8 _bombCount;
         uint8 _mysticBuffetStack;
         bool _didFirstFlyPhase;
         bool _isBelow20Pct;
         bool _isThirdPhase;
         bool _isInAirPhase;
+        bool _isLanding;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -946,11 +923,11 @@ public:
 
         bool CheckProc(ProcEventInfo& eventInfo)
         {
-            const SpellInfo* spellInfo = eventInfo.GetSpellInfo();
+            SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
             if (!spellInfo)
                 return false;
 
-            uint32 currMSTime = World::GetGameTimeMS();
+            uint32 currMSTime = GameTime::GetGameTimeMS().count();
             std::map<uint32, uint32>::iterator itr = _lastMSTimeForSpell.find(spellInfo->Id);
             if (itr != _lastMSTimeForSpell.end())
             {
@@ -1284,7 +1261,7 @@ public:
         float ox, oy, oz;
         _caster->GetPosition(ox, oy, oz);
         DynamicMapTree const& dTree = unit->GetMap()->GetDynamicMapTree();
-        return !dTree.isInLineOfSight(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ() + 2.f, ox, oy, oz + 2.f, unit->GetPhaseMask());
+        return !dTree.isInLineOfSight(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ() + 2.f, ox, oy, oz + 2.f, unit->GetPhaseMask(), VMAP::ModelIgnoreFlags::Nothing);
     }
 
 private:
@@ -1387,9 +1364,9 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_BELLOWING_ROAR, urand(20000, 25000));
-            _events.ScheduleEvent(EVENT_CLEAVE_SPINESTALKER, urand(10000, 15000));
-            _events.ScheduleEvent(EVENT_TAIL_SWEEP, urand(8000, 12000));
+            _events.ScheduleEvent(EVENT_BELLOWING_ROAR, 20s, 25s);
+            _events.ScheduleEvent(EVENT_CLEAVE_SPINESTALKER, 10s, 15s);
+            _events.ScheduleEvent(EVENT_TAIL_SWEEP, 8s, 12s);
             me->SetReactState(REACT_DEFENSIVE);
 
             if (!_summoned)
@@ -1430,7 +1407,7 @@ public:
                     return;
 
                 me->setActive(true);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+                me->SetImmuneToPC(true);
                 float moveTime = me->GetExactDist(&SpinestalkerFlyPos) / (me->GetSpeed(MOVE_RUN) * 0.001f);
                 me->m_Events.AddEvent(new FrostwyrmLandEvent(*me, SpinestalkerLandPos), me->m_Events.CalculateTime(uint64(moveTime) + 250));
                 me->SetDefaultMovementType(IDLE_MOTION_TYPE);
@@ -1449,7 +1426,7 @@ public:
             me->SetDisableGravity(false);
             me->SetHomePosition(SpinestalkerLandPos);
             me->SetFacingTo(SpinestalkerLandPos.GetOrientation());
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+            me->SetImmuneToPC(false);
         }
 
         void UpdateAI(uint32 diff) override
@@ -1466,15 +1443,15 @@ public:
             {
                 case EVENT_BELLOWING_ROAR:
                     me->CastSpell(me, SPELL_BELLOWING_ROAR, false);
-                    _events.ScheduleEvent(EVENT_BELLOWING_ROAR, urand(25000, 30000));
+                    _events.ScheduleEvent(EVENT_BELLOWING_ROAR, 25s, 30s);
                     break;
                 case EVENT_CLEAVE_SPINESTALKER:
                     me->CastSpell(me->GetVictim(), SPELL_CLEAVE_SPINESTALKER, false);
-                    _events.ScheduleEvent(EVENT_CLEAVE_SPINESTALKER, urand(10000, 15000));
+                    _events.ScheduleEvent(EVENT_CLEAVE_SPINESTALKER, 10s, 15s);
                     break;
                 case EVENT_TAIL_SWEEP:
                     me->CastSpell(me->GetVictim(), SPELL_TAIL_SWEEP, false);
-                    _events.ScheduleEvent(EVENT_TAIL_SWEEP, urand(22000, 25000));
+                    _events.ScheduleEvent(EVENT_TAIL_SWEEP, 22s, 25s);
                     break;
                 default:
                     break;
@@ -1518,8 +1495,8 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, urand(12000, 15000));
-            _events.ScheduleEvent(EVENT_ICY_BLAST, urand(30000, 35000));
+            _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, 12s, 15s);
+            _events.ScheduleEvent(EVENT_ICY_BLAST, 30s, 35s);
             me->SetReactState(REACT_DEFENSIVE);
             _icyBlastCounter = 0;
 
@@ -1561,7 +1538,7 @@ public:
                     return;
 
                 me->setActive(true);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+                me->SetImmuneToPC(true);
                 float moveTime = me->GetExactDist(&RimefangFlyPos) / (me->GetSpeed(MOVE_RUN) * 0.001f);
                 me->m_Events.AddEvent(new FrostwyrmLandEvent(*me, RimefangLandPos), me->m_Events.CalculateTime(uint64(moveTime) + 250));
                 me->SetDefaultMovementType(IDLE_MOTION_TYPE);
@@ -1582,7 +1559,7 @@ public:
                 me->SetDisableGravity(false);
                 me->SetHomePosition(RimefangLandPos);
                 me->SetFacingTo(RimefangLandPos.GetOrientation());
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+                me->SetImmuneToPC(false);
             }
             else if (point == POINT_LAND_GROUND)
             {
@@ -1593,7 +1570,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*victim*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             me->CastSpell(me, SPELL_FROST_AURA_RIMEFANG, true);
         }
@@ -1614,10 +1591,10 @@ public:
                     if (!me->IsFlying())
                     {
                         me->CastSpell(me->GetVictim(), SPELL_FROST_BREATH, false);
-                        _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, urand(20000, 25000));
+                        _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, 20s, 25s);
                     }
                     else
-                        _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, 5000);
+                        _events.ScheduleEvent(EVENT_FROST_BREATH_RIMEFANG, 5s);
                     break;
                 case EVENT_ICY_BLAST:
                     {
@@ -1635,7 +1612,7 @@ public:
                         if (floorZ > 190.0f) destZ = floorZ + 25.0f;
                         else destZ = me->GetPositionZ() + 25.0f;
                         me->GetMotionMaster()->MoveTakeoff(0, me->GetPositionX(), me->GetPositionY(), destZ, me->GetSpeed(MOVE_RUN));
-                        float moveTime = fabs(destZ - me->GetPositionZ()) / (me->GetSpeed(MOVE_RUN) * 0.001f);
+                        float moveTime = std::fabs(destZ - me->GetPositionZ()) / (me->GetSpeed(MOVE_RUN) * 0.001f);
                         _events.ScheduleEvent(EVENT_ICY_BLAST, uint32(moveTime) + urand(60000, 70000));
                         _events.ScheduleEvent(EVENT_ICY_BLAST_CAST, uint32(moveTime) + 250);
                         break;
@@ -1643,12 +1620,12 @@ public:
                 case EVENT_ICY_BLAST_CAST:
                     if (--_icyBlastCounter)
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true))
                         {
                             me->SetFacingToObject(target);
                             me->CastSpell(target, SPELL_ICY_BLAST, false);
                         }
-                        _events.ScheduleEvent(EVENT_ICY_BLAST_CAST, 3000);
+                        _events.ScheduleEvent(EVENT_ICY_BLAST_CAST, 3s);
                     }
                     else
                     {
@@ -1731,13 +1708,10 @@ public:
                 if (Creature* rimefang = ObjectAccessor::GetCreature(*player, instance->GetGuidData(DATA_RIMEFANG)))
                     rimefang->AI()->DoAction(ACTION_START_FROSTWYRM);
 
-            if (!instance->GetData(DATA_SINDRAGOSA_FROSTWYRMS) && !instance->GetGuidData(DATA_SINDRAGOSA) && instance->GetBossState(DATA_SINDRAGOSA) != DONE)
+            if (!instance->GetData(DATA_SINDRAGOSA_FROSTWYRMS) && instance->GetBossState(DATA_SINDRAGOSA) != IN_PROGRESS)
             {
-                if (instance->GetData(DATA_HAS_LIMITED_ATTEMPTS) && !instance->GetData(DATA_HEROIC_ATTEMPTS))
-                    return true;
-
                 player->GetMap()->LoadGrid(SindragosaSpawnPos.GetPositionX(), SindragosaSpawnPos.GetPositionY());
-                if (Creature* sindragosa = player->GetMap()->SummonCreature(NPC_SINDRAGOSA, SindragosaSpawnPos))
+                if (Creature* sindragosa = ObjectAccessor::GetCreature(*player, instance->GetGuidData(DATA_SINDRAGOSA)))
                     sindragosa->AI()->DoAction(ACTION_START_FROSTWYRM);
             }
         }
@@ -1777,14 +1751,14 @@ public:
             _events.Reset();
             if (me->GetEntry() == NPC_FROSTWARDEN_HANDLER)
             {
-                _events.ScheduleEvent(EVENT_FROSTWARDEN_ORDER_WHELP, 3000);
-                _events.ScheduleEvent(EVENT_CONCUSSIVE_SHOCK, urand(8000, 10000));
+                _events.ScheduleEvent(EVENT_FROSTWARDEN_ORDER_WHELP, 3s);
+                _events.ScheduleEvent(EVENT_CONCUSSIVE_SHOCK, 8s, 10s);
             }
             else
-                _events.ScheduleEvent(EVENT_WHELP_FROST_BLAST, urand(3000, 6000));
+                _events.ScheduleEvent(EVENT_WHELP_FROST_BLAST, 3s, 6s);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (me->GetEntry() == NPC_FROSTWARDEN_HANDLER)
             {
@@ -1841,15 +1815,15 @@ public:
             {
                 case EVENT_FROSTWARDEN_ORDER_WHELP:
                     me->CastSpell(me, SPELL_ORDER_WHELP, false);
-                    _events.ScheduleEvent(EVENT_FROSTWARDEN_ORDER_WHELP, 3000);
+                    _events.ScheduleEvent(EVENT_FROSTWARDEN_ORDER_WHELP, 3s);
                     break;
                 case EVENT_CONCUSSIVE_SHOCK:
                     me->CastSpell(me, SPELL_CONCUSSIVE_SHOCK, false);
-                    _events.ScheduleEvent(EVENT_CONCUSSIVE_SHOCK, urand(10000, 13000));
+                    _events.ScheduleEvent(EVENT_CONCUSSIVE_SHOCK, 10s, 13s);
                     break;
                 case EVENT_WHELP_FROST_BLAST:
                     me->CastSpell(me->GetVictim(), 71361, false);
-                    _events.ScheduleEvent(EVENT_WHELP_FROST_BLAST, urand(5000, 8000));
+                    _events.ScheduleEvent(EVENT_WHELP_FROST_BLAST, 5s, 8s);
                 default:
                     break;
             }

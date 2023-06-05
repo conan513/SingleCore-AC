@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackwing_lair.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "blackwing_lair.h"
 
 enum Spells
 {
@@ -42,13 +42,13 @@ public:
     {
         boss_firemawAI(Creature* creature) : BossAI(creature, DATA_FIREMAW) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
 
-            events.ScheduleEvent(EVENT_SHADOWFLAME, 10000, 20000);
-            events.ScheduleEvent(EVENT_WINGBUFFET, 30000);
-            events.ScheduleEvent(EVENT_FLAMEBUFFET, 5000);
+            events.ScheduleEvent(EVENT_SHADOWFLAME, 18s);
+            events.ScheduleEvent(EVENT_WINGBUFFET, 30s);
+            events.ScheduleEvent(EVENT_FLAMEBUFFET, 5s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -67,17 +67,17 @@ public:
                 {
                     case EVENT_SHADOWFLAME:
                         DoCastVictim(SPELL_SHADOWFLAME);
-                        events.ScheduleEvent(EVENT_SHADOWFLAME, 10000, 20000);
+                        events.ScheduleEvent(EVENT_SHADOWFLAME, 15s, 25s);
                         break;
                     case EVENT_WINGBUFFET:
                         DoCastVictim(SPELL_WINGBUFFET);
                         if (DoGetThreat(me->GetVictim()))
-                            DoModifyThreatPercent(me->GetVictim(), -75);
-                        events.ScheduleEvent(EVENT_WINGBUFFET, 30000);
+                            DoModifyThreatByPercent(me->GetVictim(), -75);
+                        events.ScheduleEvent(EVENT_WINGBUFFET, 30s);
                         break;
                     case EVENT_FLAMEBUFFET:
                         DoCastVictim(SPELL_FLAMEBUFFET);
-                        events.ScheduleEvent(EVENT_FLAMEBUFFET, 5000);
+                        events.ScheduleEvent(EVENT_FLAMEBUFFET, 5s);
                         break;
                 }
 

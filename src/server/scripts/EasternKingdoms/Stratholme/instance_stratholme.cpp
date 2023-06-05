@@ -17,8 +17,8 @@
 
 #include "InstanceScript.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "stratholme.h"
 
 const Position BlackGuardPos[10] =
@@ -60,6 +60,7 @@ public:
     {
         instance_stratholme_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
         }
 
         void Initialize() override
@@ -160,6 +161,10 @@ public:
                         SaveToDB();
                     }
                     break;
+                case NPC_BARON_RIVENDARE:
+                    events.CancelEvent(EVENT_BARON_TIME);
+                    DoRemoveAurasDueToSpellOnPlayers(SPELL_BARON_ULTIMATUM);
+                    break;
             }
         }
 
@@ -167,55 +172,74 @@ public:
         {
             switch (go->GetEntry())
             {
+                case GO_CRUSADER_SQUARE_DOOR:
+                case GO_HOARD_DOOR:
+                case GO_HALL_OF_HIGH_COMMAND:
+                case GO_GAUNTLET_DOOR_1:
+                case GO_GAUNTLET_DOOR_2:
+                    go->UpdateSaveToDb(true);
+                    break;
                 case GO_ZIGGURAT_DOORS1:
+                    go->UpdateSaveToDb(true);
                     _zigguratDoorsGUID1 = go->GetGUID();
                     if (GetData(TYPE_ZIGGURAT1) >= 1)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_ZIGGURAT_DOORS2:
+                    go->UpdateSaveToDb(true);
                     _zigguratDoorsGUID2 = go->GetGUID();
                     if (GetData(TYPE_ZIGGURAT2) >= 1)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_ZIGGURAT_DOORS3:
+                    go->UpdateSaveToDb(true);
                     _zigguratDoorsGUID3 = go->GetGUID();
                     if (GetData(TYPE_ZIGGURAT3) >= 1)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_GAUNTLET_GATE:
+                    go->UpdateSaveToDb(true);
                     _gauntletGateGUID = go->GetGUID();
                     if (_zigguratState1 == 2 && _zigguratState2 == 2 && _zigguratState3 == 2)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_SLAUGTHER_GATE:
+                    go->UpdateSaveToDb(true);
                     _slaughterGateGUID = go->GetGUID();
                     if (_zigguratState1 == 2 && _zigguratState2 == 2 && _zigguratState3 == 2)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_ZIGGURAT_DOORS4:
+                    go->UpdateSaveToDb(true);
                     _zigguratDoorsGUID4 = go->GetGUID();
                     if (_slaughterProgress == 4)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_ZIGGURAT_DOORS5:
+                    go->UpdateSaveToDb(true);
                     _zigguratDoorsGUID5 = go->GetGUID();
                     if (_slaughterProgress == 4)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_SLAUGHTER_GATE_SIDE:
+                    go->UpdateSaveToDb(true);
                     if (_slaughterProgress >= 2)
                         go->SetGoState(GO_STATE_ACTIVE);
                     break;
                 case GO_PORT_TRAP_GATE_1:
+                    go->UpdateSaveToDb(true);
                     _trapGatesGUIDs[0] = go->GetGUID();
                     break;
                 case GO_PORT_TRAP_GATE_2:
+                    go->UpdateSaveToDb(true);
                     _trapGatesGUIDs[1] = go->GetGUID();
                     break;
                 case GO_PORT_TRAP_GATE_3:
+                    go->UpdateSaveToDb(true);
                     _trapGatesGUIDs[2] = go->GetGUID();
                     break;
                 case GO_PORT_TRAP_GATE_4:
+                    go->UpdateSaveToDb(true);
                     _trapGatesGUIDs[3] = go->GetGUID();
                     break;
             }
@@ -321,37 +345,36 @@ public:
             SaveToDB();
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            std::ostringstream saveStream;
-            saveStream << "S T " << _baronRunProgress << ' ' << _baronRunTime << ' ' << _zigguratState1 << ' ' << _zigguratState2 << ' ' << _zigguratState3 << ' ' << _slaughterProgress << ' ' << _postboxesOpened;
-            return saveStream.str();
-        }
+            data >> _baronRunProgress;
+            data >> _baronRunTime;
+            data >> _zigguratState1;
+            data >> _zigguratState2;
+            data >> _zigguratState3;
+            data >> _slaughterProgress;
+            data >> _postboxesOpened;
 
-        void Load(const char* in) override
-        {
-            if (!in)
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-            if (dataHead1 == 'S' && dataHead2 == 'T')
+            if (_baronRunTime)
             {
-                loadStream >> _baronRunProgress;
-                loadStream >> _baronRunTime;
-                loadStream >> _zigguratState1;
-                loadStream >> _zigguratState2;
-                loadStream >> _zigguratState3;
-                loadStream >> _slaughterProgress;
-                loadStream >> _postboxesOpened;
+                events.ScheduleEvent(EVENT_BARON_TIME, 60000);
             }
 
-            if (_baronRunTime > 0)
-                events.ScheduleEvent(EVENT_BARON_TIME, 60000);
-
             if (_slaughterProgress > 0 && _slaughterProgress < 4)
+            {
                 events.ScheduleEvent(EVENT_FORCE_SLAUGHTER_EVENT, 5000);
+            }
+        }
+
+        void WriteSaveDataMore(std::ostringstream& data) override
+        {
+            data << _baronRunProgress << ' '
+                << _baronRunTime << ' '
+                << _zigguratState1 << ' '
+                << _zigguratState2 << ' '
+                << _zigguratState3 << ' '
+                << _slaughterProgress << ' '
+                << _postboxesOpened;
         }
 
         uint32 GetData(uint32 type) const override
@@ -475,9 +498,9 @@ public:
                         }
 
                         if (_baronRunTime > 0)
-                            events.ScheduleEvent(EVENT_BARON_TIME, 60000);
+                            events.ScheduleEvent(EVENT_BARON_TIME, 60s);
                         else
-                            events.ScheduleEvent(EVENT_EXECUTE_PRISONER, 0);
+                            events.ScheduleEvent(EVENT_EXECUTE_PRISONER, 0ms);
 
                         SaveToDB();
                         break;
@@ -495,7 +518,7 @@ public:
                                     Unit::Kill(baron, ysida);
                             }
                             else
-                                events.ScheduleEvent(EVENT_EXECUTE_PRISONER, 1000);
+                                events.ScheduleEvent(EVENT_EXECUTE_PRISONER, 1s);
                         }
                         break;
                     }
@@ -508,7 +531,7 @@ public:
                 case EVENT_FORCE_SLAUGHTER_EVENT:
                     {
                         Map::PlayerList const& PlayerList = instance->GetPlayers();
-                        if (!PlayerList.isEmpty())
+                        if (!PlayerList.IsEmpty())
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                                 if (Player* player = i->GetSource())
                                     if (player->GetDistance2d(4034.97f, -3402.13f) < 50.0f)
@@ -517,7 +540,7 @@ public:
                                         return;
                                     }
 
-                        events.ScheduleEvent(EVENT_FORCE_SLAUGHTER_EVENT, 3000);
+                        events.ScheduleEvent(EVENT_FORCE_SLAUGHTER_EVENT, 3s);
                         break;
                     }
                 case EVENT_SPAWN_BLACK_GUARD:

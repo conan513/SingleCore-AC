@@ -35,10 +35,10 @@ EndContentData */
 #include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 
 /*######
 ## npc_draenei_survivor
@@ -82,12 +82,12 @@ public:
             DoCast(me, SPELL_IRRIDATION, true);
 
             me->SetPvP(true);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
+            me->SetUnitFlag(UNIT_FLAG_IN_COMBAT);
             me->SetHealth(me->CountPctFromMaxHealth(10));
             me->SetStandState(UNIT_STAND_STATE_SLEEP);
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void MoveInLineOfSight(Unit* who) override
         {
@@ -101,11 +101,11 @@ public:
             }
         }
 
-        void SpellHit(Unit* Caster, const SpellInfo* Spell) override
+        void SpellHit(Unit* Caster, SpellInfo const* Spell) override
         {
             if (Spell->SpellFamilyFlags[2] & 0x080000000)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+                me->RemoveUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
                 me->SetStandState(UNIT_STAND_STATE_STAND);
 
                 DoCast(me, SPELL_STUNNED, true);
@@ -182,7 +182,7 @@ public:
 
         void Reset() override
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
+            me->SetUnitFlag(UNIT_FLAG_IN_COMBAT);
             me->SetHealth(me->CountPctFromMaxHealth(15));
             switch (urand(0, 1))
             {
@@ -196,7 +196,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void MoveInLineOfSight(Unit* /*who*/) override { }
 
@@ -245,7 +245,7 @@ public:
             _events.Reset();
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             Talk(SAY_AGGRO, who);
         }
@@ -255,7 +255,7 @@ public:
             if (quest->GetQuestId() == QUEST_A_CRY_FOR_HELP)
             {
                 _player = player->GetGUID();
-                _events.ScheduleEvent(EVENT_ACCEPT_QUEST, 2000);
+                _events.ScheduleEvent(EVENT_ACCEPT_QUEST, 2s);
             }
         }
 
@@ -270,7 +270,7 @@ public:
                         break;
                     case 28:
                         player->GroupEventHappens(QUEST_A_CRY_FOR_HELP, me);
-                        _events.ScheduleEvent(EVENT_TALK_END, 2000);
+                        _events.ScheduleEvent(EVENT_TALK_END, 2s);
                         SetRun(true);
                         break;
                     case 29:
@@ -297,14 +297,14 @@ public:
                             Talk(SAY_START, player);
                         }
                         me->SetFaction(FACTION_ESCORTEE_N_NEUTRAL_PASSIVE);
-                        _events.ScheduleEvent(EVENT_START_ESCORT, 1000);
+                        _events.ScheduleEvent(EVENT_START_ESCORT, 1s);
                         break;
                     case EVENT_START_ESCORT:
                         if (Player* player = ObjectAccessor::GetPlayer(*me, _player))
                         {
                             npc_escortAI::Start(true, false, player->GetGUID());
                         }
-                        _events.ScheduleEvent(EVENT_STAND, 2000);
+                        _events.ScheduleEvent(EVENT_STAND, 2s);
                         break;
                     case EVENT_STAND: // Remove kneel standstate. Using a separate delayed event because it causes unwanted delay before starting waypoint movement.
                         me->SetByteValue(UNIT_FIELD_BYTES_1, UNIT_BYTES_1_OFFSET_STAND_STATE, UNIT_STAND_STATE_STAND);
@@ -314,7 +314,7 @@ public:
                         {
                             Talk(SAY_END1, player);
                         }
-                        _events.ScheduleEvent(EVENT_COWLEN_TALK, 2000);
+                        _events.ScheduleEvent(EVENT_COWLEN_TALK, 2s);
                         break;
                     case EVENT_COWLEN_TALK:
                         if (Creature* cowlen = me->FindNearestCreature(NPC_COWLEN, 50.0f, true))
@@ -359,7 +359,7 @@ public:
         {
             if (Creature* ravager = go->FindNearestCreature(NPC_DEATH_RAVAGER, 5.0f, true))
             {
-                ravager->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                ravager->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 ravager->SetReactState(REACT_AGGRESSIVE);
                 ravager->AI()->AttackStart(player);
             }
@@ -385,7 +385,7 @@ public:
             RendTimer = 30000;
             EnragingBiteTimer = 20000;
 
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_PASSIVE);
         }
 
@@ -475,7 +475,7 @@ public:
                 player->KilledMonsterCredit(me->GetEntry(), me->GetGUID());
 
             _movementComplete = true;
-            _events.ScheduleEvent(EVENT_DESPAWN, 3500);
+            _events.ScheduleEvent(EVENT_DESPAWN, 3500ms);
         }
 
         void UpdateAI(uint32 diff) override

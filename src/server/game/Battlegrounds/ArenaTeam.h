@@ -70,7 +70,7 @@ enum ArenaTeamEvents
 };
 
 // PLAYER_FIELD_ARENA_TEAM_INFO_1_1 offsets
-enum ArenaTeamInfoType
+enum ArenaTeamInfoType : uint8
 {
     ARENA_TEAM_ID                = 0,
     ARENA_TEAM_TYPE              = 1,                       // new in 3.2 - team type?
@@ -132,7 +132,7 @@ struct ArenaTeamStats
     uint32 Rank;
 };
 
-#define MAX_ARENA_SLOT 3                                    // 0..2 slots
+#define MAX_ARENA_SLOT 4                                    // 0..2 slots
 
 class ArenaTeam
 {
@@ -182,7 +182,7 @@ public:
     bool LoadArenaTeamFromDB(QueryResult arenaTeamDataResult);
     bool LoadMembersFromDB(QueryResult arenaTeamMembersResult);
     void LoadStatsFromDB(uint32 ArenaTeamId);
-    void SaveToDB();
+    void SaveToDB(bool forceMemberSave = false);
 
     void BroadcastPacket(WorldPacket* packet);
     void BroadcastEvent(ArenaTeamEvents event, ObjectGuid guid, uint8 strCount, std::string const& str1, std::string const& str2, std::string const& str3);
@@ -206,8 +206,11 @@ public:
 
     void UpdateArenaPointsHelper(std::map<ObjectGuid, uint32>& PlayerPoints);
 
-    void FinishWeek();
+    bool FinishWeek(); // returns true if arena team played this week
     void FinishGame(int32 mod, const Map* bgMap);
+
+    void SetPreviousOpponents(uint32 arenaTeamId) { PreviousOpponents = arenaTeamId; }
+    uint32 GetPreviousOpponents() { return PreviousOpponents; }
 
     void CreateTempArenaTeam(std::vector<Player*> playerList, uint8 type, std::string const& teamName);
 
@@ -229,5 +232,7 @@ protected:
 
     MemberList     Members;
     ArenaTeamStats Stats;
+
+    uint32 PreviousOpponents = 0;
 };
 #endif

@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "black_temple.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "black_temple.h"
 
 enum Says
 {
@@ -92,9 +92,9 @@ public:
             BossAI::Reset();
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             Talk(SAY_AGGRO);
 
             me->CastSpell(me, SPELL_ACIDIC_WOUND, true);
@@ -164,7 +164,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_ARCING_SMASH, 15000);
                     break;
                 case EVENT_SPELL_FEL_GEYSER:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 40.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 40.0f, true))
                     {
                         me->RemoveAurasByType(SPELL_AURA_MOD_TAUNT);
                         me->CastSpell(me, SPELL_FEL_RAGE_SELF, true);
@@ -188,7 +188,6 @@ public:
             }
 
             DoMeleeAttackIfReady();
-            EnterEvadeIfOutOfCombatArea();
         }
 
         bool CheckEvadeIfOutOfCombatArea() const override
@@ -246,7 +245,7 @@ public:
         {
             PreventHitEffect(effIndex);
             if (Unit* target = GetHitUnit())
-                GetCaster()->getThreatMgr().modifyThreatPercent(target, -20);
+                GetCaster()->GetThreatMgr().ModifyThreatByPercent(target, -20);
         }
 
         void Register() override

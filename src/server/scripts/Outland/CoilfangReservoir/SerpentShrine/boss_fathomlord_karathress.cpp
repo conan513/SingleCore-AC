@@ -15,8 +15,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "serpent_shrine.h"
 
 enum Talk
@@ -127,9 +127,9 @@ public:
                 gobject->SetGoState(GO_STATE_ACTIVE);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             Talk(SAY_AGGRO);
             me->CallForHelp(10.0f);
 
@@ -154,7 +154,7 @@ public:
                     me->CastSpell(me, SPELL_ENRAGE, true);
                     break;
                 case EVENT_SPELL_CATACLYSMIC_BOLT:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, PowerUsersSelector(me, POWER_MANA, 50.0f, true)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, PowerUsersSelector(me, POWER_MANA, 50.0f, true)))
                         me->CastSpell(target, SPELL_CATACLYSMIC_BOLT, false);
                     events.ScheduleEvent(EVENT_SPELL_CATACLYSMIC_BOLT, 6000);
                     break;

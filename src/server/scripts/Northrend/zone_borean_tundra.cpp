@@ -15,36 +15,17 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* ScriptData
-SDName: Borean_Tundra
-SD%Complete: 100
-SDComment: Quest support: 11708. Taxi vendors.
-SDCategory: Borean Tundra
-EndScriptData */
-
-/* ContentData
-npc_iruk
-npc_corastrasza
-npc_sinkhole_kill_credit
-npc_khunok_the_behemoth
-npc_nerubar_victim
-npc_nesingwary_trapper
-npc_lurgglbr
-npc_nexus_drake_hatchling
-EndContentData */
-
 #include "PassiveAI.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
 #include "ScriptedFollowerAI.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellAuras.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
 #include "WorldSession.h"
-#include "ScriptedGossip.h"
 
 // Ours
 enum eDrakeHunt
@@ -75,13 +56,13 @@ public:
             Creature* owner = GetOwner()->ToCreature();
             owner->RemoveAllAurasExceptType(SPELL_AURA_DUMMY);
             owner->CombatStop(true);
-            owner->DeleteThreatList();
+            owner->GetThreatMgr().ClearAllThreat();
             owner->GetMotionMaster()->Clear(false);
             owner->GetMotionMaster()->MoveFollow(GetCaster(), 4.0f, M_PI, MOTION_SLOT_ACTIVE);
             owner->CastSpell(owner, SPELL_SUBDUED, true);
             GetCaster()->CastSpell(GetCaster(), SPELL_DRAKE_HATCHLING_SUBDUED, true);
             owner->SetFaction(FACTION_FRIENDLY);
-            owner->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+            owner->SetImmuneToAll(true);
             owner->DespawnOrUnsummon(3 * MINUTE * IN_MILLISECONDS);
         }
 
@@ -133,7 +114,7 @@ public:
             casterGuid.Clear();
         }
 
-        void SpellHit(Unit* caster, const SpellInfo* spell) override
+        void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
             if (phase || spell->Id != SPELL_SET_CART)
                 return;
@@ -180,7 +161,7 @@ public:
                         DoCast(me, SPELL_SUMMON_WORM, true);
                         if (Unit* worm = me->FindNearestCreature(NPC_SCOURGED_BURROWER, 3.0f))
                         {
-                            worm->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            worm->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                             worm->HandleEmoteCommand(EMOTE_ONESHOT_EMERGE);
                         }
                         phaseTimer = 1000;
@@ -191,7 +172,7 @@ public:
                         if (Unit* worm = me->FindNearestCreature(NPC_SCOURGED_BURROWER, 3.0f))
                         {
                             Unit::Kill(me, worm);
-                            worm->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                            worm->RemoveDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
                         }
                         phaseTimer = 2000;
                         phase = 7;
@@ -542,7 +523,7 @@ struct npc_beryl_sorcererAI : public CreatureAI
             Initialize();
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (me->IsValidAttackTarget(who))
             {
@@ -552,7 +533,7 @@ struct npc_beryl_sorcererAI : public CreatureAI
             _events.ScheduleEvent(EVENT_FROSTBOLT, 3000, 4000);
         }
 
-        void SpellHit(Unit* unit, const SpellInfo* spell) override
+        void SpellHit(Unit* unit, SpellInfo const* spell) override
         {
             if (spell->Id == SPELL_ARCANE_CHAINS && !_chainsCast)
             {
@@ -560,7 +541,7 @@ struct npc_beryl_sorcererAI : public CreatureAI
                 {
                     _playerGUID = player->GetGUID();
                     _chainsCast = true;
-                    _events.ScheduleEvent(EVENT_ARCANE_CHAINS, 4000);
+                    _events.ScheduleEvent(EVENT_ARCANE_CHAINS, 4s);
                 }
             }
         }
@@ -580,7 +561,7 @@ struct npc_beryl_sorcererAI : public CreatureAI
                 {
                     case EVENT_FROSTBOLT:
                         DoCastVictim(SPELL_FROSTBOLT);
-                        _events.ScheduleEvent(EVENT_FROSTBOLT, 3000, 4000);
+                        _events.ScheduleEvent(EVENT_FROSTBOLT, 3s, 4s);
                         break;
                     case EVENT_ARCANE_CHAINS:
                         if (me->HasAura(SPELL_ARCANE_CHAINS))
@@ -631,8 +612,8 @@ public:
 
         void Initialize()
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            _events.ScheduleEvent(EVENT_ADD_ARCANE_CHAINS, 0);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+            _events.ScheduleEvent(EVENT_ADD_ARCANE_CHAINS, 0ms);
         }
 
         void Reset() override
@@ -652,7 +633,7 @@ public:
                         if (Player* summoner = me->ToTempSummon()->GetSummonerUnit()->ToPlayer())
                         {
                             summoner->CastSpell(summoner, SPELL_ARCANE_CHAINS_CHANNEL_II, TriggerCastFlags(TRIGGERED_FULL_MASK & ~TRIGGERED_IGNORE_AURA_INTERRUPT_FLAGS & ~TRIGGERED_IGNORE_CAST_ITEM & ~TRIGGERED_IGNORE_POWER_AND_REAGENT_COST & ~TRIGGERED_IGNORE_GCD));
-                            _events.ScheduleEvent(EVENT_FOLLOW_PLAYER, 1000);
+                            _events.ScheduleEvent(EVENT_FOLLOW_PLAYER, 1s);
                         }
                         break;
                     case EVENT_FOLLOW_PLAYER:
@@ -771,11 +752,11 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
         }
 
-        void SpellHit(Unit* unit, const SpellInfo* spell) override
+        void SpellHit(Unit* unit, SpellInfo const* spell) override
         {
             if (spell->Id == SPELL_NEURAL_NEEDLE && unit->GetTypeId() == TYPEID_PLAYER)
             {
@@ -1078,7 +1059,7 @@ public:
             m_uiTimer = 0;
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void AttackStart(Unit* /*who*/) override { }
 
@@ -1182,7 +1163,7 @@ public:
         {
             Initialize();
             _emoteState = creature->GetUInt32Value(UNIT_NPC_EMOTESTATE);
-            _npcFlags   = creature->GetUInt32Value(UNIT_NPC_FLAGS);
+            _npcFlags   = creature->GetNpcFlags();
         }
 
         void Initialize()
@@ -1199,7 +1180,7 @@ public:
 
             if (_npcFlags)
             {
-                me->SetUInt32Value(UNIT_NPC_FLAGS, _npcFlags);
+                me->ReplaceAllNpcFlags(_npcFlags);
             }
 
             Initialize();
@@ -1210,13 +1191,13 @@ public:
         void PreScript()
         {
             me->StopMoving();
-            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
             me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
             if (Player* player = ObjectAccessor::GetPlayer(*me, _playerGUID))
             {
                 me->SetFacingToObject(player);
             }
-            _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_1, 3000);
+            _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_1, 3s);
         }
 
         void AttackPlayer()
@@ -1242,18 +1223,18 @@ public:
                         {
                             case NPC_SALTY_JOHN_THORPE:
                                 Talk(SAY_HIDDEN_CULTIST_1);
-                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5000);
+                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5s);
                                 break;
                             case NPC_GUARD_MITCHELLS:
                                 Talk(SAY_HIDDEN_CULTIST_2);
-                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5000);
+                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5s);
                                 break;
                             case NPC_TOM_HEGGER:
                                 if (Player* player = ObjectAccessor::GetPlayer(*me, _playerGUID))
                                 {
                                     Talk(SAY_HIDDEN_CULTIST_3, player);
                                 }
-                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5000);
+                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_2, 5s);
                                 break;
                         }
                         break;
@@ -1268,7 +1249,7 @@ public:
                                 {
                                     me->SetFacingToObject(player);
                                 }
-                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_3, 3000);
+                                _events.ScheduleEvent(EVENT_CULTIST_SCRIPT_3, 3s);
                                 break;
                             case NPC_GUARD_MITCHELLS:
                             case NPC_TOM_HEGGER:
@@ -1310,7 +1291,7 @@ public:
         private:
             EventMap   _events;
             uint32     _emoteState;
-            uint32     _npcFlags;
+            NPCFlags   _npcFlags;
             ObjectGuid _playerGUID;
     };
 
@@ -1402,7 +1383,7 @@ public:
                         if (Player* player = ObjectAccessor::GetPlayer(*me, _playerGUID))
                             Talk(SAY_BLOODMAGE_LAURITH, player);
                         _playerGUID.Clear();
-                        _events.ScheduleEvent(EVENT_RESET_ORIENTATION, 5000);
+                        _events.ScheduleEvent(EVENT_RESET_ORIENTATION, 5s);
                         break;
                     case EVENT_RESET_ORIENTATION:
                         me->SetFacingTo(me->GetHomePosition().GetOrientation());
@@ -1506,7 +1487,7 @@ public:
 
         void Reset() override
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_IMMUNE_TO_PC);
+            me->SetImmuneToAll(true);
             _events.ScheduleEvent(EVENT_THASSARIAN_CAST, 1000);
         }
 
@@ -1563,8 +1544,8 @@ public:
             me->SetFaction(FACTION_VALIANCE_EXPEDITION_7);
             me->SetStandState(UNIT_STAND_STATE_STAND);
             me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             Initialize();
         }
 
@@ -1583,12 +1564,12 @@ public:
                         leryssa->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
                         leryssa->SetOrientation(4.537856f);
                     }
-                    _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_8, 1000);
+                    _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_8, 1s);
                     break;
                 }
                 case NPC_COUNSELOR_TALBOT:
                 {
-                    _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_18, 0);
+                    _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_18, 0ms);
                 }
                     break;
                 default:
@@ -1602,7 +1583,7 @@ public:
             {
                 me->SetWalk(false);
                 me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_READY1H);
-                _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_1, 2000);
+                _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_1, 2s);
             }
         }
 
@@ -1619,7 +1600,7 @@ public:
                         if (Creature* arthas = me->SummonCreature(NPC_IMAGE_LICH_KING, 3729.4614f, 3520.386f, 473.4048f, 1.361f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 120000))
                         {
                             _arthasGUID = arthas->GetGUID();
-                            arthas->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            arthas->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             arthas->SetReactState(REACT_PASSIVE);
                             arthas->SetWalk(true);
                         }
@@ -1628,7 +1609,7 @@ public:
                             _talbotGUID = talbot->GetGUID();
                             talbot->SetWalk(true);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_2, 1000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_2, 1s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_2:
                         // Arthas load path
@@ -1636,7 +1617,7 @@ public:
                         {
                             arthas->GetMotionMaster()->MovePath(PATH_ARTHAS, false);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_3, 1000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_3, 1s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_3:
                         // Talbot load path
@@ -1644,7 +1625,7 @@ public:
                         {
                             talbot->GetMotionMaster()->MovePath(PATH_TALBOT, false);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_4, 20000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_4, 20s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_4:
                         // Talbot transform and knell
@@ -1654,11 +1635,11 @@ public:
                             talbot->UpdateEntry(NPC_PRINCE_VALANAR);
                             talbot->SetFullHealth();
                             talbot->SetFaction(FACTION_UNDEAD_SCOURGE);
-                            talbot->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            talbot->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             talbot->SetReactState(REACT_PASSIVE);
                             talbot->SetStandState(UNIT_STAND_STATE_KNEEL);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_5, 7000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_5, 7s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_5:
                         // Talbot say text 1
@@ -1666,7 +1647,7 @@ public:
                         {
                             talbot->AI()->Talk(SAY_TALBOT_1);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_6, 9000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_6, 9s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_6:
                         // Summon General Arlos and Leryssa
@@ -1674,19 +1655,19 @@ public:
                         {
                             _arlosGUID = arlos->GetGUID();
                             arlos->SetWalk(true);
-                            arlos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_IMMUNE_TO_PC);
-                            arlos->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                            arlos->SetImmuneToAll(true);
+                            arlos->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                             arlos->GetMotionMaster()->MovePath(PATH_ARLOS, false);
                         }
                         if (Creature* leryssa = me->SummonCreature(NPC_LERYSSA, 3751.0986f, 3614.9219f, 473.4048f, 4.5029f, TEMPSUMMON_CORPSE_TIMED_DESPAWN))
                         {
                             _leryssaGUID = leryssa->GetGUID();
                             leryssa->SetWalk(true);
-                            leryssa->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_IMMUNE_TO_PC);
-                            leryssa->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                            leryssa->SetImmuneToAll(true);
+                            leryssa->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
                             leryssa->GetMotionMaster()->MovePath(PATH_LERYSSA, false);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_7, 7000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_7, 7s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_7:
                         // Talbot say text 2
@@ -1700,13 +1681,13 @@ public:
                         Talk(SAY_THASSARIAN_1);
                         me->SetWalk(false);
                         me->GetMotionMaster()->MovePoint(0, 3722.527f, 3567.2583f, 477.44086f);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_9, 7000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_9, 7s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_9:
                         // Thassarian say text 2
                         Talk(SAY_THASSARIAN_2);
                         me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_10, 6000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_10, 6s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_10:
                         // Arthas turn to Thassarian and Talbot stand
@@ -1718,7 +1699,7 @@ public:
                         {
                             talbot->SetStandState(UNIT_STAND_STATE_STAND);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_11, 4000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_11, 4s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_11:
                         // Arthas say text 2
@@ -1726,12 +1707,12 @@ public:
                         {
                             arthas->AI()->Talk(SAY_LICH_2);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_12, 18000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_12, 18s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_12:
                         // Thassarian say text 3
                         Talk(SAY_THASSARIAN_3);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_13, 10000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_13, 10s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_13:
                         // Talbot say text 3
@@ -1739,7 +1720,7 @@ public:
                         {
                             talbot->AI()->Talk(SAY_TALBOT_3);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_14, 5000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_14, 5s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_14:
                         // Arthas turn to Talbot say text 3
@@ -1751,7 +1732,7 @@ public:
                             }
                             arthas->AI()->Talk(SAY_LICH_3);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_15, 5000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_15, 5s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_15:
                         // Arthas turn to me and emote
@@ -1760,7 +1741,7 @@ public:
                             arthas->SetFacingToObject(me);
                             arthas->HandleEmoteCommand(EMOTE_ONESHOT_POINT);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_16, 5000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_16, 5s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_16:
                         // Arthas despawn
@@ -1768,16 +1749,16 @@ public:
                         {
                             arthas->RemoveFromWorld();
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_17, 3000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_17, 3s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_17:
                         // Talbot say text 4 and attack
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                         if (Creature* talbot = ObjectAccessor::GetCreature(*me, _talbotGUID))
                         {
                             talbot->AI()->Talk(SAY_TALBOT_4);
                             talbot->SetFaction(FACTION_UNDEAD_SCOURGE_9);
-                            talbot->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            talbot->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             talbot->SetReactState(REACT_AGGRESSIVE);
                             talbot->Attack(me, false);
                         }
@@ -1795,19 +1776,19 @@ public:
                         {
                             leryssa->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_19, 3000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_19, 3s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_19:
                         // Leryssa set facing to me
-                        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                        me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+                        me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                         if (Creature* leryssa = me->FindNearestCreature(NPC_LERYSSA, 50.0f, true))
                         {
                             _leryssaGUID = leryssa->GetGUID();
                             leryssa->SetFacingToObject(me);
                             me->SetFacingToObject(leryssa);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_20, 3000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_20, 3s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_20:
                         // Arlos say text 2 and die. Leryssa say text 1
@@ -1821,13 +1802,13 @@ public:
                         {
                             leryssa->AI()->Talk(SAY_LERYSSA_1);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_21, 5000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_21, 5s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_21:
                         // Thassarian say text 4
                         me->SetStandState(UNIT_STAND_STATE_KNEEL);
                         Talk(SAY_THASSARIAN_4);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_22, 3000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_22, 3s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_22:
                         // Leryssa run to Thassarian
@@ -1836,7 +1817,7 @@ public:
                             leryssa->SetWalk(false);
                             leryssa->MonsterMoveWithSpeed(3726.751f, 3568.1633f, 477.44086f, leryssa->GetSpeed(MOVE_RUN));
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_23, 2000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_23, 2s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_23:
                         // Leryssa say text 2
@@ -1845,12 +1826,12 @@ public:
                             leryssa->AI()->Talk(SAY_LERYSSA_2);
                             leryssa->SetStandState(UNIT_STAND_STATE_SIT);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_24, 5000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_24, 5s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_24:
                         // Thassarian say text 5
                         Talk(SAY_THASSARIAN_5);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_25, 10000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_25, 10s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_25:
                         // Leryssa say text 3
@@ -1858,12 +1839,12 @@ public:
                         {
                             leryssa->AI()->Talk(SAY_LERYSSA_3);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_26, 12000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_26, 12s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_26:
                         // Thassarian say text 6
                         Talk(SAY_THASSARIAN_6);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_27, 11000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_27, 11s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_27:
                         // Leryssa say text 4
@@ -1871,16 +1852,16 @@ public:
                         {
                             leryssa->AI()->Talk(SAY_LERYSSA_4);
                         }
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_28, 12000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_28, 12s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_28:
                         // Thassarian say text 7
                         Talk(SAY_THASSARIAN_7);
-                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_29, 35000);
+                        _events.ScheduleEvent(EVENT_THASSARIAN_SCRIPT_29, 35s);
                         break;
                     case EVENT_THASSARIAN_SCRIPT_29:
                         Cleanup();
-                        me->DespawnOrUnsummon(30000ms, 120s);
+                        me->DespawnOrUnsummon(30s, 120s);
                         break;
                     default:
                         break;
@@ -1898,7 +1879,7 @@ public:
         void JustDied(Unit* /*killer*/) override
         {
             Cleanup();
-            me->DespawnOrUnsummon(1000ms, 120s);
+            me->DespawnOrUnsummon(1s, 120s);
         }
 
         void Cleanup()
@@ -1938,7 +1919,7 @@ public:
             {
                 _playerGUID = player->GetGUID();
                 CloseGossipMenuFor(player);
-                me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 me->GetMotionMaster()->MovePath(PATH_THASSARIAN, false);
             }
         }
@@ -2012,11 +1993,11 @@ public:
 
         void Reset() override {}
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
-            _events.ScheduleEvent(EVENT_DEFLECTION, 10000, 20000);
-            _events.ScheduleEvent(EVENT_SOUL_BLAST, 4000, 6000);
-            _events.ScheduleEvent(EVENT_VAMPIRIC_BOLT, 0);
+            _events.ScheduleEvent(EVENT_DEFLECTION, 10s, 20s);
+            _events.ScheduleEvent(EVENT_SOUL_BLAST, 4s, 6s);
+            _events.ScheduleEvent(EVENT_VAMPIRIC_BOLT, 0ms);
         }
 
         void UpdateAI(uint32 diff) override
@@ -2036,15 +2017,15 @@ public:
                     {
                         case EVENT_DEFLECTION:
                             DoCastSelf(SPELL_DEFLECTION);
-                            _events.ScheduleEvent(EVENT_DEFLECTION, 10000, 20000);
+                            _events.ScheduleEvent(EVENT_DEFLECTION, 10s, 20s);
                             break;
                         case EVENT_SOUL_BLAST:
                             DoCastVictim(SPELL_SOUL_BLAST);
-                            _events.ScheduleEvent(EVENT_SOUL_BLAST, 4000, 6000);
+                            _events.ScheduleEvent(EVENT_SOUL_BLAST, 4s, 6s);
                             break;
                         case EVENT_VAMPIRIC_BOLT:
                             DoCastVictim(SPELL_VAMPIRIC_BOLT);
-                            _events.ScheduleEvent(EVENT_VAMPIRIC_BOLT, 3000, 4000);
+                            _events.ScheduleEvent(EVENT_VAMPIRIC_BOLT, 3s, 4s);
                             break;
                         default:
                             break;

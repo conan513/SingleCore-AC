@@ -15,13 +15,40 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ulduar.h"
+#include "CombatAI.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
-#include "ulduar.h"
+#include "Vehicle.h"
+
+enum Texts
+{
+    // Freya
+    GOSSIP_MENU_FREYA     = 10324,
+    NPC_TEXT_FREYA        = 14332,
+
+    // Hodir
+    GOSSIP_MENU_HODIR     = 10335,
+    NPC_TEXT_HODIR        = 14326,
+
+    // Mimiron
+    GOSSIP_MENU_MIMIRON   = 10336,
+    NPC_TEXT_MIMIRON      = 14334,
+
+    // Thorim
+    GOSSIP_MENU_THORIM    = 10337,
+    NPC_TEXT_THORIM       = 14333,
+
+    // Confirm assistance
+    GOSSIP_MENU_CONFIRM   = 10333,
+    NPC_TEXT_CONFIRM      = 14325,
+
+    SAY_KEEPER_SELECTED   = 1,
+};
 
 class npc_ulduar_keeper : public CreatureScript
 {
@@ -30,45 +57,75 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature) override
     {
-        AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Lend us your aid, keeper. Together we shall defeat Yogg-Saron.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        SendGossipMenuFor(player, DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
-        return true;
-    }
-
-    bool OnGossipSelect(Player*  /*player*/, Creature* creature, uint32  /*uiSender*/, uint32  /*uiAction*/) override
-    {
-        creature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
-        uint8 _keeper = 0;
+        uint32 gossipMenuId = 0;
+        uint32 gossipTextId = 0;
         switch (creature->GetEntry())
         {
             case NPC_FREYA_GOSSIP:
-                creature->Yell("Eonar, your servant calls for your blessing!", LANG_UNIVERSAL);
-                creature->PlayDirectSound(15535);
-                _keeper = KEEPER_FREYA;
+                gossipMenuId = GOSSIP_MENU_FREYA;
+                gossipTextId = NPC_TEXT_FREYA;
                 break;
             case NPC_HODIR_GOSSIP:
-                creature->Yell("The veil of winter will protect you, champions!", LANG_UNIVERSAL);
-                creature->PlayDirectSound(15559);
-                _keeper = KEEPER_HODIR;
+                gossipMenuId = GOSSIP_MENU_HODIR;
+                gossipTextId = NPC_TEXT_HODIR;
                 break;
             case NPC_MIMIRON_GOSSIP:
-                creature->Yell("Combat matrix enhanced. Behold wonderous rapidity!", LANG_UNIVERSAL);
-                creature->PlayDirectSound(15630);
-                _keeper = KEEPER_MIMIRON;
+                gossipMenuId = GOSSIP_MENU_MIMIRON;
+                gossipTextId = NPC_TEXT_MIMIRON;
                 break;
             case NPC_THORIM_GOSSIP:
-                creature->Yell("Golganneth, lend me your strengh! Grant my mortal allies the power of thunder!", LANG_UNIVERSAL);
-                creature->PlayDirectSound(15750);
-                _keeper = KEEPER_THORIM;
+                gossipMenuId = GOSSIP_MENU_THORIM;
+                gossipTextId = NPC_TEXT_THORIM;
                 break;
         }
 
-        if (creature->GetInstanceScript())
-        {
-            creature->GetInstanceScript()->SetData(TYPE_WATCHERS, _keeper);
-            creature->DespawnOrUnsummon(6000);
-        }
+        AddGossipItemFor(player, gossipMenuId, 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        SendGossipMenuFor(player, gossipTextId, creature->GetGUID());
+        return true;
+    }
 
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) override
+    {
+        ClearGossipMenuFor(player);
+        uint8 _keeper = 0;
+        switch (action)
+        {
+            case GOSSIP_ACTION_INFO_DEF+1:
+                AddGossipItemFor(player, GOSSIP_MENU_CONFIRM, 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+                SendGossipMenuFor(player, NPC_TEXT_CONFIRM, creature);
+                break;
+            case GOSSIP_ACTION_INFO_DEF+2:
+            {
+                switch (creature->GetEntry())
+                {
+                    case NPC_FREYA_GOSSIP:
+                        creature->AI()->Talk(SAY_KEEPER_SELECTED);
+                        _keeper = KEEPER_FREYA;
+                        break;
+                    case NPC_HODIR_GOSSIP:
+                        creature->AI()->Talk(SAY_KEEPER_SELECTED);
+                        _keeper = KEEPER_HODIR;
+                        break;
+                    case NPC_MIMIRON_GOSSIP:
+                        creature->AI()->Talk(SAY_KEEPER_SELECTED);
+                        _keeper = KEEPER_MIMIRON;
+                        break;
+                    case NPC_THORIM_GOSSIP:
+                        creature->AI()->Talk(SAY_KEEPER_SELECTED);
+                        _keeper = KEEPER_THORIM;
+                        break;
+                }
+
+                creature->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
+                CloseGossipMenuFor(player);
+
+                if (creature->GetInstanceScript())
+                {
+                    creature->GetInstanceScript()->SetData(TYPE_WATCHERS, _keeper);
+                    creature->DespawnOrUnsummon(6000);
+                }
+            }
+        }
         return true;
     }
 };
@@ -123,7 +180,8 @@ public:
         void MoveInLineOfSight(Unit* who) override
         {
             if (!activated && who->GetTypeId() == TYPEID_PLAYER)
-                if (me->GetExactDist2d(who) <= 25.0f && me->GetMap()->isInLineOfSight(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 5.0f, who->GetPositionX(), who->GetPositionY(), who->GetPositionZ() + 5.0f, 2, LINEOFSIGHT_ALL_CHECKS))
+                if (me->GetExactDist2d(who) <= 25.0f && me->GetMap()->isInLineOfSight(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 5.0f,
+                    who->GetPositionX(), who->GetPositionY(), who->GetPositionZ() + 5.0f, 2, LINEOFSIGHT_ALL_CHECKS, VMAP::ModelIgnoreFlags::Nothing))
                 {
                     activated = true;
                     me->RemoveAura(64615);
@@ -137,7 +195,7 @@ public:
                     {
                         float a = rand_norm() * 2 * M_PI;
                         float d = rand_norm() * 4.0f;
-                        if (Creature* c = me->SummonCreature(34137, me->GetPositionX() + cos(a) * d, me->GetPositionY() + sin(a) * d, me->GetPositionZ() + 1.0f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
+                        if (Creature* c = me->SummonCreature(34137, me->GetPositionX() + cos(a) * d, me->GetPositionY() + std::sin(a) * d, me->GetPositionZ() + 1.0f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
                             c->AI()->AttackStart(who);
                     }
                 }
@@ -172,12 +230,12 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             events.Reset();
-            events.ScheduleEvent(1, 2000); // checking Separation Anxiety, Charged Sphere
-            events.ScheduleEvent(2, urand(5000, 8000)); // Forked Lightning
-            events.ScheduleEvent(3, (me->GetEntry() == 33722 ? 20000 : 50000)); // Summon Charged Sphere
+            events.ScheduleEvent(1, 2s); // checking Separation Anxiety, Charged Sphere
+            events.ScheduleEvent(2, 5s, 8s); // Forked Lightning
+            events.ScheduleEvent(3, (me->GetEntry() == 33722 ? 20s : 50s)); // Summon Charged Sphere
             if (Creature* c = me->FindNearestCreature((me->GetEntry() == 33722 ? 33699 : 33722), 30.0f, true))
                 otherGUID = c->GetGUID();
             else
@@ -218,16 +276,16 @@ public:
                         if (c->IsSummon())
                             if (c->ToTempSummon()->GetSummonerGUID() != me->GetGUID())
                                 me->CastSpell(me, 63528, true);
-                    events.RepeatEvent(2000);
+                    events.Repeat(2s);
                     break;
                 case 2:
                     me->CastSpell(me->GetVictim(), 63541, false);
-                    events.RepeatEvent(urand(10000, 14000));
+                    events.Repeat(10s, 14s);
                     break;
                 case 3:
                     if (!me->HasAura(63630))
                         me->CastSpell(me, 63527, false);
-                    events.RepeatEvent(60000);
+                    events.Repeat(1min);
                     break;
             }
 
@@ -260,9 +318,9 @@ public:
         void Reset() override
         {
             events.Reset();
-            events.ScheduleEvent(1, urand(5000, 8000)); // Flame Spray
-            events.ScheduleEvent(2, urand(3000, 6000)); // Machine Gun
-            events.ScheduleEvent(3, 1000); // Charged Leap
+            events.ScheduleEvent(1, 5s, 8s); // Flame Spray
+            events.ScheduleEvent(2, 3s, 6s); // Machine Gun
+            events.ScheduleEvent(3, 1s); // Charged Leap
         }
 
         void PassengerBoarded(Unit* p, int8  /*seat*/, bool  /*apply*/) override
@@ -283,7 +341,7 @@ public:
                 me->SetReactState(REACT_PASSIVE);
                 me->SetRegeneratingHealth(false);
                 me->SetFaction(FACTION_PREY);
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
                 me->CastSpell(me, 64770, true);
             }
         }
@@ -294,10 +352,10 @@ public:
                 ScriptedAI::AttackStart(who);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             if (me->GetFaction() == FACTION_MONSTER_2)
-                ScriptedAI::EnterEvadeMode();
+                ScriptedAI::EnterEvadeMode(why);
         }
 
         void OnCharmed(bool  /*apply*/) override {}
@@ -325,11 +383,11 @@ public:
                         break;
                     case 1:
                         me->CastSpell(me->GetVictim(), RAID_MODE(64717, 65241), false);
-                        events.RepeatEvent(urand(15000, 25000));
+                        events.Repeat(15s, 25s);
                         break;
                     case 2:
                         me->CastSpell(me->GetVictim(), RAID_MODE(64776, 65240), false);
-                        events.RepeatEvent(urand(10000, 15000));
+                        events.Repeat(10s, 15s);
                         break;
                     case 3:
                         {
@@ -337,10 +395,10 @@ public:
                             if (dist > 10.0f && dist < 40.0f)
                             {
                                 me->CastSpell(me->GetVictim(), 64779, false);
-                                events.RepeatEvent(25000);
+                                events.Repeat(25s);
                             }
                             else
-                                events.RepeatEvent(3000);
+                                events.Repeat(3s);
                         }
                         break;
                 }
@@ -423,6 +481,34 @@ public:
     }
 };
 
+struct npc_salvaged_siege_engine : public VehicleAI
+{
+    npc_salvaged_siege_engine(Creature* creature) : VehicleAI(creature) { }
+
+    bool BeforeSpellClick(Unit* clicker) override
+    {
+        if (Vehicle* vehicle = me->GetVehicleKit())
+        {
+            if (vehicle->IsVehicleInUse())
+            {
+                if (Unit* turret = vehicle->GetPassenger(7))
+                {
+                    if (Vehicle* turretVehicle = me->GetVehicleKit())
+                    {
+                        if (!turretVehicle->IsVehicleInUse())
+                        {
+                            turret->HandleSpellClick(clicker);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+};
+
 void AddSC_ulduar()
 {
     new npc_ulduar_keeper();
@@ -435,4 +521,6 @@ void AddSC_ulduar()
 
     new AreaTrigger_at_celestial_planetarium_enterance();
     new go_call_tram();
+
+    RegisterCreatureAI(npc_salvaged_siege_engine);
 }

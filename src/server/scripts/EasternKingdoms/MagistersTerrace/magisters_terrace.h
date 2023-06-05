@@ -19,10 +19,11 @@
 #define DEF_MAGISTERS_TERRACE_H
 
 #include "CreatureAI.h"
+#include "CreatureAIImpl.h"
 #include "Player.h"
 #include "SpellScript.h"
-#include "CreatureAIImpl.h"
 
+#define DataHeader "MT"
 #define MTScriptName "instance_magisters_terrace"
 
 enum MTData

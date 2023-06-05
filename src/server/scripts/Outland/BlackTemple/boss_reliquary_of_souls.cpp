@@ -15,10 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "black_temple.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "Spell.h"
+#include "black_temple.h"
 
 enum Says
 {
@@ -158,7 +158,7 @@ public:
                 return;
 
             me->SetInCombatWithZone();
-            events.ScheduleEvent(EVENT_ESSENCE_OF_SUFFERING, 5000); // ZOMG! 15000);
+            events.ScheduleEvent(EVENT_ESSENCE_OF_SUFFERING, 5000); // 15000);
             me->SetStandState(UNIT_STAND_STATE_STAND);
         }
 
@@ -183,9 +183,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
         }
 
         void JustSummoned(Creature* summon) override
@@ -251,7 +251,8 @@ public:
                     break;
             }
 
-            EnterEvadeIfOutOfCombatArea();
+            if (!UpdateVictim())
+                return;
         }
 
         bool CheckEvadeIfOutOfCombatArea() const override
@@ -286,7 +287,7 @@ public:
         {
             if (param == ACTION_ENGAGE_ESSENCE)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                 me->SetReactState(REACT_AGGRESSIVE);
                 me->SetInCombatWithZone();
             }
@@ -307,10 +308,10 @@ public:
             if (damage >= me->GetHealth())
             {
                 damage = 0;
-                if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+                if (!me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
                 {
                     me->RemoveAurasDueToSpell(SPELL_ESSENCE_OF_SUFFERING_PASSIVE); // prevent fixate from triggering
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     Talk(SUFF_SAY_RECAP);
                     me->SetReactState(REACT_PASSIVE);
                     me->GetMotionMaster()->Clear();
@@ -329,7 +330,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(SUFF_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_SUFFERING, true);
@@ -397,7 +398,7 @@ public:
         {
             if (param == ACTION_ENGAGE_ESSENCE)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                 me->SetReactState(REACT_AGGRESSIVE);
                 me->SetInCombatWithZone();
             }
@@ -418,9 +419,9 @@ public:
             if (damage >= me->GetHealth())
             {
                 damage = 0;
-                if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+                if (!me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
                 {
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     Talk(DESI_SAY_RECAP);
                     me->SetReactState(REACT_PASSIVE);
                     me->GetMotionMaster()->Clear();
@@ -439,7 +440,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(DESI_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_DESIRE, true);
@@ -508,7 +509,7 @@ public:
         {
             if (param == ACTION_ENGAGE_ESSENCE)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                 me->SetReactState(REACT_AGGRESSIVE);
                 me->SetInCombatWithZone();
             }
@@ -523,7 +524,7 @@ public:
             }
         }
 
-        void JustDied(Unit*  /*killer*/) override
+        void JustDied(Unit* /*killer*/) override
         {
             Talk(ANGER_SAY_DEATH);
             if (me->IsSummon())
@@ -531,7 +532,7 @@ public:
                     Unit::Kill(summoner, summoner);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(ANGER_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_ANGER, true);

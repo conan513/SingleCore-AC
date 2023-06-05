@@ -184,7 +184,7 @@ enum SpellCustomAttributes
     SPELL_ATTR0_CU_DIRECT_DAMAGE                 = 0x00000100,
     SPELL_ATTR0_CU_CHARGE                        = 0x00000200,
     SPELL_ATTR0_CU_PICKPOCKET                    = 0x00000400,
-    SPELL_ATTR0_CU_NONE4                         = 0x00000800,   // UNUSED
+    SPELL_ATTR0_CU_IGNORE_EVADE                  = 0x00000800,
     SPELL_ATTR0_CU_NEGATIVE_EFF0                 = 0x00001000,
     SPELL_ATTR0_CU_NEGATIVE_EFF1                 = 0x00002000,
     SPELL_ATTR0_CU_NEGATIVE_EFF2                 = 0x00004000,
@@ -197,12 +197,13 @@ enum SpellCustomAttributes
     SPELL_ATTR0_CU_NO_POSITIVE_TAKEN_BONUS       = 0x00200000,
     SPELL_ATTR0_CU_SINGLE_AURA_STACK             = 0x00400000, // pussywizard
     SPELL_ATTR0_CU_SCHOOLMASK_NORMAL_WITH_MAGIC  = 0x00800000,
-    SPELL_ATTR0_CU_ENCOUNTER_REWARD              = 0x01000000, // pussywizard
+    SPELL_ATTR0_CU_AURA_CANNOT_BE_SAVED          = 0x01000000,
     SPELL_ATTR0_CU_POSITIVE_EFF0                 = 0x02000000,
     SPELL_ATTR0_CU_POSITIVE_EFF1                 = 0x04000000,
     SPELL_ATTR0_CU_POSITIVE_EFF2                 = 0x08000000,
-    SPELL_ATTR0_CU_REJECT_AURA_SAVING            = 0x10000000,
+    SPELL_ATTR0_CU_FORCE_SEND_CATEGORY_COOLDOWNS = 0x10000000,
     SPELL_ATTR0_CU_FORCE_AURA_SAVING             = 0x20000800,
+    SPELL_ATTR0_CU_ENCOUNTER_REWARD              = 0x40000000, // pussywizard
 
     SPELL_ATTR0_CU_NEGATIVE                      = SPELL_ATTR0_CU_NEGATIVE_EFF0 | SPELL_ATTR0_CU_NEGATIVE_EFF1 | SPELL_ATTR0_CU_NEGATIVE_EFF2,
     SPELL_ATTR0_CU_POSITIVE                      = SPELL_ATTR0_CU_POSITIVE_EFF0 | SPELL_ATTR0_CU_POSITIVE_EFF1 | SPELL_ATTR0_CU_POSITIVE_EFF2,
@@ -215,7 +216,7 @@ class SpellImplicitTargetInfo
 private:
     Targets _target;
 public:
-    SpellImplicitTargetInfo() {}
+    SpellImplicitTargetInfo() : _target(Targets(0)) {}
     SpellImplicitTargetInfo(uint32 target);
 
     bool IsArea() const;
@@ -309,8 +310,10 @@ private:
     static std::array<StaticData, TOTAL_SPELL_EFFECTS> _data;
 };
 
-class SpellInfo
+class AC_GAME_API SpellInfo
 {
+friend class SpellMgr;
+
 public:
     uint32 Id;
     SpellCategoryEntry const* CategoryEntry;
@@ -374,6 +377,7 @@ public:
     std::array<uint32, 2> SpellVisual;
     uint32 SpellIconID;
     uint32 ActiveIconID;
+    uint32 SpellPriority;
     std::array<char const*, 16> SpellName;
     std::array<char const*, 16> Rank;
     uint32 MaxTargetLevel;
@@ -453,7 +457,7 @@ public:
     bool IsPositive() const;
     bool IsPositiveEffect(uint8 effIndex) const;
     bool IsChanneled() const;
-    [[nodiscard]] bool IsMoveAllowedChannel() const;
+    [[nodiscard]] bool IsActionAllowedChannel() const;
     bool NeedsComboPoints() const;
     bool IsBreakingStealth() const;
     bool IsRangedWeaponSpell() const;
@@ -478,7 +482,7 @@ public:
     // xinef: aura stacking
     bool IsStrongerAuraActive(Unit const* caster, Unit const* target) const;
     bool IsAuraEffectEqual(SpellInfo const* otherSpellInfo) const;
-    bool ValidateAttribute6SpellDamageMods(const Unit* caster, const AuraEffect* auraEffect, bool isDot) const;
+    bool ValidateAttribute6SpellDamageMods(Unit const* caster, const AuraEffect* auraEffect, bool isDot) const;
 
     SpellSchoolMask GetSchoolMask() const;
     uint32 GetAllEffectsMechanicMask() const;
@@ -517,15 +521,26 @@ public:
     bool IsDifferentRankOf(SpellInfo const* spellInfo) const;
     bool IsHighRankOf(SpellInfo const* spellInfo) const;
 
+    std::array<SpellEffectInfo, MAX_SPELL_EFFECTS> const& GetEffects() const { return Effects; }
+    SpellEffectInfo const& GetEffect(SpellEffIndex index) const { ASSERT(index < Effects.size()); return Effects[index]; }
+
     // loading helpers
     void _InitializeExplicitTargetMask();
     bool _IsPositiveEffect(uint8 effIndex, bool deep) const;
     bool _IsPositiveSpell() const;
     static bool _IsPositiveTarget(uint32 targetA, uint32 targetB);
+
     AuraStateType LoadAuraState() const;
     SpellSpecificType LoadSpellSpecific() const;
+
     // unloading helpers
     void _UnloadImplicitTargetConditionLists();
+
+    bool CheckElixirStacking(Unit const* caster) const;
+
+private:
+    std::array<SpellEffectInfo, MAX_SPELL_EFFECTS>& _GetEffects() { return Effects; }
+    SpellEffectInfo& _GetEffect(SpellEffIndex index) { ASSERT(index < Effects.size()); return Effects[index]; }
 };
 
 #endif // _SPELLINFO_H

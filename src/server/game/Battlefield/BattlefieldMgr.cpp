@@ -16,7 +16,6 @@
  */
 
 #include "BattlefieldMgr.h"
-#include "ObjectMgr.h"
 #include "Player.h"
 #include "Zones/BattlefieldWG.h"
 
@@ -41,6 +40,12 @@ BattlefieldMgr* BattlefieldMgr::instance()
 
 void BattlefieldMgr::InitBattlefield()
 {
+    if (sWorld->getIntConfig(CONFIG_WINTERGRASP_ENABLE) == 2)
+    {
+        LOG_INFO("server.loading", "Battlefield: Wintergrasp is disabled.");
+        LOG_INFO("server.loading", " ");
+        return;
+    }
     Battlefield* pBf = new BattlefieldWG;
     // respawn, init variables
     if (!pBf->SetupBattlefield())
@@ -86,7 +91,7 @@ void BattlefieldMgr::HandlePlayerEnterZone(Player* player, uint32 zoneid)
         return;
 
     itr->second->HandlePlayerEnterZone(player, zoneid);
-    LOG_DEBUG("bg.battlefield", "Player %s entered outdoorpvp id %u", player->GetGUID().ToString().c_str(), itr->second->GetTypeId());
+    LOG_DEBUG("bg.battlefield", "Player {} entered outdoorpvp id {}", player->GetGUID().ToString(), itr->second->GetTypeId());
 }
 
 void BattlefieldMgr::HandlePlayerLeaveZone(Player* player, uint32 zoneid)
@@ -99,7 +104,7 @@ void BattlefieldMgr::HandlePlayerLeaveZone(Player* player, uint32 zoneid)
     if (!itr->second->HasPlayer(player))
         return;
     itr->second->HandlePlayerLeaveZone(player, zoneid);
-    LOG_DEBUG("bg.battlefield", "Player %s left outdoorpvp id %u", player->GetGUID().ToString().c_str(), itr->second->GetTypeId());
+    LOG_DEBUG("bg.battlefield", "Player {} left outdoorpvp id {}", player->GetGUID().ToString(), itr->second->GetTypeId());
 }
 
 Battlefield* BattlefieldMgr::GetBattlefieldToZoneId(uint32 zoneid)

@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "naxxramas.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "naxxramas.h"
 
 enum Says
 {
@@ -157,9 +157,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             me->CallForHelp(30.0f);
             Talk(SAY_AGGRO);
             if (pInstance)
@@ -169,16 +169,16 @@ public:
                     go->SetGoState(GO_STATE_READY);
                 }
             }
-            events.ScheduleEvent(EVENT_IMPALE, 15000);
-            events.ScheduleEvent(EVENT_LOCUST_SWARM, urand(70000, 120000));
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
+            events.ScheduleEvent(EVENT_IMPALE, 15s);
+            events.ScheduleEvent(EVENT_LOCUST_SWARM, 70s, 120s);
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
             if (!summons.HasEntry(NPC_CRYPT_GUARD))
             {
                 SummonCryptGuards();
             }
             if (!Is25ManRaid())
             {
-                events.ScheduleEvent(EVENT_SPAWN_GUARD, urand(15000, 20000));
+                events.ScheduleEvent(EVENT_SPAWN_GUARD, 15s, 20s);
             }
         }
 
@@ -219,17 +219,17 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_IMPALE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                     {
                         me->CastSpell(target, RAID_MODE(SPELL_IMPALE_10, SPELL_IMPALE_25), false);
                     }
-                    events.RepeatEvent(20000);
+                    events.Repeat(20s);
                     break;
                 case EVENT_LOCUST_SWARM:
                     Talk(EMOTE_LOCUST);
                     me->CastSpell(me, RAID_MODE(SPELL_LOCUST_SWARM_10, SPELL_LOCUST_SWARM_25), false);
-                    events.ScheduleEvent(EVENT_SPAWN_GUARD, 3000);
-                    events.RepeatEvent(90000);
+                    events.ScheduleEvent(EVENT_SPAWN_GUARD, 3s);
+                    events.Repeat(90s);
                     break;
                 case EVENT_SPAWN_GUARD:
                     me->SummonCreature(NPC_CRYPT_GUARD, 3331.217f, -3476.607f, 287.074f, 3.269f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);

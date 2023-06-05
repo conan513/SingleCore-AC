@@ -17,22 +17,22 @@
 
 #include "DatabaseWorkerPool.h"
 #include "AdhocStatement.h"
-#include "Common.h"
+#include "CharacterDatabase.h"
 #include "Errors.h"
-#include "Implementation/CharacterDatabase.h"
-#include "Implementation/LoginDatabase.h"
-#include "Implementation/WorldDatabase.h"
 #include "Log.h"
+#include "LoginDatabase.h"
 #include "MySQLPreparedStatement.h"
 #include "MySQLWorkaround.h"
-#include "PreparedStatement.h"
 #include "PCQueue.h"
+#include "PreparedStatement.h"
 #include "QueryCallback.h"
 #include "QueryHolder.h"
 #include "QueryResult.h"
 #include "SQLOperation.h"
 #include "Transaction.h"
+#include "WorldDatabase.h"
 #include <mysqld_error.h>
+#include <limits>
 
 #ifdef ACORE_DEBUG
 #include <boost/stacktrace.hpp>
@@ -40,7 +40,7 @@
 #endif
 
 #if MARIADB_VERSION_ID >= 100600
-#define MIN_MYSQL_SERVER_VERSION 100200u
+#define MIN_MYSQL_SERVER_VERSION 100500u
 #define MIN_MYSQL_CLIENT_VERSION 30203u
 #else
 #define MIN_MYSQL_SERVER_VERSION 50700u
@@ -58,9 +58,10 @@ class PingOperation : public SQLOperation
 };
 
 template <class T>
-DatabaseWorkerPool<T>::DatabaseWorkerPool()
-    : _queue(new ProducerConsumerQueue<SQLOperation*>()),
-      _async_threads(0), _synch_threads(0)
+DatabaseWorkerPool<T>::DatabaseWorkerPool() :
+    _queue(new ProducerConsumerQueue<SQLOperation*>()),
+    _async_threads(0),
+    _synch_threads(0)
 {
     WPFatal(mysql_thread_safe(), "Used MySQL library isn't thread-safe.");
 
@@ -72,8 +73,9 @@ DatabaseWorkerPool<T>::DatabaseWorkerPool()
     bool isSameClientDB    = true; // Client version 3.2.3?
 #endif
 
-    WPFatal(isSupportClientDB, "AzerothCore does not support MySQL versions below 5.7 and MariaDB 10.2\nSearch the wiki for ACE00043 in Common Errors (https://www.azerothcore.org/wiki/common-errors).");
-    WPFatal(isSameClientDB, "Used MySQL library version (%s id %lu) does not match the version id used to compile AzerothCore (id %u).\nSearch the wiki for ACE00046 in Common Errors (https://www.azerothcore.org/wiki/common-errors).",
+    WPFatal(isSupportClientDB, "AzerothCore does not support MySQL versions below 5.7 or MariaDB versions below 10.5.\n\nFound version: {} / {}. Server compiled with: {}.\nSearch the wiki for ACE00043 in Common Errors (https://www.azerothcore.org/wiki/common-errors#ace00043).",
+        mysql_get_client_info(), mysql_get_client_version(), MYSQL_VERSION_ID);
+    WPFatal(isSameClientDB, "Used MySQL library version ({} id {}) does not match the version id used to compile AzerothCore (id {}).\nSearch the wiki for ACE00046 in Common Errors (https://www.azerothcore.org/wiki/common-errors#ace00046).",
         mysql_get_client_info(), mysql_get_client_version(), MYSQL_VERSION_ID);
 }
 
@@ -84,8 +86,7 @@ DatabaseWorkerPool<T>::~DatabaseWorkerPool()
 }
 
 template <class T>
-void DatabaseWorkerPool<T>::SetConnectionInfo(std::string const& infoString,
-    uint8 const asyncThreads, uint8 const synchThreads)
+void DatabaseWorkerPool<T>::SetConnectionInfo(std::string_view infoString, uint8 const asyncThreads, uint8 const synchThreads)
 {
     _connectionInfo = std::make_unique<MySQLConnectionInfo>(infoString);
 
@@ -98,8 +99,7 @@ uint32 DatabaseWorkerPool<T>::Open()
 {
     WPFatal(_connectionInfo.get(), "Connection info was not set!");
 
-    LOG_INFO("sql.driver", "Opening DatabasePool '%s'. "
-        "Asynchronous connections: %u, synchronous connections: %u.",
+    LOG_INFO("sql.driver", "Opening DatabasePool '{}'. Asynchronous connections: {}, synchronous connections: {}.",
         GetDatabaseName(), _async_threads, _synch_threads);
 
     uint32 error = OpenConnections(IDX_ASYNC, _async_threads);
@@ -111,9 +111,8 @@ uint32 DatabaseWorkerPool<T>::Open()
 
     if (!error)
     {
-        LOG_INFO("sql.driver", "DatabasePool '%s' opened successfully. " SZFMTD
-                    " total connections running.", GetDatabaseName(),
-                    (_connections[IDX_SYNCH].size() + _connections[IDX_ASYNC].size()));
+        LOG_INFO("sql.driver", "DatabasePool '{}' opened successfully. {} total connections running.",
+            GetDatabaseName(), (_connections[IDX_SYNCH].size() + _connections[IDX_ASYNC].size()));
     }
 
     LOG_INFO("sql.driver", " ");
@@ -124,13 +123,12 @@ uint32 DatabaseWorkerPool<T>::Open()
 template <class T>
 void DatabaseWorkerPool<T>::Close()
 {
-    LOG_INFO("sql.driver", "Closing down DatabasePool '%s'.", GetDatabaseName());
+    LOG_INFO("sql.driver", "Closing down DatabasePool '{}'.", GetDatabaseName());
 
     //! Closes the actualy MySQL connection.
     _connections[IDX_ASYNC].clear();
 
-    LOG_INFO("sql.driver", "Asynchronous connections on DatabasePool '%s' terminated. "
-                "Proceeding with synchronous connections.",
+    LOG_INFO("sql.driver", "Asynchronous connections on DatabasePool '{}' terminated. Proceeding with synchronous connections.",
         GetDatabaseName());
 
     //! Shut down the synchronous connections
@@ -139,15 +137,15 @@ void DatabaseWorkerPool<T>::Close()
     //! meaning there can be no concurrent access at this point.
     _connections[IDX_SYNCH].clear();
 
-    LOG_INFO("sql.driver", "All connections on DatabasePool '%s' closed.", GetDatabaseName());
+    LOG_INFO("sql.driver", "All connections on DatabasePool '{}' closed.", GetDatabaseName());
 }
 
 template <class T>
 bool DatabaseWorkerPool<T>::PrepareStatements()
 {
-    for (auto& connections : _connections)
+    for (auto const& connections : _connections)
     {
-        for (auto& connection : connections)
+        for (auto const& connection : connections)
         {
             connection->LockIfReady();
             if (!connection->PrepareStatements())
@@ -174,7 +172,7 @@ bool DatabaseWorkerPool<T>::PrepareStatements()
                 {
                     uint32 const paramCount = stmt->GetParameterCount();
 
-                    // TC only supports uint8 indices.
+                    // WH only supports uint8 indices.
                     ASSERT(paramCount < std::numeric_limits<uint8>::max());
 
                     _preparedStatementSize[i] = static_cast<uint8>(paramCount);
@@ -187,13 +185,13 @@ bool DatabaseWorkerPool<T>::PrepareStatements()
 }
 
 template <class T>
-QueryResult DatabaseWorkerPool<T>::Query(char const* sql, T* connection /*= nullptr*/)
+QueryResult DatabaseWorkerPool<T>::Query(std::string_view sql)
 {
-    if (!connection)
-        connection = GetFreeConnection();
+    auto connection = GetFreeConnection();
 
     ResultSet* result = connection->Query(sql);
     connection->Unlock();
+
     if (!result || !result->GetRowCount() || !result->NextRow())
     {
         delete result;
@@ -223,7 +221,7 @@ PreparedQueryResult DatabaseWorkerPool<T>::Query(PreparedStatement<T>* stmt)
 }
 
 template <class T>
-QueryCallback DatabaseWorkerPool<T>::AsyncQuery(char const* sql)
+QueryCallback DatabaseWorkerPool<T>::AsyncQuery(std::string_view sql)
 {
     BasicStatementTask* task = new BasicStatementTask(sql, true);
     // Store future result before enqueueing - task might get already processed and deleted before returning from this method
@@ -312,6 +310,7 @@ void DatabaseWorkerPool<T>::DirectCommitTransaction(SQLTransaction<T>& transacti
 {
     T* connection = GetFreeConnection();
     int errorCode = connection->ExecuteTransaction(transaction);
+
     if (!errorCode)
     {
         connection->Unlock();      // OK, operation succesful
@@ -324,6 +323,7 @@ void DatabaseWorkerPool<T>::DirectCommitTransaction(SQLTransaction<T>& transacti
     {
         //todo: handle multiple sync threads deadlocking in a similar way as async threads
         uint8 loopBreaker = 5;
+
         for (uint8 i = 0; i < loopBreaker; ++i)
         {
             if (!connection->ExecuteTransaction(transaction))
@@ -372,6 +372,7 @@ void DatabaseWorkerPool<T>::KeepAlive()
     //! If one or more worker threads are busy, the ping operations will not be split evenly, but this doesn't matter
     //! as the sole purpose is to prevent connections from idling.
     auto const count = _connections[IDX_ASYNC].size();
+
     for (uint8 i = 0; i < count; ++i)
         Enqueue(new PingOperation);
 }
@@ -382,7 +383,8 @@ uint32 DatabaseWorkerPool<T>::OpenConnections(InternalIndex type, uint8 numConne
     for (uint8 i = 0; i < numConnections; ++i)
     {
         // Create the connection
-        auto connection = [&] {
+        auto connection = [&]
+        {
             switch (type)
             {
             case IDX_ASYNC:
@@ -402,7 +404,8 @@ uint32 DatabaseWorkerPool<T>::OpenConnections(InternalIndex type, uint8 numConne
         }
         else if (connection->GetServerVersion() < MIN_MYSQL_SERVER_VERSION)
         {
-            LOG_ERROR("sql.driver", "AzerothCore does not support MySQL versions below 5.7");
+            LOG_ERROR("sql.driver", "AzerothCore does not support MySQL versions below 5.7 or MariaDB versions below 10.5.\n\nFound server version: {}. Server compiled with: {}.",
+                connection->GetServerVersion(), MYSQL_VERSION_ID);
             return 1;
         }
         else
@@ -444,7 +447,7 @@ T* DatabaseWorkerPool<T>::GetFreeConnection()
     {
         std::ostringstream ss;
         ss << boost::stacktrace::stacktrace();
-        LOG_WARN("sql.performances", "Sync query at:\n%s", ss.str().c_str());
+        LOG_WARN("sql.performances", "Sync query at:\n{}", ss.str());
     }
 #endif
 
@@ -465,15 +468,15 @@ T* DatabaseWorkerPool<T>::GetFreeConnection()
 }
 
 template <class T>
-char const* DatabaseWorkerPool<T>::GetDatabaseName() const
+std::string_view DatabaseWorkerPool<T>::GetDatabaseName() const
 {
-    return _connectionInfo->database.c_str();
+    return std::string_view{ _connectionInfo->database };
 }
 
 template <class T>
-void DatabaseWorkerPool<T>::Execute(char const* sql)
+void DatabaseWorkerPool<T>::Execute(std::string_view sql)
 {
-    if (Acore::IsFormatEmptyOrNull(sql))
+    if (sql.empty())
         return;
 
     BasicStatementTask* task = new BasicStatementTask(sql);
@@ -488,9 +491,9 @@ void DatabaseWorkerPool<T>::Execute(PreparedStatement<T>* stmt)
 }
 
 template <class T>
-void DatabaseWorkerPool<T>::DirectExecute(char const* sql)
+void DatabaseWorkerPool<T>::DirectExecute(std::string_view sql)
 {
-    if (Acore::IsFormatEmptyOrNull(sql))
+    if (sql.empty())
         return;
 
     T* connection = GetFreeConnection();
@@ -510,7 +513,7 @@ void DatabaseWorkerPool<T>::DirectExecute(PreparedStatement<T>* stmt)
 }
 
 template <class T>
-void DatabaseWorkerPool<T>::ExecuteOrAppend(SQLTransaction<T>& trans, char const* sql)
+void DatabaseWorkerPool<T>::ExecuteOrAppend(SQLTransaction<T>& trans, std::string_view sql)
 {
     if (!trans)
         Execute(sql);

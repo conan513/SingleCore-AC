@@ -17,8 +17,8 @@
 
 #include "InstanceScript.h"
 #include "ObjectMgr.h"
-#include "razorfen_downs.h"
 #include "ScriptMgr.h"
+#include "razorfen_downs.h"
 
 class instance_razorfen_downs : public InstanceMapScript
 {
@@ -33,6 +33,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             _gongPhase = 0;
             _firesState = 0;
         }
@@ -49,7 +50,7 @@ public:
                     break;
                 case GO_GONG:
                     if (_gongPhase == DONE)
-                        gameobject->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameobject->SetGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     break;
             }
         }
@@ -70,27 +71,15 @@ public:
             SaveToDB();
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            std::ostringstream saveStream;
-            saveStream << "R D " << _gongPhase << ' ' << _firesState;
-            return saveStream.str();
+            data >> _gongPhase;
+            data >> _firesState;
         }
 
-        void Load(const char* str) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!str)
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(str);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'R' && dataHead2 == 'D')
-            {
-                loadStream >> _gongPhase;
-                loadStream >> _firesState;
-            }
+            data << _gongPhase << ' ' << _firesState;
         }
 
     private:

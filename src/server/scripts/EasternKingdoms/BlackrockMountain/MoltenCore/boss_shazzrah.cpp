@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Player.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
 #include "molten_core.h"
-#include "Player.h"
 
 enum Spells
 {
@@ -49,14 +49,14 @@ public:
     {
         boss_shazzrahAI(Creature* creature) : BossAI(creature, DATA_SHAZZRAH) {}
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
-            _EnterCombat();
-            events.ScheduleEvent(EVENT_ARCANE_EXPLOSION, urand(2000, 4000));
-            events.ScheduleEvent(EVENT_SHAZZRAH_CURSE, urand(7000, 11000));
-            events.ScheduleEvent(EVENT_MAGIC_GROUNDING, urand(14000, 19000));
-            events.ScheduleEvent(EVENT_COUNTERSPELL, urand(9000, 10000));
-            events.ScheduleEvent(EVENT_SHAZZRAH_GATE, 30000);
+            _JustEngagedWith();
+            events.ScheduleEvent(EVENT_ARCANE_EXPLOSION, 2s, 4s);
+            events.ScheduleEvent(EVENT_SHAZZRAH_CURSE, 7s,11s);
+            events.ScheduleEvent(EVENT_MAGIC_GROUNDING, 14s, 19s);
+            events.ScheduleEvent(EVENT_COUNTERSPELL, 9s, 10s);
+            events.ScheduleEvent(EVENT_SHAZZRAH_GATE, 30s);
         }
 
         void ExecuteEvent(uint32 eventId) override
@@ -71,7 +71,7 @@ public:
                 }
                 case EVENT_SHAZZRAH_CURSE:
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true, -SPELL_SHAZZRAH_CURSE))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true, true, -SPELL_SHAZZRAH_CURSE))
                     {
                         DoCast(target, SPELL_SHAZZRAH_CURSE);
                     }
@@ -93,7 +93,7 @@ public:
                 case EVENT_SHAZZRAH_GATE:
                 {
                     DoCastAOE(SPELL_SHAZZRAH_GATE_DUMMY);
-                    events.RescheduleEvent(EVENT_ARCANE_EXPLOSION, urand(3000, 6000));
+                    events.RescheduleEvent(EVENT_ARCANE_EXPLOSION, 3s, 6s);
                     events.RepeatEvent(45000);
                     break;
                 }
@@ -170,8 +170,8 @@ public:
 
                 if (Creature* creatureCaster = caster->ToCreature())
                 {
-                    creatureCaster->getThreatMgr().resetAllAggro();
-                    creatureCaster->getThreatMgr().addThreat(target, 1);
+                    creatureCaster->GetThreatMgr().ResetAllThreat();
+                    creatureCaster->GetThreatMgr().AddThreat(target, 1);
                     creatureCaster->AI()->AttackStart(target); // Attack the target which caster will teleport to.
                 }
             }

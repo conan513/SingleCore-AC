@@ -23,8 +23,8 @@ SDCategory: Creatures
 EndScriptData */
 
 #include "PassiveAI.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 
 #define GENERIC_CREATURE_COOLDOWN   5000
 
@@ -48,7 +48,7 @@ public:
             IsSelfRooted = false;
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (!me->IsWithinMeleeRange(who))
                 IsSelfRooted = true;
@@ -183,7 +183,7 @@ public:
         }
 
         uint32 timer, interval;
-        const SpellInfo* spell;
+        SpellInfo const* spell;
 
         void UpdateAI(uint32 diff) override
         {
@@ -214,7 +214,7 @@ public:
         trigger_deathAI(Creature* creature) : NullCreatureAI(creature) { }
         void JustDied(Unit* killer) override
         {
-            if (me->m_spells[0])
+            if (killer && me->m_spells[0])
                 me->CastSpell(killer, me->m_spells[0], true);
         }
     };

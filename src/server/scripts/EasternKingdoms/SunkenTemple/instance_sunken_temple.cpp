@@ -16,11 +16,13 @@
  */
 
 #include "CreatureAI.h"
+#include "EventMap.h"
 #include "InstanceScript.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "SpellScript.h"
 #include "sunken_temple.h"
+#include "Unit.h"
 
 class instance_sunken_temple : public InstanceMapScript
 {
@@ -31,6 +33,7 @@ public:
     {
         instance_sunken_temple_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
         }
 
         void Initialize() override
@@ -47,6 +50,10 @@ public:
                 case NPC_JAMMAL_AN_THE_PROPHET:
                     _jammalanGUID = creature->GetGUID();
                     break;
+                case NPC_SHADE_OF_ERANIKUS:
+                    _shadeOfEranikusGUID = creature->GetGUID();
+                    creature->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                    break;
             }
 
             if (creature->IsAlive() && creature->GetSpawnId() && creature->GetCreatureType() == CREATURE_TYPE_DRAGONKIN && creature->GetEntry() != NPC_SHADE_OF_ERANIKUS)
@@ -57,6 +64,12 @@ public:
         {
             if (unit->GetTypeId() == TYPEID_UNIT && unit->GetCreatureType() == CREATURE_TYPE_DRAGONKIN && unit->GetEntry() != NPC_SHADE_OF_ERANIKUS)
                 _dragonkinList.remove(unit->GetGUID());
+            if (unit->GetEntry() == NPC_JAMMAL_AN_THE_PROPHET)
+            {
+                if (Creature* cr = instance->GetCreature(_shadeOfEranikusGUID))
+                    cr->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            }
+
         }
 
         void OnGameObjectCreate(GameObject* gameobject) override
@@ -72,7 +85,7 @@ public:
                     if (gameobject->GetEntry() < GO_ATALAI_STATUE1 + _statuePhase)
                     {
                         instance->SummonGameObject(GO_ATALAI_LIGHT2, gameobject->GetPositionX(), gameobject->GetPositionY(), gameobject->GetPositionZ(), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-                        gameobject->SetUInt32Value(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameobject->ReplaceAllGameObjectFlags(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case GO_ATALAI_IDOL:
@@ -81,7 +94,7 @@ public:
                     break;
                 case GO_IDOL_OF_HAKKAR:
                     if (_encounters[TYPE_ATAL_ALARION] == DONE)
-                        gameobject->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameobject->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     break;
                 case GO_FORCEFIELD:
                     _forcefieldGUID = gameobject->GetGUID();
@@ -95,7 +108,7 @@ public:
             switch (type)
             {
                 case DATA_STATUES:
-                    _events.ScheduleEvent(DATA_STATUES, 0);
+                    _events.ScheduleEvent(DATA_STATUES, 0ms);
                     break;
                 case DATA_DEFENDER_KILLED:
                     ++_defendersKilled;
@@ -156,33 +169,22 @@ public:
             }
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            std::ostringstream saveStream;
-            saveStream << "T A " << _encounters[0] << ' ' << _encounters[1] << ' ' << _encounters[2] << ' ' << _statuePhase << ' ' << _defendersKilled;
-            return saveStream.str();
+            data >> _encounters[0];
+            data >> _encounters[1];
+            data >> _encounters[2];
+            data >> _statuePhase;
+            data >> _defendersKilled;
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-            if (dataHead1 == 'T' && dataHead2 == 'A')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    loadStream >> _encounters[i];
-                    if (_encounters[i] == IN_PROGRESS)
-                        _encounters[i] = NOT_STARTED;
-                }
-
-                loadStream >> _statuePhase;
-                loadStream >> _defendersKilled;
-            }
+            data << _encounters[0] << ' '
+                << _encounters[1] << ' '
+                << _encounters[2] << ' '
+                << _statuePhase << ' '
+                << _defendersKilled;
         }
 
     private:
@@ -192,6 +194,7 @@ public:
 
         ObjectGuid _forcefieldGUID;
         ObjectGuid _jammalanGUID;
+        ObjectGuid _shadeOfEranikusGUID;
         GuidList _dragonkinList;
         EventMap _events;
     };

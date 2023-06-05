@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gundrak.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "gundrak.h"
 
 enum Spells
 {
@@ -99,22 +99,22 @@ public:
             events.Reset();
             if (troll)
             {
-                events.RescheduleEvent(EVENT_STAMPEDE, 10000);
-                events.RescheduleEvent(EVENT_WHIRLING_SLASH, 21000);
+                events.RescheduleEvent(EVENT_STAMPEDE, 10s);
+                events.RescheduleEvent(EVENT_WHIRLING_SLASH, 21s);
             }
             else
             {
-                events.RescheduleEvent(EVENT_PUNCTURE, 10000);
-                events.RescheduleEvent(EVENT_ENRAGE, 15000);
-                events.RescheduleEvent(EVENT_IMPALING_CHARGE, 21000);
-                events.RescheduleEvent(EVENT_STOMP, 5000);
+                events.RescheduleEvent(EVENT_PUNCTURE, 10s);
+                events.RescheduleEvent(EVENT_ENRAGE, 15s);
+                events.RescheduleEvent(EVENT_IMPALING_CHARGE, 21s);
+                events.RescheduleEvent(EVENT_STOMP, 5s);
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             Talk(SAY_AGGRO);
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
 
             ScheduleEvents(true);
             me->RemoveAurasDueToSpell(SPELL_START_VISUAL);
@@ -124,7 +124,7 @@ public:
         void JustSummoned(Creature* summon) override
         {
             uint32 despawnTime = 0;
-            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 60.0f, true))
+            if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 60.0f, true))
             {
                 summon->CastSpell(target, SPELL_STAMPEDE_DMG, true);
                 despawnTime = (summon->GetDistance(target) / 40.0f * 1000) + 500;
@@ -149,7 +149,7 @@ public:
             if (events.GetNextEventTime(EVENT_KILL_TALK) == 0)
             {
                 Talk(SAY_SLAY);
-                events.ScheduleEvent(EVENT_KILL_TALK, 6000);
+                events.ScheduleEvent(EVENT_KILL_TALK, 6s);
             }
         }
 
@@ -167,7 +167,7 @@ public:
                 case EVENT_STAMPEDE:
                     Talk(SAY_SUMMON_RHINO);
                     me->CastSpell(me->GetVictim(), SPELL_STAMPEDE, false);
-                    events.ScheduleEvent(EVENT_STAMPEDE, 15000);
+                    events.ScheduleEvent(EVENT_STAMPEDE, 15s);
                     break;
                 case EVENT_WHIRLING_SLASH:
                     if (++phaseCounter >= 3)
@@ -178,21 +178,21 @@ public:
                         phaseCounter = 0;
                         return;
                     }
-                    events.ScheduleEvent(EVENT_WHIRLING_SLASH, 21000);
+                    events.ScheduleEvent(EVENT_WHIRLING_SLASH, 21s);
                     me->CastSpell(me, SPELL_WHIRLING_SLASH, false);
                     break;
                 case EVENT_PUNCTURE:
                     me->CastSpell(me->GetVictim(), SPELL_PUNCTURE, false);
-                    events.ScheduleEvent(EVENT_PUNCTURE, 8000);
+                    events.ScheduleEvent(EVENT_PUNCTURE, 8s);
                     break;
                 case EVENT_ENRAGE:
                     me->CastSpell(me, SPELL_ENRAGE, false);
-                    events.ScheduleEvent(EVENT_ENRAGE, 20000);
+                    events.ScheduleEvent(EVENT_ENRAGE, 20s);
                     break;
                 case EVENT_STOMP:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f, true))
                         me->CastSpell(target, SPELL_STOMP, false);
-                    events.ScheduleEvent(EVENT_STOMP, 20000);
+                    events.ScheduleEvent(EVENT_STOMP, 20s);
                     break;
                 case EVENT_IMPALING_CHARGE:
                     if (++phaseCounter >= 3)
@@ -203,8 +203,8 @@ public:
                         phaseCounter = 0;
                         return;
                     }
-                    events.ScheduleEvent(EVENT_IMPALING_CHARGE, 21000);
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100.0f, true))
+                    events.ScheduleEvent(EVENT_IMPALING_CHARGE, 21s);
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 100.0f, true))
                     {
                         me->CastSpell(target, SPELL_IMPALING_CHARGE, false);
                         impaledList.insert(target->GetGUID());

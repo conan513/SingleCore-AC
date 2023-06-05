@@ -23,8 +23,8 @@
 #include "CombatAI.h"
 #include "Pet.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
 
 enum MageSpells
@@ -89,7 +89,7 @@ struct npc_pet_mage_mirror_image : CasterAI
 
         ((Minion*)me)->SetFollowAngle(angle);
         if (owner->IsInCombat())
-            me->NearTeleportTo(me->GetPositionX() + cos(angle)*dist, me->GetPositionY() + sin(angle)*dist, me->GetPositionZ(), me->GetOrientation(), false, false, false, false);
+            me->NearTeleportTo(me->GetPositionX() + cos(angle)*dist, me->GetPositionY() + std::sin(angle)*dist, me->GetPositionZ(), me->GetOrientation(), false, false, false, false);
         else
             me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, me->GetFollowAngle(), MOTION_SLOT_ACTIVE);
 
@@ -101,7 +101,7 @@ struct npc_pet_mage_mirror_image : CasterAI
         while (ref)
         {
             if (Unit* unit = ref->GetSource()->GetOwner())
-                unit->AddThreat(me, ref->getThreat() - ref->getTempThreatModifier());
+                unit->AddThreat(me, ref->GetThreat() - ref->getTempThreatModifier());
             ref = ref->next();
         }
 
@@ -133,7 +133,7 @@ struct npc_pet_mage_mirror_image : CasterAI
     }
 
     // Do not reload Creature templates on evade mode enter - prevent visual lost
-    void EnterEvadeMode() override
+    void EnterEvadeMode(EvadeReason /*why*/) override
     {
         if (me->IsInEvadeMode() || !me->IsAlive())
             return;
@@ -164,7 +164,7 @@ struct npc_pet_mage_mirror_image : CasterAI
 
             if (selection)
             {
-                me->getThreatMgr().resetAllAggro();
+                me->GetThreatMgr().ResetAllThreat();
                 me->AddThreat(selection, 1000000.0f);
 
                 if (owner->IsInCombat())
@@ -172,7 +172,7 @@ struct npc_pet_mage_mirror_image : CasterAI
             }
 
             if (!owner->IsInCombat() && !me->GetVictim())
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
         }
     }
 

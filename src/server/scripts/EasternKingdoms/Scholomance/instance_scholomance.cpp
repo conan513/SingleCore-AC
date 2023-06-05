@@ -18,11 +18,11 @@
 #include "GameObjectAI.h"
 #include "InstanceScript.h"
 #include "Player.h"
-#include "scholomance.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
 #include "SpellScript.h"
+#include "scholomance.h"
 
 Position KirtonosSpawn = Position(315.028, 70.5385, 102.15, 0.385971);
 
@@ -61,6 +61,9 @@ public:
             {
                 case GO_GATE_KIRTONOS:
                     GateKirtonosGUID = go->GetGUID();
+                    break;
+                case GO_DOOR_OPENED_WITH_KEY:
+                    go->UpdateSaveToDb(true);
                     break;
                 case GO_GATE_GANDLING_DOWN_NORTH:
                     GandlingGatesGUID[0] = go->GetGUID();
@@ -128,7 +131,10 @@ public:
                             // summon kirtonos and close door
                             if (_kirtonosState == NOT_STARTED)
                             {
-                                instance->SummonCreature(NPC_KIRTONOS, KirtonosSpawn);
+                                if (Creature* kirtonos = instance->SummonCreature(NPC_KIRTONOS, KirtonosSpawn))
+                                {
+                                    kirtonos->AI()->DoAction(IN_PROGRESS);
+                                }
                                 if (GameObject* gate = instance->GetGameObject(GetGuidData(GO_GATE_KIRTONOS)))
                                 {
                                     gate->SetGoState(GO_STATE_READY);
@@ -208,30 +214,15 @@ public:
             return 0;
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            std::ostringstream saveStream;
-            saveStream << "S O " << _kirtonosState << ' ' << _miniBosses;
-            return saveStream.str();
+            data >> _kirtonosState;
+            data >> _miniBosses;
         }
 
-        void Load(const char* str) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!str)
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(str);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'S' && dataHead2 == 'O')
-            {
-                loadStream >> _kirtonosState;
-                loadStream >> _miniBosses;
-
-                if (_kirtonosState == IN_PROGRESS)
-                    _kirtonosState = NOT_STARTED;
-            }
+            data << _kirtonosState << ' ' << _miniBosses;
         }
 
     protected:
@@ -286,63 +277,6 @@ public:
     AuraScript* GetAuraScript() const override
     {
         return new spell_scholomance_fixate_AuraScript();
-    }
-};
-
-class spell_kormok_summon_bone_mages : SpellScriptLoader
-{
-public:
-    spell_kormok_summon_bone_mages() : SpellScriptLoader("spell_kormok_summon_bone_mages") { }
-
-    class spell_kormok_summon_bone_magesSpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_kormok_summon_bone_magesSpellScript);
-
-        void HandleScript(SpellEffIndex effIndex)
-        {
-            PreventHitDefaultEffect(effIndex);
-            for (uint8 i = 0; i < 2; ++i)
-                GetCaster()->CastSpell(GetCaster(), SPELL_SUMMON_BONE_MAGE_FRONT_LEFT + urand(0, 3), true);
-        }
-
-        void Register() override
-        {
-            OnEffectHitTarget += SpellEffectFn(spell_kormok_summon_bone_magesSpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
-        }
-    };
-
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_kormok_summon_bone_magesSpellScript();
-    }
-};
-
-class spell_kormok_summon_bone_minions : SpellScriptLoader
-{
-public:
-    spell_kormok_summon_bone_minions() : SpellScriptLoader("spell_kormok_summon_bone_minions") { }
-
-    class spell_kormok_summon_bone_minionsSpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_kormok_summon_bone_minionsSpellScript);
-
-        void HandleScript(SpellEffIndex effIndex)
-        {
-            PreventHitDefaultEffect(effIndex);
-
-            for (uint32 i = 0; i < 4; ++i)
-                GetCaster()->CastSpell(GetCaster(), SPELL_SUMMON_BONE_MINION1 + i, true);
-        }
-
-        void Register() override
-        {
-            OnEffectHitTarget += SpellEffectFn(spell_kormok_summon_bone_minionsSpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
-        }
-    };
-
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_kormok_summon_bone_minionsSpellScript();
     }
 };
 
@@ -425,7 +359,7 @@ public:
 
         Unit* SelectUnitCasting()
         {
-          ThreatContainer::StorageType threatlist = me->getThreatMgr().getThreatList();
+          ThreatContainer::StorageType threatlist = me->GetThreatMgr().GetThreatList();
           for (ThreatContainer::StorageType::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
           {
               if (Unit* unit = ObjectAccessor::GetUnit(*me, (*itr)->getUnitGuid()))
@@ -449,14 +383,14 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             originalDisplayId = me->GetDisplayId();
 
             events.Reset();
-            events.RescheduleEvent(1, urand(1000, 7000));
-            events.RescheduleEvent(2, 400);
-            events.RescheduleEvent(3, urand(6000, 15000));
+            events.RescheduleEvent(1, 1s, 7s);
+            events.RescheduleEvent(2, 400ms);
+            events.RescheduleEvent(3, 6s, 15s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -473,7 +407,7 @@ public:
                 events.Reset();
                 me->InterruptNonMeleeSpells(false);
                 me->UpdateEntry(DARK_SHADE_ENTRY, nullptr, false);
-                events.RescheduleEvent(4, urand(2000, 10000));
+                events.RescheduleEvent(4, 2s, 10s);
             }
 
             if (me->HasUnitState(UNIT_STATE_CASTING))
@@ -499,7 +433,7 @@ public:
                     }
                     break;
                 case 3:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, PowerUsersSelector(me, POWER_MANA, 20.0f, false)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, PowerUsersSelector(me, POWER_MANA, 20.0f, false)))
                     {
                         me->CastSpell(target, DRAIN_MANA_SPELL, false);
                     }
@@ -525,8 +459,6 @@ void AddSC_instance_scholomance()
 {
     new instance_scholomance();
     new spell_scholomance_fixate();
-    new spell_kormok_summon_bone_mages();
-    new spell_kormok_summon_bone_minions();
     new spell_scholomance_boon_of_life();
     new npc_scholomance_occultist();
 }

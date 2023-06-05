@@ -18,8 +18,10 @@
 #ifndef DEF_GUNDRAK_H
 #define DEF_GUNDRAK_H
 
-#include "SpellScript.h"
 #include "CreatureAIImpl.h"
+#include "SpellScript.h"
+
+#define DataHeader "GD"
 
 #define GundrakScriptName "instance_gundrak"
 

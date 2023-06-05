@@ -16,7 +16,7 @@
  */
 
 #include "CreatureTextMgr.h"
-#include "icecrown_citadel.h"
+#include "GameTime.h"
 #include "MoveSpline.h"
 #include "MoveSplineInit.h"
 #include "ScriptMgr.h"
@@ -24,6 +24,7 @@
 #include "Transport.h"
 #include "TransportMgr.h"
 #include "Vehicle.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -424,7 +425,7 @@ public:
             return false;
 
         bool summoned = false;
-        time_t now = time(nullptr);
+        time_t now = GameTime::GetGameTime().count();
         for (int32 i = first; i <= last; ++i)
         {
             if (_respawnCooldowns[i] > now)
@@ -460,7 +461,7 @@ public:
     void ClearSlot(PassengerSlots slot)
     {
         _controlledSlots[slot].Clear();
-        _respawnCooldowns[slot] = time(nullptr) + _slotInfo[slot].Cooldown;
+        _respawnCooldowns[slot] = GameTime::GetGameTime().count() + _slotInfo[slot].Cooldown;
     }
 
 private:
@@ -749,7 +750,7 @@ public:
             _controller.ResetSlots(TEAM_HORDE, creature->GetTransport()->ToMotionTransport());
             me->SetRegeneratingHealth(false);
             me->m_CombatDistance = 70.0f;
-            _firstMageCooldown = time(nullptr) + 45;
+            _firstMageCooldown = GameTime::GetGameTime().count() + 45;
             _axethrowersYellCooldown = time_t(0);
             _rocketeersYellCooldown = time_t(0);
             checkTimer = 1000;
@@ -757,33 +758,33 @@ public:
 
         void sGossipSelect(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/) override
         {
-            if (!me->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+            if (!me->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
                 return;
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             me->GetTransport()->setActive(true);
             me->GetTransport()->ToMotionTransport()->EnableMovement(true);
-            _events.ScheduleEvent(EVENT_INTRO_H_1, 5000);
-            _events.ScheduleEvent(EVENT_INTRO_H_2, 16000);
-            _events.ScheduleEvent(EVENT_INTRO_SUMMON_SKYBREAKER, 24600);
-            _events.ScheduleEvent(EVENT_INTRO_H_3, 29600);
-            _events.ScheduleEvent(EVENT_INTRO_H_4, 39200);
+            _events.ScheduleEvent(EVENT_INTRO_H_1, 5s);
+            _events.ScheduleEvent(EVENT_INTRO_H_2, 16s);
+            _events.ScheduleEvent(EVENT_INTRO_SUMMON_SKYBREAKER, 24s + 600ms);
+            _events.ScheduleEvent(EVENT_INTRO_H_3, 29s + 600ms);
+            _events.ScheduleEvent(EVENT_INTRO_H_4, 39s + 200ms);
         }
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
             if (_instance->GetData(DATA_TEAMID_IN_INSTANCE) == TEAM_HORDE && !me->HasAura(SPELL_FRIENDLY_BOSS_DAMAGE_MOD))
                 me->CastSpell(me, SPELL_FRIENDLY_BOSS_DAMAGE_MOD, true);
             if (!me->HasAura(SPELL_BATTLE_FURY))
                 me->CastSpell(me, SPELL_BATTLE_FURY, true);
             _events.CancelEvent(EVENT_CLEAVE);
-            _events.ScheduleEvent(EVENT_CLEAVE, urand(3000, 6000));
+            _events.ScheduleEvent(EVENT_CLEAVE, 3s, 6s);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             if (!me->IsAlive())
                 return;
-            me->DeleteThreatList();
+            me->GetThreatMgr().ClearAllThreat();
             me->CombatStop(true);
             me->GetMotionMaster()->MoveTargetedHome();
             Reset();
@@ -800,9 +801,9 @@ public:
                     muradin->AI()->DoAction(ACTION_SPAWN_ALL_ADDS);
 
                 Talk(SAY_SAURFANG_INTRO_5);
-                _events.ScheduleEvent(EVENT_INTRO_H_5, 4000);
-                _events.ScheduleEvent(EVENT_INTRO_H_6, 11000);
-                _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 1);
+                _events.ScheduleEvent(EVENT_INTRO_H_5, 4s);
+                _events.ScheduleEvent(EVENT_INTRO_H_6, 11s);
+                _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 1ms);
 
                 if (Creature* skybreaker = me->FindNearestCreature(NPC_THE_SKYBREAKER, 200.0f))
                     _instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, skybreaker, 1);
@@ -814,17 +815,17 @@ public:
             }
             else if (action == ACTION_SPAWN_MAGE)
             {
-                time_t now = time(nullptr);
+                time_t now = GameTime::GetGameTime().count();
                 if (_firstMageCooldown > now)
                     _events.ScheduleEvent(EVENT_SUMMON_MAGE, (_firstMageCooldown - now) * IN_MILLISECONDS);
                 else
-                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 1);
+                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 1ms);
             }
             else if (action == ACTION_SPAWN_ALL_ADDS)
             {
-                _events.ScheduleEvent(EVENT_ADDS, 12000);
-                _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 13000);
-                _events.ScheduleEvent(EVENT_CHECK_MORTAR, 13000);
+                _events.ScheduleEvent(EVENT_ADDS, 12s);
+                _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 13s);
+                _events.ScheduleEvent(EVENT_CHECK_MORTAR, 13s);
                 if (Is25ManRaid())
                     _controller.SummonCreatures(me, SLOT_MAGE_1, SLOT_MORTAR_4);
                 else
@@ -859,7 +860,7 @@ public:
             {
                 _controller.ClearSlot(PassengerSlots(data));
                 if (data == SLOT_FREEZE_MAGE)
-                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, urand(30000, 33500));
+                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 30s, 33s + 500ms);
             }
         }
 
@@ -949,7 +950,7 @@ public:
                             if (Player* p = itr->GetSource())
                                 if (!p->IsGameMaster())
                                     p->SetInCombatState(true);
-                        _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 4000);
+                        _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 4s);
                     }
                     break;
 
@@ -979,8 +980,8 @@ public:
                             me->SummonCreature(NPC_TELEPORT_EXIT, x, y, z, o, TEMPSUMMON_TIMED_DESPAWN, 23000);
                         }
 
-                    _events.ScheduleEvent(EVENT_ADDS_BOARD_YELL, 6000);
-                    _events.ScheduleEvent(EVENT_ADDS, 60000);
+                    _events.ScheduleEvent(EVENT_ADDS_BOARD_YELL, 6s);
+                    _events.ScheduleEvent(EVENT_ADDS, 1min);
                     break;
                 case EVENT_ADDS_BOARD_YELL:
                     if (Creature* muradin = me->FindNearestCreature(NPC_IGB_MURADIN_BRONZEBEARD, 200.0f))
@@ -989,29 +990,29 @@ public:
                 case EVENT_CHECK_RIFLEMAN:
                     if (_controller.SummonCreatures(me, SLOT_RIFLEMAN_1, Is25ManRaid() ? SLOT_RIFLEMAN_8 : SLOT_RIFLEMAN_4))
                     {
-                        if (_axethrowersYellCooldown < time(nullptr))
+                        if (_axethrowersYellCooldown < GameTime::GetGameTime().count())
                         {
                             Talk(SAY_SAURFANG_AXETHROWERS);
-                            _axethrowersYellCooldown = time(nullptr) + 5;
+                            _axethrowersYellCooldown = GameTime::GetGameTime().count() + 5;
                         }
                     }
-                    _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 1500);
+                    _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 1500ms);
                     break;
                 case EVENT_CHECK_MORTAR:
                     if (_controller.SummonCreatures(me, SLOT_MORTAR_1, Is25ManRaid() ? SLOT_MORTAR_4 : SLOT_MORTAR_2))
                     {
-                        if (_rocketeersYellCooldown < time(nullptr))
+                        if (_rocketeersYellCooldown < GameTime::GetGameTime().count())
                         {
                             Talk(SAY_SAURFANG_ROCKETEERS);
-                            _rocketeersYellCooldown = time(nullptr) + 5;
+                            _rocketeersYellCooldown = GameTime::GetGameTime().count() + 5;
                         }
                     }
-                    _events.ScheduleEvent(EVENT_CHECK_MORTAR, 1500);
+                    _events.ScheduleEvent(EVENT_CHECK_MORTAR, 1500ms);
                     break;
                 case EVENT_CLEAVE:
                     if (me->GetVictim())
                         me->CastSpell(me->GetVictim(), SPELL_CLEAVE, false);
-                    _events.ScheduleEvent(EVENT_CLEAVE, urand(4000, 8000));
+                    _events.ScheduleEvent(EVENT_CLEAVE, 4s, 8s);
                     break;
 
                 default:
@@ -1046,7 +1047,7 @@ public:
             }
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             if (_instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) != IN_PROGRESS)
                 return false;
@@ -1084,7 +1085,7 @@ public:
             _controller.ResetSlots(TEAM_ALLIANCE, creature->GetTransport()->ToMotionTransport());
             me->SetRegeneratingHealth(false);
             me->m_CombatDistance = 70.0f;
-            _firstMageCooldown = time(nullptr) + 45;
+            _firstMageCooldown = GameTime::GetGameTime().count() + 45;
             _riflemanYellCooldown = time_t(0);
             _mortarYellCooldown = time_t(0);
             checkTimer = 1000;
@@ -1092,34 +1093,34 @@ public:
 
         void sGossipSelect(Player* /*player*/, uint32 /*sender*/, uint32 /*action*/) override
         {
-            if (!me->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+            if (!me->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
                 return;
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             me->GetTransport()->setActive(true);
             me->GetTransport()->ToMotionTransport()->EnableMovement(true);
-            _events.ScheduleEvent(EVENT_INTRO_A_1, 5000);
-            _events.ScheduleEvent(EVENT_INTRO_A_2, 10000);
-            _events.ScheduleEvent(EVENT_INTRO_SUMMON_ORGRIMS_HAMMER, 28000);
-            _events.ScheduleEvent(EVENT_INTRO_A_3, 33000);
-            _events.ScheduleEvent(EVENT_INTRO_A_4, 39000);
-            _events.ScheduleEvent(EVENT_INTRO_A_5, 45000);
+            _events.ScheduleEvent(EVENT_INTRO_A_1, 5s);
+            _events.ScheduleEvent(EVENT_INTRO_A_2, 10s);
+            _events.ScheduleEvent(EVENT_INTRO_SUMMON_ORGRIMS_HAMMER, 28s);
+            _events.ScheduleEvent(EVENT_INTRO_A_3, 33s);
+            _events.ScheduleEvent(EVENT_INTRO_A_4, 39s);
+            _events.ScheduleEvent(EVENT_INTRO_A_5, 45s);
         }
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
             if (_instance->GetData(DATA_TEAMID_IN_INSTANCE) == TEAM_ALLIANCE && !me->HasAura(SPELL_FRIENDLY_BOSS_DAMAGE_MOD))
                 me->CastSpell(me, SPELL_FRIENDLY_BOSS_DAMAGE_MOD, true);
             if (!me->HasAura(SPELL_BATTLE_FURY))
                 me->CastSpell(me, SPELL_BATTLE_FURY, true);
             _events.CancelEvent(EVENT_CLEAVE);
-            _events.ScheduleEvent(EVENT_CLEAVE, urand(3000, 6000));
+            _events.ScheduleEvent(EVENT_CLEAVE, 3s, 6s);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             if (!me->IsAlive())
                 return;
-            me->DeleteThreatList();
+            me->GetThreatMgr().ClearAllThreat();
             me->CombatStop(true);
             me->GetMotionMaster()->MoveTargetedHome();
             Reset();
@@ -1136,9 +1137,9 @@ public:
                     saurfang->AI()->DoAction(ACTION_SPAWN_ALL_ADDS);
 
                 Talk(SAY_MURADIN_INTRO_6);
-                _events.ScheduleEvent(EVENT_INTRO_A_6, 5000);
-                _events.ScheduleEvent(EVENT_INTRO_A_7, 11000);
-                _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 1);
+                _events.ScheduleEvent(EVENT_INTRO_A_6, 5s);
+                _events.ScheduleEvent(EVENT_INTRO_A_7, 11s);
+                _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 1ms);
 
                 if (Creature* orgrimsHammer = me->FindNearestCreature(NPC_ORGRIMS_HAMMER, 200.0f))
                     _instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, orgrimsHammer, 1);
@@ -1150,17 +1151,17 @@ public:
             }
             else if (action == ACTION_SPAWN_MAGE)
             {
-                time_t now = time(nullptr);
+                time_t now = GameTime::GetGameTime().count();
                 if (_firstMageCooldown > now)
                     _events.ScheduleEvent(EVENT_SUMMON_MAGE, (_firstMageCooldown - now) * IN_MILLISECONDS);
                 else
-                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 1);
+                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 1ms);
             }
             else if (action == ACTION_SPAWN_ALL_ADDS)
             {
-                _events.ScheduleEvent(EVENT_ADDS, 12000);
-                _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 13000);
-                _events.ScheduleEvent(EVENT_CHECK_MORTAR, 13000);
+                _events.ScheduleEvent(EVENT_ADDS, 12s);
+                _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 13s);
+                _events.ScheduleEvent(EVENT_CHECK_MORTAR, 13s);
                 if (Is25ManRaid())
                     _controller.SummonCreatures(me, SLOT_MAGE_1, SLOT_MORTAR_4);
                 else
@@ -1195,7 +1196,7 @@ public:
             {
                 _controller.ClearSlot(PassengerSlots(data));
                 if (data == SLOT_FREEZE_MAGE)
-                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, urand(30000, 33500));
+                    _events.ScheduleEvent(EVENT_SUMMON_MAGE, 30s, 33s + 500ms);
             }
         }
 
@@ -1288,7 +1289,7 @@ public:
                             if (Player* p = itr->GetSource())
                                 if (!p->IsGameMaster())
                                     p->SetInCombatState(true);
-                        _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 4000);
+                        _events.ScheduleEvent(EVENT_KEEP_PLAYER_IN_COMBAT, 4s);
                     }
                     break;
 
@@ -1318,8 +1319,8 @@ public:
                             me->SummonCreature(NPC_TELEPORT_EXIT, x, y, z, o, TEMPSUMMON_TIMED_DESPAWN, 23000);
                         }
 
-                    _events.ScheduleEvent(EVENT_ADDS_BOARD_YELL, 6000);
-                    _events.ScheduleEvent(EVENT_ADDS, 60000);
+                    _events.ScheduleEvent(EVENT_ADDS_BOARD_YELL, 6s);
+                    _events.ScheduleEvent(EVENT_ADDS, 1min);
                     break;
                 case EVENT_ADDS_BOARD_YELL:
                     if (Creature* saurfang = me->FindNearestCreature(NPC_IGB_HIGH_OVERLORD_SAURFANG, 200.0f))
@@ -1328,29 +1329,29 @@ public:
                 case EVENT_CHECK_RIFLEMAN:
                     if (_controller.SummonCreatures(me, SLOT_RIFLEMAN_1, Is25ManRaid() ? SLOT_RIFLEMAN_8 : SLOT_RIFLEMAN_4))
                     {
-                        if (_riflemanYellCooldown < time(nullptr))
+                        if (_riflemanYellCooldown < GameTime::GetGameTime().count())
                         {
                             Talk(SAY_MURADIN_RIFLEMAN);
-                            _riflemanYellCooldown = time(nullptr) + 5;
+                            _riflemanYellCooldown = GameTime::GetGameTime().count() + 5;
                         }
                     }
-                    _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 1500);
+                    _events.ScheduleEvent(EVENT_CHECK_RIFLEMAN, 1500ms);
                     break;
                 case EVENT_CHECK_MORTAR:
                     if (_controller.SummonCreatures(me, SLOT_MORTAR_1, Is25ManRaid() ? SLOT_MORTAR_4 : SLOT_MORTAR_2))
                     {
-                        if (_mortarYellCooldown < time(nullptr))
+                        if (_mortarYellCooldown < GameTime::GetGameTime().count())
                         {
                             Talk(SAY_MURADIN_MORTAR);
-                            _mortarYellCooldown = time(nullptr) + 5;
+                            _mortarYellCooldown = GameTime::GetGameTime().count() + 5;
                         }
                     }
-                    _events.ScheduleEvent(EVENT_CHECK_MORTAR, 1500);
+                    _events.ScheduleEvent(EVENT_CHECK_MORTAR, 1500ms);
                     break;
                 case EVENT_CLEAVE:
                     if (me->GetVictim())
                         me->CastSpell(me->GetVictim(), SPELL_CLEAVE, false);
-                    _events.ScheduleEvent(EVENT_CLEAVE, urand(4000, 8000));
+                    _events.ScheduleEvent(EVENT_CLEAVE, 4s, 8s);
                     break;
 
                 default:
@@ -1385,7 +1386,7 @@ public:
             }
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             if (_instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) != IN_PROGRESS)
                 return false;
@@ -1444,7 +1445,7 @@ public:
     {
         npc_igb_ship_crewAI(Creature* creature) : ScriptedAI(creature), _instance(creature->GetInstanceScript()) {}
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return _instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == IN_PROGRESS && target->GetTransport() == me->GetTransport() && target->GetPositionZ() < 478.0f && (me->GetEntry() == NPC_SKYBREAKER_DECKHAND ? (target->GetPositionY() > 2042.0f) : (target->GetPositionY() < 2431.0f));
         }
@@ -1491,11 +1492,11 @@ struct gunship_npc_AI : public ScriptedAI
         }
     }
 
-    void EnterEvadeMode() override
+    void EnterEvadeMode(EvadeReason /*why*/) override
     {
         if (!me->IsAlive() || !me->IsInCombat())
             return;
-        me->DeleteThreatList();
+        me->GetThreatMgr().ClearAllThreat();
         me->CombatStop(true);
         me->GetMotionMaster()->MoveTargetedHome();
         Reset();
@@ -1552,11 +1553,11 @@ struct npc_gunship_boarding_addAI : public ScriptedAI
         }
     }
 
-    void EnterEvadeMode() override
+    void EnterEvadeMode(EvadeReason /*why*/) override
     {
         if (!me->IsAlive() || !me->IsInCombat())
             return;
-        me->DeleteThreatList();
+        me->GetThreatMgr().ClearAllThreat();
         me->CombatStop(true);
         me->GetMotionMaster()->MoveTargetedHome();
         Reset();
@@ -1626,7 +1627,7 @@ struct npc_gunship_boarding_addAI : public ScriptedAI
             checkTimer -= diff;
     }
 
-    bool CanAIAttack(const Unit* target) const override
+    bool CanAIAttack(Unit const* target) const override
     {
         return Instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == IN_PROGRESS && target->GetTransport() && target->GetTransport() != me->GetTransport() && target->GetPositionZ() < 478.0f && (me->GetEntry() == NPC_SKYBREAKER_SERGEANT || me->GetEntry() == NPC_SKYBREAKER_MARINE ? (target->GetPositionY() < 2431.0f) : (target->GetPositionY() > 2042.0f));
     }
@@ -1657,11 +1658,11 @@ public:
         {
         }
 
-        void EnterCombat(Unit*  /*target*/) override
+        void JustEngagedWith(Unit*  /*target*/) override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_BLADESTORM, urand(13000, 18000));
-            _events.ScheduleEvent(EVENT_WOUNDING_STRIKE, urand(5000, 10000));
+            _events.ScheduleEvent(EVENT_BLADESTORM, 13s, 18s);
+            _events.ScheduleEvent(EVENT_WOUNDING_STRIKE, 5s, 10s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -1688,11 +1689,11 @@ public:
                     break;
                 case EVENT_BLADESTORM:
                     me->CastSpell(me->GetVictim(), SPELL_BLADESTORM, false);
-                    _events.ScheduleEvent(EVENT_BLADESTORM, urand(25000, 30000));
+                    _events.ScheduleEvent(EVENT_BLADESTORM, 25s, 30s);
                     break;
                 case EVENT_WOUNDING_STRIKE:
                     me->CastSpell(me->GetVictim(), SPELL_WOUNDING_STRIKE, false);
-                    _events.ScheduleEvent(EVENT_WOUNDING_STRIKE, urand(7000, 13000));
+                    _events.ScheduleEvent(EVENT_WOUNDING_STRIKE, 7s, 13s);
                     break;
                 default:
                     break;
@@ -1805,7 +1806,7 @@ public:
             gunship_npc_AI::UpdateAI(diff);
         }
 
-        bool CanAIAttack(const Unit*  /*target*/) const override
+        bool CanAIAttack(Unit const*  /*target*/) const override
         {
             return Instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == IN_PROGRESS;
         }
@@ -1879,7 +1880,7 @@ public:
             DoSpellAttackIfReady(me->GetEntry() == NPC_SKYBREAKER_RIFLEMAN ? SPELL_SHOOT : SPELL_HURL_AXE);
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return Instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == IN_PROGRESS && target->GetTransport() && target->GetTransport() != me->GetTransport();
         }
@@ -1934,7 +1935,7 @@ public:
             me->_AddCreatureSpellCooldown(spellId, 0, 9000);
         }
 
-        bool CanAIAttack(const Unit*  /*target*/) const override
+        bool CanAIAttack(Unit const*  /*target*/) const override
         {
             return Instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == IN_PROGRESS;
         }
@@ -2425,7 +2426,7 @@ public:
         void CalculateDamage(SpellEffIndex /*effIndex*/)
         {
             PreventHitEffect(EFFECT_0);
-            const SpellInfo* si = sSpellMgr->GetSpellInfo(GetSpellInfo()->Effects[0].TriggerSpell);
+            SpellInfo const* si = sSpellMgr->GetSpellInfo(GetSpellInfo()->Effects[0].TriggerSpell);
             if (!si)
                 return;
             SpellCastTargets targets;
@@ -2718,6 +2719,22 @@ public:
     }
 };
 
+// 71201 - Battle Experience - proc should never happen, handled in script
+class spell_igb_battle_experience_check : public AuraScript
+{
+    PrepareAuraScript(spell_igb_battle_experience_check);
+
+    bool CheckProc(ProcEventInfo& /*eventInfo*/)
+    {
+        return false;
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_igb_battle_experience_check::CheckProc);
+    }
+};
+
 void AddSC_boss_icecrown_gunship_battle()
 {
     new npc_gunship();
@@ -2749,4 +2766,5 @@ void AddSC_boss_icecrown_gunship_battle()
     new spell_igb_below_zero();
     new spell_igb_on_gunship_deck();
     new achievement_im_on_a_boat();
+    RegisterSpellScript(spell_igb_battle_experience_check);
 }

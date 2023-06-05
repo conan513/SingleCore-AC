@@ -27,10 +27,10 @@ npc_aged_dying_ancient_kodo
 EndContentData */
 
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellInfo.h"
 
 // Ours
@@ -101,7 +101,7 @@ public:
             _faction = 35;
             headNorth = true;
             me->setActive(true);
-            events.ScheduleEvent(EVENT_RESTART_ESCORT, 0);
+            events.ScheduleEvent(EVENT_RESTART_ESCORT, 0ms);
         }
 
         void JustRespawned() override
@@ -122,11 +122,11 @@ public:
             npc_escortAI::JustDied(killer);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             SummonsFollow();
             ImmuneFlagSet(false, 35);
-            npc_escortAI::EnterEvadeMode();
+            npc_escortAI::EnterEvadeMode(why);
         }
 
         void CheckPlayer()
@@ -147,7 +147,7 @@ public:
             _faction = faction;
             SetEscortPaused(false);
             if (Creature* active = !headNorth ? me : ObjectAccessor::GetCreature(*me, summons[0]))
-                active->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                active->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
             events.CancelEvent(EVENT_WAIT_FOR_ASSIST);
         }
 
@@ -192,11 +192,11 @@ public:
         void SummonHelpers()
         {
             RemoveSummons();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
 
             if (Creature* cr = me->SummonCreature(NPC_RIGGER_GIZELTON, *me))
             {
-                cr->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                cr->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                 summons[0] = cr->GetGUID();
             }
             if (Creature* cr = me->SummonCreature(NPC_CARAVAN_KODO, *me))
@@ -258,14 +258,14 @@ public:
                 {
                     summon->SetFaction(faction);
                     if (remove)
-                        summon->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC);
+                        summon->SetImmuneToNPC(false);
                     else
-                        summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC);
+                        summon->SetImmuneToNPC(true);
                 }
             if (remove)
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC);
+                me->SetImmuneToNPC(false);
             else
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_NPC);
+                me->SetImmuneToNPC(true);
             me->SetFaction(faction);
         }
 
@@ -291,7 +291,7 @@ public:
                 // North -> South - hire
                 case 77:
                     SetEscortPaused(true);
-                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                     Talk(SAY_CARAVAN_HIRE);
                     events.ScheduleEvent(EVENT_WAIT_FOR_ASSIST, TIME_HIRE_STOP);
                     break;
@@ -300,7 +300,7 @@ public:
                     SetEscortPaused(true);
                     if (Creature* rigger = ObjectAccessor::GetCreature(*me, summons[0]))
                     {
-                        rigger->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                        rigger->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                         rigger->AI()->Talk(SAY_CARAVAN_HIRE);
                     }
                     events.ScheduleEvent(EVENT_WAIT_FOR_ASSIST, TIME_HIRE_STOP);
@@ -342,7 +342,7 @@ public:
                         {
                             float o = (i * M_PI / 2) + (M_PI / 4);
                             float x = me->GetPositionX() + cos(o) * 15.0f;
-                            float y = me->GetPositionY() + sin(o) * 15.0f;
+                            float y = me->GetPositionY() + std::sin(o) * 15.0f;
                             if ((cr = me->SummonCreature((i % 2 == 0 ? NPC_KOLKAR_WAYLAYER : NPC_KOLKAR_AMBUSHER),
                                                          x, y, me->GetMap()->GetHeight(x, y, MAX_HEIGHT), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000)))
                                 cr->AI()->AttackStart(me);
@@ -367,7 +367,7 @@ public:
                         {
                             float o = i * 2 * M_PI / 3;
                             float x = me->GetPositionX() + cos(o) * 10.0f;
-                            float y = me->GetPositionY() + sin(o) * 10.0f;
+                            float y = me->GetPositionY() + std::sin(o) * 10.0f;
                             uint32 entry = NPC_LESSER_INFERNAL;
                             if (i)
                                 entry = i == 1 ? NPC_DOOMWARDER : NPC_NETHER;
@@ -383,7 +383,7 @@ public:
                         break;
                     }
                 case 282:
-                    events.ScheduleEvent(EVENT_RESTART_ESCORT, 1000);
+                    events.ScheduleEvent(EVENT_RESTART_ESCORT, 1s);
                     break;
             }
         }
@@ -403,7 +403,7 @@ public:
                 case EVENT_WAIT_FOR_ASSIST:
                     SetEscortPaused(false);
                     if (Creature* active = !headNorth ? me : ObjectAccessor::GetCreature(*me, summons[0]))
-                        active->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                        active->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                     break;
                 case EVENT_RESTART_ESCORT:
                     CheckCaravan();
@@ -426,6 +426,8 @@ enum DyingKodo
     SAY_SMEED_HOME                  = 0,
 
     QUEST_KODO                      = 5561,
+
+    NPC_TEXT_KODO                   = 4449, // MenuID 3650
 
     NPC_SMEED                       = 11596,
     NPC_AGED_KODO                   = 4700,
@@ -484,7 +486,7 @@ public:
             }
             else if (spell->Id == SPELL_KODO_KOMBO_GOSSIP)
             {
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 me->DespawnOrUnsummon(60000);
             }
         }
@@ -498,7 +500,7 @@ public:
             player->RemoveAurasDueToSpell(SPELL_KODO_KOMBO_PLAYER_BUFF);
         }
 
-        SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
+        SendGossipMenuFor(player, NPC_TEXT_KODO, creature->GetGUID());
         return true;
     }
 

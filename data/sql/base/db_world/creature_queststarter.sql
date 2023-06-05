@@ -1,28 +1,29 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.creature_queststarter
+-- Dumping structure for table acore_world.creature_queststarter
 DROP TABLE IF EXISTS `creature_queststarter`;
 CREATE TABLE IF NOT EXISTS `creature_queststarter` (
-  `id` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'Identifier',
-  `quest` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'Quest Identifier',
+  `id` int unsigned NOT NULL DEFAULT '0' COMMENT 'Identifier',
+  `quest` int unsigned NOT NULL DEFAULT '0' COMMENT 'Quest Identifier',
   PRIMARY KEY (`id`,`quest`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 ROW_FORMAT=FIXED COMMENT='Creature System';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Creature System';
 
--- Дамп данных таблицы _acore_world.creature_queststarter: 7 457 rows
+-- Dumping data for table acore_world.creature_queststarter: ~7,497 rows (approximately)
 DELETE FROM `creature_queststarter`;
-/*!40000 ALTER TABLE `creature_queststarter` DISABLE KEYS */;
 INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(196, 33),
 	(197, 7),
@@ -141,6 +142,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(311, 269),
 	(311, 323),
 	(313, 94),
+	(313, 249),
 	(328, 1860),
 	(328, 1919),
 	(332, 141),
@@ -897,8 +899,8 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(3034, 9063),
 	(3038, 6066),
 	(3038, 6068),
-	(3038, 8151),
 	(3038, 9617),
+	(3039, 8151),
 	(3041, 1718),
 	(3041, 8417),
 	(3045, 8254),
@@ -1022,6 +1024,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(3341, 846),
 	(3341, 849),
 	(3344, 8410),
+	(3352, 8151),
 	(3354, 1505),
 	(3354, 1718),
 	(3354, 1823),
@@ -1056,7 +1059,6 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(3401, 2479),
 	(3402, 2382),
 	(3403, 8410),
-	(3406, 8151),
 	(3407, 6067),
 	(3407, 6070),
 	(3407, 9617),
@@ -2100,7 +2102,6 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(7916, 3661),
 	(7916, 4902),
 	(7917, 2923),
-	(7918, 2954),
 	(7937, 2929),
 	(7944, 2922),
 	(7944, 3640),
@@ -2480,13 +2481,11 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(10837, 5098),
 	(10837, 5228),
 	(10837, 5238),
-	(10837, 5511),
 	(10838, 211),
 	(10838, 5092),
 	(10838, 5097),
 	(10838, 5215),
 	(10838, 5237),
-	(10838, 5505),
 	(10838, 5533),
 	(10838, 8414),
 	(10838, 8418),
@@ -2578,10 +2577,12 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(11055, 5231),
 	(11055, 5233),
 	(11055, 5235),
+	(11056, 5505),
 	(11056, 5537),
 	(11056, 5538),
 	(11056, 5803),
 	(11057, 964),
+	(11057, 5511),
 	(11057, 5514),
 	(11057, 5804),
 	(11063, 5168),
@@ -2802,6 +2803,11 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(13257, 6781),
 	(13257, 7223),
 	(13278, 6805),
+	(13278, 6821),
+	(13278, 6822),
+	(13278, 6823),
+	(13278, 6824),
+	(13278, 7486),
 	(13283, 8233),
 	(13377, 6861),
 	(13377, 6862),
@@ -3032,12 +3038,12 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(14832, 7891),
 	(14832, 7892),
 	(14832, 7893),
+	(14832, 7939),
 	(14833, 7881),
 	(14833, 7882),
 	(14833, 7883),
 	(14833, 7884),
 	(14833, 7885),
-	(14833, 7939),
 	(14833, 7941),
 	(14841, 7894),
 	(14841, 7895),
@@ -3105,6 +3111,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(14905, 8073),
 	(14905, 8141),
 	(14905, 8142),
+	(14905, 8143),
 	(14905, 8144),
 	(14905, 8145),
 	(14905, 8146),
@@ -3449,6 +3456,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(15534, 8613),
 	(15534, 8614),
 	(15535, 8615),
+	(15535, 8616),
 	(15540, 8507),
 	(15540, 8731),
 	(15540, 8800),
@@ -3506,15 +3514,42 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(15612, 8732),
 	(15624, 8734),
 	(15693, 8745),
+	(15700, 8851),
+	(15700, 8852),
+	(15700, 8853),
+	(15700, 8854),
+	(15700, 8855),
+	(15701, 8846),
+	(15701, 8847),
+	(15701, 8848),
+	(15701, 8849),
+	(15701, 8850),
 	(15702, 8792),
 	(15703, 8793),
 	(15704, 8794),
 	(15707, 8795),
 	(15709, 8797),
+	(15731, 8811),
+	(15731, 8819),
 	(15732, 8827),
 	(15732, 8828),
 	(15732, 8860),
 	(15732, 8861),
+	(15733, 8812),
+	(15733, 8820),
+	(15734, 8813),
+	(15734, 8821),
+	(15735, 8814),
+	(15735, 8822),
+	(15736, 8815),
+	(15736, 8823),
+	(15737, 8816),
+	(15737, 8824),
+	(15738, 8815),
+	(15738, 8826),
+	(15738, 8842),
+	(15739, 8818),
+	(15739, 8825),
 	(15761, 8818),
 	(15761, 8826),
 	(15761, 8844),
@@ -4730,6 +4765,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(19935, 11105),
 	(19935, 11106),
 	(19935, 13432),
+	(19942, 10259),
 	(20066, 10267),
 	(20066, 10268),
 	(20066, 10311),
@@ -5038,6 +5074,10 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(21955, 10686),
 	(21955, 11095),
 	(21962, 10706),
+	(21968, 10693),
+	(21968, 10698),
+	(21969, 10699),
+	(21969, 10700),
 	(21983, 10717),
 	(21983, 10747),
 	(21984, 10614),
@@ -7266,6 +7306,7 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(34481, 14168),
 	(34482, 14177),
 	(34483, 14171),
+	(34484, 14169),
 	(34644, 14028),
 	(34653, 14064),
 	(34654, 14065),
@@ -7481,8 +7522,8 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 	(39678, 25286),
 	(39678, 25500),
 	(40429, 26034);
-/*!40000 ALTER TABLE `creature_queststarter` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

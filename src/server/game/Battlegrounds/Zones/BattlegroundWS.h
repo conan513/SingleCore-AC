@@ -19,6 +19,8 @@
 #define __BATTLEGROUNDWS_H
 
 #include "Battleground.h"
+#include "BattlegroundScore.h"
+#include "EventMap.h"
 
 enum BG_WS_Events
 {
@@ -28,7 +30,8 @@ enum BG_WS_Events
     BG_WS_EVENT_ALLIANCE_DROP_FLAG  = 4,
     BG_WS_EVENT_HORDE_DROP_FLAG     = 5,
     BG_WS_EVENT_BOTH_FLAGS_KEPT10   = 6,
-    BG_WS_EVENT_BOTH_FLAGS_KEPT15   = 7
+    BG_WS_EVENT_BOTH_FLAGS_KEPT15   = 7,
+    BG_WS_EVENT_DESPAWN_DOORS       = 8
 };
 
 enum BG_WS_TimerOrScore
@@ -39,7 +42,25 @@ enum BG_WS_TimerOrScore
     BG_WS_FLAG_RESPAWN_TIME         = 23 * IN_MILLISECONDS,
     BG_WS_FLAG_DROP_TIME            = 10 * IN_MILLISECONDS,
     BG_WS_SPELL_FORCE_TIME          = 10 * MINUTE * IN_MILLISECONDS,
-    BG_WS_SPELL_BRUTAL_TIME         = 15 * MINUTE * IN_MILLISECONDS
+    BG_WS_SPELL_BRUTAL_TIME         = 15 * MINUTE * IN_MILLISECONDS,
+    BG_WS_DOOR_DESPAWN_TIME         = 5 * IN_MILLISECONDS
+};
+
+enum BG_WS_BroadcastTexts
+{
+    BG_WS_TEXT_START_ONE_MINUTE         = 10015,
+    BG_WS_TEXT_START_HALF_MINUTE        = 10016,
+    BG_WS_TEXT_BATTLE_HAS_BEGUN         = 10014,
+
+    BG_WS_TEXT_CAPTURED_HORDE_FLAG      = 9801,
+    BG_WS_TEXT_CAPTURED_ALLIANCE_FLAG   = 9802,
+    BG_WS_TEXT_FLAGS_PLACED             = 9803,
+    BG_WS_TEXT_ALLIANCE_FLAG_PICKED_UP  = 9804,
+    BG_WS_TEXT_ALLIANCE_FLAG_DROPPED    = 9805,
+    BG_WS_TEXT_HORDE_FLAG_PICKED_UP     = 9807,
+    BG_WS_TEXT_HORDE_FLAG_DROPPED       = 9806,
+    BG_WS_TEXT_ALLIANCE_FLAG_RETURNED   = 9808,
+    BG_WS_TEXT_HORDE_FLAG_RETURNED      = 9809,
 };
 
 enum BG_WS_Sound
@@ -163,18 +184,39 @@ enum BG_WS_Trigger
     BG_WS_TRIGGER_HORDE_ELIXIR_BERSERK_SPAWN    = 3709,
 };
 
-struct BattlegroundWGScore : public BattlegroundScore
+struct BattlegroundWGScore final : public BattlegroundScore
 {
-    BattlegroundWGScore(Player* player): BattlegroundScore(player), FlagCaptures(0), FlagReturns(0) { }
-    ~BattlegroundWGScore() override { }
-    uint32 FlagCaptures;
-    uint32 FlagReturns;
+    friend class BattlegroundWS;
 
-    uint32 GetAttr1() const final { return FlagCaptures; }
-    uint32 GetAttr2() const final { return FlagReturns; }
+protected:
+    BattlegroundWGScore(ObjectGuid playerGuid) : BattlegroundScore(playerGuid) { }
+
+    void UpdateScore(uint32 type, uint32 value) override
+    {
+        switch (type)
+        {
+        case SCORE_FLAG_CAPTURES:   // Flags captured
+            FlagCaptures += value;
+            break;
+        case SCORE_FLAG_RETURNS:    // Flags returned
+            FlagReturns += value;
+            break;
+        default:
+            BattlegroundScore::UpdateScore(type, value);
+            break;
+        }
+    }
+
+    void BuildObjectivesBlock(WorldPacket& data) final;
+
+    uint32 GetAttr1() const override { return FlagCaptures; }
+    uint32 GetAttr2() const override { return FlagReturns; }
+
+    uint32 FlagCaptures = 0;
+    uint32 FlagReturns = 0;
 };
 
-class BattlegroundWS : public Battleground
+class AC_GAME_API BattlegroundWS : public Battleground
 {
 public:
     /* Construction */
@@ -207,7 +249,7 @@ public:
     GraveyardStruct const* GetClosestGraveyard(Player* player) override;
 
     void UpdateFlagState(TeamId teamId, uint32 value);
-    void UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
+    bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
     void SetDroppedFlagGUID(ObjectGuid guid, TeamId teamId) override { _droppedFlagGUID[teamId] = guid; }
     ObjectGuid GetDroppedFlagGUID(TeamId teamId) const { return _droppedFlagGUID[teamId];}
     void FillInitialWorldStates(WorldPacket& data) override;
@@ -233,4 +275,5 @@ private:
 
     void PostUpdateImpl(uint32 diff) override;
 };
+
 #endif

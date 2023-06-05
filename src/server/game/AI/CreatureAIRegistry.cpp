@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureAIRegistry.h"
 #include "CombatAI.h"
 #include "CreatureAIFactory.h"
-#include "CreatureAIRegistry.h"
 #include "GuardAI.h"
-#include "MovementGeneratorImpl.h"
+#include "MovementGenerator.h"
 #include "PassiveAI.h"
 #include "PetAI.h"
 #include "RandomMovementGenerator.h"
@@ -27,6 +27,7 @@
 #include "SmartAI.h"
 #include "TotemAI.h"
 #include "WaypointMovementGenerator.h"
+#include "GameObjectAIFactory.h"
 
 namespace AIRegistry
 {
@@ -47,10 +48,12 @@ namespace AIRegistry
         (new CreatureAIFactory<VehicleAI>("VehicleAI"))->RegisterSelf();
         (new CreatureAIFactory<SmartAI>("SmartAI"))->RegisterSelf();
 
+        (new GameObjectAIFactory<NullGameObjectAI>("NullGameObjectAI"))->RegisterSelf();
         (new GameObjectAIFactory<GameObjectAI>("GameObjectAI"))->RegisterSelf();
         (new GameObjectAIFactory<SmartGameObjectAI>("SmartGameObjectAI"))->RegisterSelf();
 
-        (new MovementGeneratorFactory<RandomMovementGenerator<Creature> >(RANDOM_MOTION_TYPE))->RegisterSelf();
-        (new MovementGeneratorFactory<WaypointMovementGenerator<Creature> >(WAYPOINT_MOTION_TYPE))->RegisterSelf();
+        (new IdleMovementFactory())->RegisterSelf();
+        (new MovementGeneratorFactory<RandomMovementGenerator<Creature>>(RANDOM_MOTION_TYPE))->RegisterSelf();
+        (new MovementGeneratorFactory<WaypointMovementGenerator<Creature>>(WAYPOINT_MOTION_TYPE))->RegisterSelf();
     }
 }

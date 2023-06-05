@@ -172,7 +172,7 @@ public:
 
     float GetDist2d() const { return m_src._position.GetExactDist2d(&m_dst._position); }
     float GetSpeedXY() const { return m_speed * cos(m_elevation); }
-    float GetSpeedZ() const { return m_speed * sin(m_elevation); }
+    float GetSpeedZ() const { return m_speed * std::sin(m_elevation); }
 
     void Update(Unit* caster);
     void OutDebug() const;
@@ -517,7 +517,7 @@ public:
     void HandleEffects(Unit* pUnitTarget, Item* pItemTarget, GameObject* pGOTarget, uint32 i, SpellEffectHandleMode mode);
     void HandleThreatSpells();
 
-    SpellInfo const* m_spellInfo;
+    SpellInfo const* const m_spellInfo;
     Item* m_CastItem;
     Item* m_weaponItem;
     ObjectGuid m_castItemGUID;
@@ -527,9 +527,22 @@ public:
     SpellCastTargets m_targets;
     SpellCustomErrors m_customError;
 
-    UsedSpellMods m_appliedMods;
+    void AddComboPointGain(Unit* target, int8 amount)
+    {
+        if (target != m_comboTarget)
+        {
+            m_comboTarget = target;
+            m_comboPointGain = amount;
+        }
+        else
+        {
+            m_comboPointGain += amount;
+        }
+    }
+    Unit* m_comboTarget;
+    int8 m_comboPointGain;
 
-    PathGenerator* m_pathFinder; // pussywizard: for precomputing path for charge
+    UsedSpellMods m_appliedMods;
 
     int32 GetCastTime() const { return m_casttime; }
     bool IsAutoRepeat() const { return m_autoRepeat; }
@@ -559,7 +572,6 @@ public:
     Unit* GetCaster() const { return m_caster; }
     Unit* GetOriginalCaster() const { return m_originalCaster; }
     SpellInfo const* GetSpellInfo() const { return m_spellInfo; }
-    void SetSpellInfo(SpellInfo const* info) { m_spellInfo = info; }
     int32 GetPowerCost() const { return m_powerCost; }
 
     bool UpdatePointers();                              // must be used at call Spell code after time delay (non triggered spell cast/update spell call/etc)
@@ -574,6 +586,10 @@ public:
     std::list<TargetInfo>* GetUniqueTargetInfo() { return &m_UniqueTargetInfo; }
 
     [[nodiscard]] uint32 GetTriggeredByAuraTickNumber() const { return m_triggeredByAuraSpell.tickNumber; }
+
+    [[nodiscard]] TriggerCastFlags GetTriggeredCastFlags() const { return _triggeredCastFlags; }
+
+    [[nodiscard]] SpellSchoolMask GetSpellSchoolMask() const { return m_spellSchoolMask; }
 
  protected:
     bool HasGlobalCooldown() const;
@@ -591,6 +607,8 @@ public:
     Unit* m_originalCaster;                             // cached pointer for m_originalCaster, updated at Spell::UpdatePointers()
 
     Spell** m_selfContainer;                            // pointer to our spell container (if applicable)
+
+    std::string GetDebugInfo() const;
 
     //Spell data
     SpellSchoolMask m_spellSchoolMask;                  // Spell school (can be overwrite for some spells (wand shoot for example)
@@ -694,7 +712,7 @@ public:
     bool UpdateChanneledTargetList();
     bool IsValidDeadOrAliveTarget(Unit const* target) const;
     void HandleLaunchPhase();
-    void DoAllEffectOnLaunchTarget(TargetInfo& targetInfo, float* multiplier, bool firstTarget);
+    void DoAllEffectOnLaunchTarget(TargetInfo& targetInfo, float* multiplier);
 
     void PrepareTargetProcessing();
     void FinishTargetProcessing();
@@ -725,7 +743,7 @@ public:
     {
         SpellInfo const* triggeredSpell;
         SpellInfo const* triggeredByAura;
-        // uint8 triggeredByEffIdx          This might be needed at a later stage - No need known for now
+        uint8 triggeredByEffIdx;
         int32 chance;
     };
 
@@ -735,7 +753,7 @@ public:
     HitTriggerSpellList m_hitTriggerSpells;
 
     // effect helpers
-    void SummonGuardian(uint32 i, uint32 entry, SummonPropertiesEntry const* properties, uint32 numSummons);
+    void SummonGuardian(uint32 i, uint32 entry, SummonPropertiesEntry const* properties, uint32 numSummons, bool personalSpawn);
     void CalculateJumpSpeeds(uint8 i, float dist, float& speedxy, float& speedz);
 
     SpellCastResult CanOpenLock(uint32 effIndex, uint32 lockid, SkillType& skillid, int32& reqSkillValue, int32& skillValue);
@@ -754,6 +772,7 @@ public:
 
     bool m_skipCheck;
     uint8 m_auraScaleMask;
+    std::unique_ptr<PathGenerator> m_preGeneratedPath;
 
     // xinef:
     bool _spellTargetsSelected;
@@ -825,13 +844,13 @@ typedef void(Spell::*pEffect)(SpellEffIndex effIndex);
 class ReflectEvent : public BasicEvent
 {
     public:
-        ReflectEvent(Unit* caster, ObjectGuid targetGUID, const SpellInfo* spellInfo) : _caster(caster), _targetGUID(targetGUID), _spellInfo(spellInfo) { }
+        ReflectEvent(Unit* caster, ObjectGuid targetGUID, SpellInfo const* spellInfo) : _caster(caster), _targetGUID(targetGUID), _spellInfo(spellInfo) { }
         bool Execute(uint64 e_time, uint32 p_time) override;
 
     protected:
         Unit* _caster;
         ObjectGuid _targetGUID;
-        const SpellInfo* _spellInfo;
+        SpellInfo const* _spellInfo;
 };
 
 #endif

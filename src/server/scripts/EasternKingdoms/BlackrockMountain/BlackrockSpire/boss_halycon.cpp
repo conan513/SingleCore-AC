@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackrock_spire.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "blackrock_spire.h"
 
 enum Spells
 {
@@ -50,22 +50,20 @@ public:
         void Reset() override
         {
             _Reset();
-            Summoned = false;
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
-            _EnterCombat();
-            events.ScheduleEvent(EVENT_REND, urand(17000, 20000));
-            events.ScheduleEvent(EVENT_THRASH, urand(10000, 12000));
+            _JustEngagedWith();
+            events.ScheduleEvent(EVENT_REND, 17s, 20s);
+            events.ScheduleEvent(EVENT_THRASH, 10s, 12s);
         }
 
         void JustDied(Unit* /*killer*/) override
         {
+            _JustDied();
             me->SummonCreature(NPC_GIZRUL_THE_SLAVENER, SummonLocation, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
             Talk(EMOTE_DEATH);
-
-            Summoned = true;
         }
 
         void UpdateAI(uint32 diff) override
@@ -84,7 +82,7 @@ public:
                 {
                     case EVENT_REND:
                         DoCastVictim(SPELL_REND);
-                        events.ScheduleEvent(EVENT_REND, urand(8000, 10000));
+                        events.ScheduleEvent(EVENT_REND, 8s, 10s);
                         break;
                     case EVENT_THRASH:
                         DoCast(me, SPELL_THRASH);
@@ -95,8 +93,6 @@ public:
             }
             DoMeleeAttackIfReady();
         }
-    private:
-        bool Summoned;
     };
 
     CreatureAI* GetAI(Creature* creature) const override

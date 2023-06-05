@@ -59,9 +59,8 @@ enum LoginDatabaseStatements : uint32
     LOGIN_SEL_ACCOUNT_BY_ID,
     LOGIN_INS_ACCOUNT_BANNED,
     LOGIN_UPD_ACCOUNT_NOT_BANNED,
-    LOGIN_DEL_REALM_CHARACTERS_BY_REALM,
     LOGIN_DEL_REALM_CHARACTERS,
-    LOGIN_INS_REALM_CHARACTERS,
+    LOGIN_REP_REALM_CHARACTERS,
     LOGIN_SEL_SUM_REALM_CHARACTERS,
     LOGIN_INS_ACCOUNT,
     LOGIN_INS_REALM_CHARACTERS_INIT,
@@ -97,6 +96,8 @@ enum LoginDatabaseStatements : uint32
     LOGIN_SEL_REALMLIST_SECURITY_LEVEL,
     LOGIN_DEL_ACCOUNT,
     LOGIN_SEL_AUTOBROADCAST,
+    LOGIN_SEL_MOTD,
+    LOGIN_REP_MOTD,
     LOGIN_SEL_LAST_ATTEMPT_IP,
     LOGIN_SEL_LAST_IP,
     LOGIN_INS_ALDL_IP_LOGGING,
@@ -128,7 +129,7 @@ public:
     //- Constructors for sync and async connections
     LoginDatabaseConnection(MySQLConnectionInfo& connInfo);
     LoginDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo);
-    ~LoginDatabaseConnection();
+    ~LoginDatabaseConnection() override;
 
     //- Loads database type specific prepared statements
     void DoPrepareStatements() override;

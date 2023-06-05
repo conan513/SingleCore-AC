@@ -18,6 +18,7 @@
 #ifndef DEF_AHNKAHET_H
 #define DEF_AHNKAHET_H
 
+#define DataHeader "AK"
 #define AhnKahetScriptName "instance_ahnkahet"
 constexpr uint32 MAX_ENCOUNTER = 5;
 enum AhnkahetData
@@ -70,5 +71,8 @@ inline AI* GetAhnKahetAI(T* obj)
 {
     return GetInstanceAI<AI>(obj, AhnKahetScriptName);
 }
+
+#define RegisterAhnKahetCreatureAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetAhnKahetAI)
+#define RegisterAhnKahetGameObjectAI(ai_name) RegisterGameObjectAIWithFactory(ai_name, GetAhnKahetAI)
 
 #endif // DEF_AHNKAHET_H

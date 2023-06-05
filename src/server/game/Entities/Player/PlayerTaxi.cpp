@@ -15,12 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ObjectMgr.h"
 #include "Player.h"
-
-PlayerTaxi::PlayerTaxi() : _taxiSegment(0)
-{
-    memset(m_taximask, 0, sizeof(m_taximask));
-}
+#include "Tokenize.h"
+#include "StringConvert.h"
 
 void PlayerTaxi::InitTaxiNodesForLevel(uint32 race, uint32 chrClass, uint8 level)
 {
@@ -88,18 +86,31 @@ void PlayerTaxi::InitTaxiNodesForLevel(uint32 race, uint32 chrClass, uint8 level
         SetTaximaskNode(213);                               //Shattered Sun Staging Area
 }
 
-void PlayerTaxi::LoadTaxiMask(std::string const& data)
+bool PlayerTaxi::LoadTaxiMask(std::string_view data)
 {
-    Tokenizer tokens(data, ' ');
+    bool warn = false;
+    std::vector<std::string_view> tokens = Acore::Tokenize(data, ' ', false);
 
-    uint8 index;
-    Tokenizer::const_iterator iter;
-    for (iter = tokens.begin(), index = 0;
-         (index < TaxiMaskSize) && (iter != tokens.end()); ++iter, ++index)
+    for (uint8 index = 0; (index < TaxiMaskSize) && (index < tokens.size()); ++index)
     {
-        // load and set bits only for existed taxi nodes
-        m_taximask[index] = sTaxiNodesMask[index] & uint32(atol(*iter));
+        if (Optional<uint32> mask = Acore::StringTo<uint32>(tokens[index]))
+        {
+            // load and set bits only for existing taxi nodes
+            m_taximask[index] = sTaxiNodesMask[index] & *mask;
+
+            if (m_taximask[index] != *mask)
+            {
+                warn = true;
+            }
+        }
+        else
+        {
+            m_taximask[index] = 0;
+            warn = true;
+        }
     }
+
+    return !warn;
 }
 
 void PlayerTaxi::AppendTaximaskTo(ByteBuffer& data, bool all)
@@ -120,34 +131,61 @@ bool PlayerTaxi::LoadTaxiDestinationsFromString(const std::string& values, TeamI
 {
     ClearTaxiDestinations();
 
-    Tokenizer tokens(values, ' ');
-
-    for (Tokenizer::const_iterator iter = tokens.begin(); iter != tokens.end(); ++iter)
+    std::vector<std::string_view> tokens = Acore::Tokenize(values, ' ', false);
+    auto itr = tokens.begin();
+    if (itr != tokens.end())
     {
-        uint32 node = uint32(atol(*iter));
-        AddTaxiDestination(node);
+        if (Optional<uint32> faction = Acore::StringTo<uint32>(*itr))
+        {
+            m_flightMasterFactionId = *faction;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+        return false;
+
+    while ((++itr) != tokens.end())
+    {
+        if (Optional<uint32> node = Acore::StringTo<uint32>(*itr))
+        {
+            AddTaxiDestination(*node);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    if (m_TaxiDestinations.empty())
+    {
+        return true;
     }
 
     // Check integrity
-    if (m_TaxiDestinations.size() < 3)
+    if (m_TaxiDestinations.size() < 2)
+    {
         return false;
+    }
 
-    // xinef: current segment is saved as last destination in db
-    _taxiSegment = m_TaxiDestinations[m_TaxiDestinations.size() - 1];
-    m_TaxiDestinations.pop_back();
-
-    for (size_t i = 0; i < m_TaxiDestinations.size() - 1; ++i)
+    for (size_t i = 1; i < m_TaxiDestinations.size(); ++i)
     {
         uint32 cost;
         uint32 path;
-        sObjectMgr->GetTaxiPath(m_TaxiDestinations[i], m_TaxiDestinations[i + 1], path, cost);
+        sObjectMgr->GetTaxiPath(m_TaxiDestinations[i - 1], m_TaxiDestinations[i], path, cost);
         if (!path)
+        {
             return false;
+        }
     }
 
     // can't load taxi path without mount set (quest taxi path?)
     if (!sObjectMgr->GetTaxiMountDisplayId(GetTaxiSource(), teamId, true))
+    {
         return false;
+    }
 
     return true;
 }
@@ -155,26 +193,34 @@ bool PlayerTaxi::LoadTaxiDestinationsFromString(const std::string& values, TeamI
 std::string PlayerTaxi::SaveTaxiDestinationsToString()
 {
     if (m_TaxiDestinations.empty())
+    {
         return "";
+    }
+
+    ASSERT(m_TaxiDestinations.size() >= 2);
 
     std::ostringstream ss;
+    ss << m_flightMasterFactionId << ' ';
 
     for (size_t i = 0; i < m_TaxiDestinations.size(); ++i)
+    {
         ss << m_TaxiDestinations[i] << ' ';
+    }
 
-    ss << _taxiSegment << ' ';
     return ss.str();
 }
 
 uint32 PlayerTaxi::GetCurrentTaxiPath() const
 {
-    if (m_TaxiDestinations.size() < 2 || m_TaxiDestinations.size() <= _taxiSegment + 1)
+    if (m_TaxiDestinations.size() < 2)
+    {
         return 0;
+    }
 
     uint32 path;
     uint32 cost;
 
-    sObjectMgr->GetTaxiPath(m_TaxiDestinations[_taxiSegment], m_TaxiDestinations[_taxiSegment + 1], path, cost);
+    sObjectMgr->GetTaxiPath(m_TaxiDestinations[0], m_TaxiDestinations[1], path, cost);
 
     return path;
 }
@@ -184,4 +230,9 @@ std::ostringstream& operator<< (std::ostringstream& ss, PlayerTaxi const& taxi)
     for (uint8 i = 0; i < TaxiMaskSize; ++i)
         ss << taxi.m_taximask[i] << ' ';
     return ss;
+}
+
+FactionTemplateEntry const* PlayerTaxi::GetFlightMasterFactionTemplate() const
+{
+    return sFactionTemplateStore.LookupEntry(m_flightMasterFactionId);
 }

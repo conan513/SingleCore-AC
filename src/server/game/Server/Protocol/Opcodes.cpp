@@ -17,8 +17,8 @@
 
 #include "Opcodes.h"
 #include "Log.h"
+#include "Packets/AllPackets.h"
 #include "WorldSession.h"
-//#include "Packets/AllPackets.h"
 #include <iomanip>
 #include <sstream>
 
@@ -77,19 +77,19 @@ void OpcodeTable::ValidateAndSetClientOpcode(OpcodeClient opcode, char const* na
 {
     if (uint32(opcode) == NULL_OPCODE)
     {
-        LOG_ERROR("network", "Opcode %s does not have a value", name);
+        LOG_ERROR("network", "Opcode {} does not have a value", name);
         return;
     }
 
     if (uint32(opcode) >= NUM_OPCODE_HANDLERS)
     {
-        LOG_ERROR("network", "Tried to set handler for an invalid opcode %u", uint32(opcode));
+        LOG_ERROR("network", "Tried to set handler for an invalid opcode {}", uint32(opcode));
         return;
     }
 
     if (_internalTableClient[opcode] != nullptr)
     {
-        LOG_ERROR("network", "Tried to override client handler of %s with %s (opcode %u)", opcodeTable[opcode]->Name, name, uint32(opcode));
+        LOG_ERROR("network", "Tried to override client handler of {} with {} (opcode {})", opcodeTable[opcode]->Name, name, uint32(opcode));
         return;
     }
 
@@ -100,19 +100,19 @@ void OpcodeTable::ValidateAndSetServerOpcode(OpcodeServer opcode, char const* na
 {
     if (uint32(opcode) == NULL_OPCODE)
     {
-        LOG_ERROR("network", "Opcode %s does not have a value", name);
+        LOG_ERROR("network", "Opcode {} does not have a value", name);
         return;
     }
 
     if (uint32(opcode) >= NUM_OPCODE_HANDLERS)
     {
-        LOG_ERROR("network", "Tried to set handler for an invalid opcode %u", uint32(opcode));
+        LOG_ERROR("network", "Tried to set handler for an invalid opcode {}", uint32(opcode));
         return;
     }
 
     if (_internalTableClient[opcode] != nullptr)
     {
-        LOG_ERROR("network", "Tried to override server handler of %s with %s (opcode %u)", opcodeTable[opcode]->Name, name, uint32(opcode));
+        LOG_ERROR("network", "Tried to override server handler of {} with {} (opcode {})", opcodeTable[opcode]->Name, name, uint32(opcode));
         return;
     }
 
@@ -206,7 +206,7 @@ void OpcodeTable::Initialize()
     /*0x04B*/ DEFINE_HANDLER(CMSG_LOGOUT_REQUEST,                                                   STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleLogoutRequestOpcode                );
     /*0x04C*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_LOGOUT_RESPONSE,                                    STATUS_NEVER);
     /*0x04D*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_LOGOUT_COMPLETE,                                    STATUS_NEVER);
-    /*0x04E*/ DEFINE_HANDLER(CMSG_LOGOUT_CANCEL,                                                    STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleLogoutCancelOpcode                 );
+    /*0x04E*/ DEFINE_HANDLER(CMSG_LOGOUT_CANCEL,                                                    STATUS_LOGGEDIN_OR_RECENTLY_LOGGOUT,   PROCESS_THREADUNSAFE,   &WorldSession::HandleLogoutCancelOpcode);
     /*0x04F*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_LOGOUT_CANCEL_ACK,                                  STATUS_NEVER);
     /*0x050*/ DEFINE_HANDLER(CMSG_NAME_QUERY,                                                       STATUS_LOGGEDIN,   PROCESS_INPLACE,        &WorldSession::HandleNameQueryOpcode                    );
     /*0x051*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_NAME_QUERY_RESPONSE,                                STATUS_NEVER);
@@ -412,7 +412,7 @@ void OpcodeTable::Initialize()
     /*0x119*/ DEFINE_HANDLER(CMSG_IGNORE_TRADE,                                                     STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleIgnoreTradeOpcode                  );
     /*0x11A*/ DEFINE_HANDLER(CMSG_ACCEPT_TRADE,                                                     STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleAcceptTradeOpcode                  );
     /*0x11B*/ DEFINE_HANDLER(CMSG_UNACCEPT_TRADE,                                                   STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleUnacceptTradeOpcode                );
-    /*0x11C*/ DEFINE_HANDLER(CMSG_CANCEL_TRADE,                                                     STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleCancelTradeOpcode                  );
+    /*0x11C*/ DEFINE_HANDLER(CMSG_CANCEL_TRADE,                                                     STATUS_LOGGEDIN_OR_RECENTLY_LOGGOUT,   PROCESS_THREADUNSAFE,   &WorldSession::HandleCancelTradeOpcode);
     /*0x11D*/ DEFINE_HANDLER(CMSG_SET_TRADE_ITEM,                                                   STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleSetTradeItemOpcode                 );
     /*0x11E*/ DEFINE_HANDLER(CMSG_CLEAR_TRADE_ITEM,                                                 STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleClearTradeItemOpcode               );
     /*0x11F*/ DEFINE_HANDLER(CMSG_SET_TRADE_GOLD,                                                   STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleSetTradeGoldOpcode                 );
@@ -608,7 +608,7 @@ void OpcodeTable::Initialize()
     /*0x1DD*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PONG,                                               STATUS_NEVER);
     /*0x1DE*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_CLEAR_COOLDOWN,                                     STATUS_NEVER);
     /*0x1DF*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_GAMEOBJECT_PAGETEXT,                                STATUS_NEVER);
-    /*0x1E0*/ DEFINE_HANDLER(CMSG_SETSHEATHED,                                                      STATUS_LOGGEDIN,   PROCESS_THREADSAFE,     &WorldSession::HandleSetSheathedOpcode                  );
+    /*0x1E0*/ DEFINE_HANDLER(CMSG_SET_SHEATHED,                                                     STATUS_LOGGEDIN,   PROCESS_THREADSAFE,     &WorldSession::HandleSetSheathedOpcode                  );
     /*0x1E1*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_COOLDOWN_CHEAT,                                     STATUS_NEVER);
     /*0x1E2*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_SPELL_DELAYED,                                      STATUS_NEVER);
     /*0x1E3*/ DEFINE_HANDLER(CMSG_QUEST_POI_QUERY,                                                  STATUS_LOGGEDIN,   PROCESS_INPLACE,        &WorldSession::HandleQuestPOIQuery                      );
@@ -636,7 +636,7 @@ void OpcodeTable::Initialize()
     /*0x1F9*/ DEFINE_HANDLER(CMSG_GM_SET_SECURITY_GROUP,                                            STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
     /*0x1FA*/ DEFINE_HANDLER(CMSG_GM_NUKE,                                                          STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
     /*0x1FB*/ DEFINE_HANDLER(MSG_RANDOM_ROLL,                                                       STATUS_LOGGEDIN,   PROCESS_THREADSAFE,     &WorldSession::HandleRandomRollOpcode                   );
-    /*0x1FC*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENVIRONMENTALDAMAGELOG,                             STATUS_NEVER);
+    /*0x1FC*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENVIRONMENTAL_DAMAGE_LOG,                           STATUS_NEVER);
     /*0x1FD*/ DEFINE_HANDLER(CMSG_CHANGEPLAYER_DIFFICULTY,                                          STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
     /*0x1FE*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_RWHOIS,                                             STATUS_NEVER);
     /*0x1FF*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_LFG_PLAYER_REWARD,                                  STATUS_NEVER);
@@ -761,8 +761,8 @@ void OpcodeTable::Initialize()
     /*0x276*/ DEFINE_HANDLER(MSG_QUEST_PUSH_RESULT,                                                 STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleQuestPushResult                    );
     /*0x277*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PLAY_MUSIC,                                         STATUS_NEVER);
     /*0x278*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PLAY_OBJECT_SOUND,                                  STATUS_NEVER);
-    /*0x279*/ DEFINE_HANDLER(CMSG_REQUEST_PET_INFO,                                                 STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleRequestPetInfoOpcode               );
-    /*0x27A*/ DEFINE_HANDLER(CMSG_FAR_SIGHT,                                                        STATUS_LOGGEDIN,   PROCESS_THREADSAFE,     &WorldSession::HandleFarSightOpcode                     );
+    /*0x279*/ DEFINE_HANDLER(CMSG_REQUEST_PET_INFO,                                                 STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleRequestPetInfo                     );
+    /*0x27A*/ DEFINE_HANDLER(CMSG_FAR_SIGHT,                                                        STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleFarSightOpcode                     );
     /*0x27B*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_SPELLDISPELLOG,                                     STATUS_NEVER);
     /*0x27C*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_DAMAGE_CALC_LOG,                                    STATUS_NEVER);
     /*0x27D*/ DEFINE_HANDLER(CMSG_ENABLE_DAMAGE_LOG,                                                STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
@@ -785,7 +785,7 @@ void OpcodeTable::Initialize()
     /*0x28E*/ DEFINE_HANDLER(CMSG_GROUP_RAID_CONVERT,                                               STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleGroupRaidConvertOpcode             );
     /*0x28F*/ DEFINE_HANDLER(CMSG_GROUP_ASSISTANT_LEADER,                                           STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleGroupAssistantLeaderOpcode         );
     /*0x290*/ DEFINE_HANDLER(CMSG_BUYBACK_ITEM,                                                     STATUS_LOGGEDIN,   PROCESS_INPLACE,        &WorldSession::HandleBuybackItem                        );
-    /*0x291*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_SERVER_MESSAGE,                                     STATUS_NEVER);
+    /*0x291*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_CHAT_SERVER_MESSAGE,                                STATUS_NEVER);
     /*0x292*/ DEFINE_HANDLER(CMSG_SET_SAVED_INSTANCE_EXTEND,                                        STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleSetSavedInstanceExtend             );
     /*0x293*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_LFG_OFFER_CONTINUE,                                 STATUS_NEVER);
     /*0x294*/ DEFINE_HANDLER(CMSG_TEST_DROP_RATE,                                                   STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
@@ -1306,7 +1306,7 @@ void OpcodeTable::Initialize()
     /*0x497*/ DEFINE_HANDLER(CMSG_FLOOD_GRACE_CHEAT,                                                STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
     /*0x498*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_SERVER_FIRST_ACHIEVEMENT,                           STATUS_NEVER);
     /*0x499*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PET_LEARNED_SPELL,                                  STATUS_NEVER);
-    /*0x49A*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PET_REMOVED_SPELL,                                  STATUS_NEVER);
+    /*0x49A*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_PET_UNLEARNED_SPELL,                                STATUS_NEVER);
     /*0x49B*/ DEFINE_HANDLER(CMSG_CHANGE_SEATS_ON_CONTROLLED_VEHICLE,                               STATUS_LOGGEDIN,   PROCESS_INPLACE,        &WorldSession::HandleChangeSeatsOnControlledVehicle     );
     /*0x49C*/ DEFINE_HANDLER(CMSG_HEARTH_AND_RESURRECT,                                             STATUS_LOGGEDIN,   PROCESS_THREADSAFE,     &WorldSession::HandleHearthAndResurrect                 );
     /*0x49D*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA,               STATUS_NEVER);

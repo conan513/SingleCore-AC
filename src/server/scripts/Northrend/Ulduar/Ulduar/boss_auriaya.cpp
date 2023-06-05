@@ -16,8 +16,8 @@
  */
 
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
 #include "ulduar.h"
@@ -80,14 +80,14 @@ enum AuriayaEvents
     EVENT_ENRAGE                        = 10,
 };
 
-enum AuriayaSounds
+enum Texts
 {
-    SOUND_AGGRO                         = 15473,
-    SOUND_SLAY1                         = 15474,
-    SOUND_SLAY2                         = 15475,
-    SOUND_DEATH                         = 15476,
-    SOUND_BERSERK                       = 15477,
-    SOUND_WOUND                         = 15478,
+    SAY_AGGRO       = 0,
+    SAY_SLAY        = 1,
+    SAY_BERSERK     = 2,
+    EMOTE_DEATH     = 3,
+    EMOTE_FEAR      = 4,
+    EMOTE_DEFFENDER = 5,
 };
 
 enum Misc
@@ -172,43 +172,33 @@ public:
 
         void JustReachedHome() override { me->setActive(false); }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             if (m_pInstance)
                 m_pInstance->SetData(TYPE_AURIAYA, IN_PROGRESS);
 
-            events.ScheduleEvent(EVENT_TERRIFYING_SCREECH, 35000);
-            events.ScheduleEvent(EVENT_SONIC_SCREECH, 45000);
-            events.ScheduleEvent(EVENT_GUARDIAN_SWARM, 70000);
-            events.ScheduleEvent(EVENT_SUMMON_FERAL_DEFENDER, 60000);
-            events.ScheduleEvent(EVENT_SENTINEL_BLAST, 36000);
-            events.ScheduleEvent(EVENT_ENRAGE, 600000);
+            events.ScheduleEvent(EVENT_TERRIFYING_SCREECH, 35s);
+            events.ScheduleEvent(EVENT_SONIC_SCREECH, 45s);
+            events.ScheduleEvent(EVENT_GUARDIAN_SWARM, 70s);
+            events.ScheduleEvent(EVENT_SUMMON_FERAL_DEFENDER, 60s);
+            events.ScheduleEvent(EVENT_SENTINEL_BLAST, 36s);
+            events.ScheduleEvent(EVENT_ENRAGE, 10min);
 
             summons.DoZoneInCombat(NPC_SANCTUM_SENTRY);
 
-            me->Yell("Some things are better left alone!", LANG_UNIVERSAL);
-            me->PlayDirectSound(SOUND_AGGRO);
+            Talk(SAY_AGGRO);
             me->setActive(true);
         }
 
-        void KilledUnit(Unit*  /*victim*/) override
+        void KilledUnit(Unit* victim) override
         {
-            if (urand(0, 2))
+            if (victim->GetTypeId() != TYPEID_PLAYER || urand(0, 2))
                 return;
 
-            if (urand(0, 1))
-            {
-                me->Yell("The secret dies with you!", LANG_UNIVERSAL);
-                me->PlayDirectSound(SOUND_SLAY1);
-            }
-            else
-            {
-                me->Yell("There is no escape!", LANG_UNIVERSAL);
-                me->PlayDirectSound(SOUND_SLAY2);
-            }
+            Talk(SAY_SLAY);
         }
 
-        void JustDied(Unit* /*victim*/) override
+        void JustDied(Unit* /*killer*/) override
         {
             if (m_pInstance)
                 m_pInstance->SetData(TYPE_AURIAYA, DONE);
@@ -216,14 +206,13 @@ public:
             EntryCheckPredicate pred(NPC_FERAL_DEFENDER);
             summons.DoAction(ACTION_DESPAWN_ADDS, pred);
             summons.DespawnAll();
-            me->TextEmote("Auriaya screams in agony.", nullptr, true);
-            me->PlayDirectSound(SOUND_DEATH);
+            Talk(EMOTE_DEATH);
         }
 
         void DoAction(int32 param) override
         {
             if (param == ACTION_FERAL_DEATH_WITH_STACK)
-                events.ScheduleEvent(EVENT_RESPAWN_FERAL_DEFENDER, 25000);
+                events.ScheduleEvent(EVENT_RESPAWN_FERAL_DEFENDER, 25s);
             else if (param == ACTION_FERAL_DEATH)
                 _nineLives = true;
         }
@@ -240,30 +229,30 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_SUMMON_FERAL_DEFENDER:
-                    me->TextEmote("Auriaya begins to activate Feral Defender.", nullptr, true);
+                    Talk(EMOTE_DEFFENDER);
                     me->CastSpell(me, SPELL_ACTIVATE_FERAL_DEFENDER, true);
                     me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_INTERRUPT_CAST, true);
-                    events.ScheduleEvent(EVENT_REMOVE_IMMUNE, 3000);
+                    events.ScheduleEvent(EVENT_REMOVE_IMMUNE, 3s);
                     break;
                 case EVENT_REMOVE_IMMUNE:
                     me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_INTERRUPT_CAST, false);
                     break;
                 case EVENT_TERRIFYING_SCREECH:
-                    me->TextEmote("Auriaya begins to cast Terrifying Screech.", nullptr, true);
+                    Talk(EMOTE_FEAR);
                     me->CastSpell(me, SPELL_TERRIFYING_SCREECH, false);
-                    events.RepeatEvent(35000);
+                    events.Repeat(35s);
                     break;
                 case EVENT_SONIC_SCREECH:
                     me->CastSpell(me, SPELL_SONIC_SCREECH, false);
-                    events.RepeatEvent(50000);
+                    events.Repeat(50s);
                     break;
                 case EVENT_GUARDIAN_SWARM:
                     me->CastSpell(me->GetVictim(), SPELL_GUARDIAN_SWARM, false);
-                    events.RepeatEvent(40000);
+                    events.Repeat(40s);
                     break;
                 case EVENT_SENTINEL_BLAST:
                     me->CastSpell(me, SPELL_SENTINEL_BLAST, false);
-                    events.RepeatEvent(35000);
+                    events.Repeat(35s);
                     events.DelayEvents(5000, 0);
                     break;
                 case EVENT_RESPAWN_FERAL_DEFENDER:
@@ -273,8 +262,7 @@ public:
                         break;
                     }
                 case EVENT_ENRAGE:
-                    me->TextEmote("You waste my time!", nullptr, true);
-                    me->PlayDirectSound(SOUND_BERSERK);
+                    Talk(SAY_BERSERK);
                     me->CastSpell(me, SPELL_ENRAGE, true);
                     break;
             }
@@ -301,7 +289,7 @@ public:
         uint32 _savagePounceTimer;
         uint32 _ripFleshTimer;
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             if (me->GetInstanceScript())
                 if (Creature* cr = ObjectAccessor::GetCreature(*me, me->GetInstanceScript()->GetGuidData(TYPE_AURIAYA)))
@@ -424,7 +412,7 @@ public:
 
             if (_feralRushTimer >= 6000)
             {
-                DoResetThreat();
+                DoResetThreatList();
                 if (!UpdateVictim())
                     return;
 

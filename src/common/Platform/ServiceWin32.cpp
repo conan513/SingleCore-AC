@@ -42,6 +42,7 @@ SERVICE_STATUS serviceStatus;
 
 SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
 
+// cppcheck-suppress syntaxError
 typedef WINADVAPI BOOL (WINAPI* CSD_T)(SC_HANDLE, DWORD, LPCVOID);
 
 bool WinServiceInstall()
@@ -254,7 +255,7 @@ bool WinServiceRun()
 
     if (!StartServiceCtrlDispatcher(serviceTable))
     {
-        LOG_ERROR("server", "StartService Failed. Error [%u]", ::GetLastError());
+        LOG_ERROR("server", "StartService Failed. Error [{}]", ::GetLastError());
         return false;
     }
     return true;

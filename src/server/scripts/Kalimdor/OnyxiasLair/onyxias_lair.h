@@ -20,6 +20,8 @@
 
 #include "CreatureAIImpl.h"
 
+#define DataHeader "OL"
+
 #define OnyxiasLairScriptName "instance_onyxias_lair"
 
 enum eInstanceData
@@ -57,5 +59,7 @@ inline AI* GetOnyxiasLairAI(T* obj)
 {
     return GetInstanceAI<AI>(obj, OnyxiasLairScriptName);
 }
+
+#define RegisterOnyxiasLairCreatureAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetOnyxiasLairAI)
 
 #endif

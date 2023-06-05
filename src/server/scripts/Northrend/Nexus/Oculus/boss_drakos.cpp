@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "oculus.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "oculus.h"
 
 enum Spells
 {
@@ -83,7 +83,7 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             Talk(SAY_AGGRO);
 
@@ -92,9 +92,9 @@ public:
 
             me->SetInCombatWithZone();
 
-            events.RescheduleEvent(EVENT_MAGIC_PULL, urand(10000, 15000));
-            events.RescheduleEvent(EVENT_THUNDERING_STOMP, urand(3000, 6000));
-            events.RescheduleEvent(EVENT_SUMMON, 2000);
+            events.RescheduleEvent(EVENT_MAGIC_PULL, 10s, 15s);
+            events.RescheduleEvent(EVENT_THUNDERING_STOMP, 3s, 6s);
+            events.RescheduleEvent(EVENT_SUMMON, 2s);
         }
 
         void JustDied(Unit*  /*killer*/) override
@@ -145,8 +145,8 @@ public:
                         //me->TextEmote(TEXT_MAGIC_PULL, nullptr, true);
 
                         me->CastSpell(me, SPELL_MAGIC_PULL, false);
-                        events.RepeatEvent(urand(15000, 25000));
-                        events.ScheduleEvent(EVENT_SUMMON_x4, 1500);
+                        events.Repeat(15s, 25s);
+                        events.ScheduleEvent(EVENT_SUMMON_x4, 1500ms);
                     }
                     break;
                 case EVENT_THUNDERING_STOMP:
@@ -154,7 +154,7 @@ public:
                         Talk(SAY_STOMP);
 
                         me->CastSpell(me, SPELL_THUNDERING_STOMP, false);
-                        events.RepeatEvent(urand(10000, 20000));
+                        events.Repeat(10s, 20s);
                     }
                     break;
                 case EVENT_SUMMON:
@@ -162,16 +162,16 @@ public:
                         for( uint8 i = 0; i < 2; ++i )
                         {
                             float angle = rand_norm() * 2 * M_PI;
-                            me->SummonCreature(NPC_UNSTABLE_SPHERE, me->GetPositionX() + 5.0f * cos(angle), me->GetPositionY() + 5.0f * sin(angle), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 18000);
+                            me->SummonCreature(NPC_UNSTABLE_SPHERE, me->GetPositionX() + 5.0f * cos(angle), me->GetPositionY() + 5.0f * std::sin(angle), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 18000);
                         }
-                        events.RepeatEvent(2000);
+                        events.Repeat(2s);
                     }
                     break;
                 case EVENT_SUMMON_x4:
                     for( uint8 i = 0; i < 4; ++i )
                     {
                         float angle = rand_norm() * 2 * M_PI;
-                        me->SummonCreature(NPC_UNSTABLE_SPHERE, me->GetPositionX() + 5.0f * cos(angle), me->GetPositionY() + 5.0f * sin(angle), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 18000);
+                        me->SummonCreature(NPC_UNSTABLE_SPHERE, me->GetPositionX() + 5.0f * cos(angle), me->GetPositionY() + 5.0f * std::sin(angle), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 18000);
                     }
 
                     break;
@@ -201,7 +201,7 @@ public:
         {
             float dist = rand_norm() * 40.0f;
             float angle = rand_norm() * 2 * M_PI;
-            me->GetMotionMaster()->MovePoint(1, 961.29f + dist * cos(angle), 1049.0f + dist * sin(angle), 360.0f);
+            me->GetMotionMaster()->MovePoint(1, 961.29f + dist * cos(angle), 1049.0f + dist * std::sin(angle), 360.0f);
         }
 
         void MovementInform(uint32 type, uint32 id) override

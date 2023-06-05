@@ -19,8 +19,8 @@
 #include "CombatAI.h"
 #include "PassiveAI.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
 #include "SpellScript.h"
 
@@ -41,7 +41,7 @@ public:
         uint32 faction;
         EventMap events;
 
-        void JustDied(Unit* ) override
+        void JustDied(Unit* /*killer*/) override
         {
             if (me->GetEntry() == NPC_KEEP_CANNON)
             {
@@ -49,7 +49,7 @@ public:
                 me->Respawn();
                 me->UpdateEntry(NPC_BROKEN_KEEP_CANNON, nullptr, false);
                 me->RemoveVehicleKit();
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
             }
         }
 
@@ -61,8 +61,8 @@ public:
                 if (faction)
                     me->SetFaction(faction);
                 me->CreateVehicleKit(510, NPC_KEEP_CANNON);
-                me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
-                events.ScheduleEvent(EVENT_RESTORE_FLAG, 4000);
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+                events.ScheduleEvent(EVENT_RESTORE_FLAG, 4s);
             }
         }
 
@@ -72,7 +72,7 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_RESTORE_FLAG:
-                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
                     break;
             }
 
@@ -127,8 +127,13 @@ public:
 
         void JustDied(Unit* killer) override
         {
-            if (Player* player = killer->GetCharmerOrOwnerPlayerOrPlayerItself())
-                player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS, 1, 0, me);
+            if (killer)
+            {
+                if (Player* player = killer->GetCharmerOrOwnerPlayerOrPlayerItself())
+                {
+                    player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS, 1, 0, me);
+                }
+            }
         }
     };
 
@@ -163,7 +168,7 @@ public:
             if (action == ACTION_GUNSHIP_READY)
             {
                 DoCast(me, SPELL_SIMPLE_TELEPORT);
-                _events.ScheduleEvent(EVENT_TALK, 3000);
+                _events.ScheduleEvent(EVENT_TALK, 3s);
             }
         }
 
@@ -175,7 +180,7 @@ public:
                 switch (eventId)
                 {
                     case EVENT_TALK:
-                        _events.ScheduleEvent(EVENT_DESPAWN, 1000);
+                        _events.ScheduleEvent(EVENT_DESPAWN, 1s);
                         Talk(SAY_ONBOARD);
                         DoCast(me, SPELL_TELEPORT_VISUAL_ONLY);
                         break;
@@ -245,7 +250,7 @@ public:
             }
             else
             {
-                if (me->GetDistance(me->GetHomePosition()) < 40.0f && abs(me->GetPositionZ() - me->GetHomePosition().GetPositionZ()) < 5.0f)
+                if (me->GetDistance(me->GetHomePosition()) < 40.0f && std::abs(me->GetPositionZ() - me->GetHomePosition().GetPositionZ()) < 5.0f)
                 {
                     rage = false;
                     me->RemoveAurasDueToSpell(SPELL_IOCBOSS_RAGE);
@@ -253,12 +258,12 @@ public:
             }
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
-            events.ScheduleEvent(EVENT_CHECK_RAGE, 2000);
-            events.ScheduleEvent(EVENT_BRUTAL_STRIKE, 6000);
-            events.ScheduleEvent(EVENT_CRUSHING_LEAP, 22000);
-            events.ScheduleEvent(EVENT_DAGGER_THROW, 10000);
+            events.ScheduleEvent(EVENT_CHECK_RAGE, 2s);
+            events.ScheduleEvent(EVENT_BRUTAL_STRIKE, 6s);
+            events.ScheduleEvent(EVENT_CRUSHING_LEAP, 22s);
+            events.ScheduleEvent(EVENT_DAGGER_THROW, 10s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -274,21 +279,21 @@ public:
             {
                 case EVENT_CHECK_RAGE:
                     CheckRageBuff();
-                    events.RepeatEvent(2000);
+                    events.Repeat(2s);
                     break;
                 case EVENT_BRUTAL_STRIKE:
                     me->CastSpell(me->GetVictim(), SPELL_IOCBOSS_BRUTAL_STRIKE, false);
-                    events.RepeatEvent(6000);
+                    events.Repeat(6s);
                     break;
                 case EVENT_CRUSHING_LEAP:
                     me->CastSpell(me, SPELL_IOCBOSS_CRUSHING_LEAP, false);
-                    events.RepeatEvent(22000);
+                    events.Repeat(22s);
                     break;
                 case EVENT_DAGGER_THROW:
-                    if (Unit* tgt = SelectTarget(SELECT_TARGET_RANDOM))
+                    if (Unit* tgt = SelectTarget(SelectTargetMethod::Random))
                         me->CastSpell(tgt, SPELL_IOCBOSS_DAGGER_THROW, false);
 
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
             }
 
@@ -477,7 +482,7 @@ public:
 
                 float dist = position->GetExactDist2d(player->GetPositionX(), player->GetPositionY());
                 float elevation = GetSpell()->m_targets.GetElevation();
-                float speedZ = std::max(10.0f, float(50.0f * sin(elevation)));
+                float speedZ = std::max(10.0f, float(50.0f * std::sin(elevation)));
                 float speedXY = dist * 10.0f / speedZ;
 
                 player->GetMotionMaster()->MoveJump(position->GetPositionX(), position->GetPositionY(), position->GetPositionZ(), speedXY, speedZ);

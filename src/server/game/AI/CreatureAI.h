@@ -18,15 +18,19 @@
 #ifndef ACORE_CREATUREAI_H
 #define ACORE_CREATUREAI_H
 
+#include "AreaBoundary.h"
 #include "Common.h"
 #include "Creature.h"
 #include "UnitAI.h"
+#include "EventMap.h"
 
 class WorldObject;
 class Unit;
 class Creature;
 class Player;
 class SpellInfo;
+
+typedef std::vector<AreaBoundary const*> CreatureBoundary;
 
 #define TIME_INTERVAL_LOOK   5000
 #define VISIBILITY_RANGE    10000
@@ -67,6 +71,8 @@ class CreatureAI : public UnitAI
 protected:
     Creature* const me;
 
+    EventMap events;
+
     bool UpdateVictim();
     bool UpdateVictimWithGaze();
 
@@ -75,10 +81,21 @@ protected:
     Creature* DoSummon(uint32 entry, Position const& pos, uint32 despawnTime = 30000, TempSummonType summonType = TEMPSUMMON_CORPSE_TIMED_DESPAWN);
     Creature* DoSummon(uint32 entry, WorldObject* obj, float radius = 5.0f, uint32 despawnTime = 30000, TempSummonType summonType = TEMPSUMMON_CORPSE_TIMED_DESPAWN);
     Creature* DoSummonFlyer(uint32 entry, WorldObject* obj, float flightZ, float radius = 5.0f, uint32 despawnTime = 30000, TempSummonType summonType = TEMPSUMMON_CORPSE_TIMED_DESPAWN);
-
 public:
-    void Talk(uint8 id, WorldObject const* whisperTarget = nullptr);
-    explicit CreatureAI(Creature* creature) : UnitAI(creature), me(creature), m_MoveInLineOfSight_locked(false) {}
+    // EnumUtils: DESCRIBE THIS
+    enum EvadeReason
+    {
+        EVADE_REASON_NO_HOSTILES,       // the creature's threat list is empty
+        EVADE_REASON_BOUNDARY,          // the creature has moved outside its evade boundary
+        EVADE_REASON_SEQUENCE_BREAK,    // this is a boss and the pre-requisite encounters for engaging it are not defeated yet
+        EVADE_REASON_NO_PATH,           // the creature was unable to reach its target for over 5 seconds
+        EVADE_REASON_OTHER
+    };
+
+    void Talk(uint8 id, WorldObject const* whisperTarget = nullptr, Milliseconds delay = 0s);
+    void Talk(uint8 id, Milliseconds delay) { Talk(id, nullptr, delay); }
+
+    explicit CreatureAI(Creature* creature) : UnitAI(creature), me(creature), _boundary(nullptr), _negateBoundary(false), m_MoveInLineOfSight_locked(false) { }
 
     ~CreatureAI() override {}
 
@@ -97,10 +114,12 @@ public:
     virtual bool CanRespawn() { return true; }
 
     // Called for reaction at stopping attack at no attackers or targets
-    virtual void EnterEvadeMode();
+    virtual void EnterEvadeMode(EvadeReason why = EVADE_REASON_OTHER);
 
-    // Called for reaction at enter to combat if not in combat yet (enemy can be nullptr)
-    virtual void EnterCombat(Unit* /*victim*/) {}
+    /**
+     * @brief Called for reaction when initially engaged
+     */
+    virtual void JustEngagedWith(Unit* /*who*/) {}
 
     // Called when the creature is killed
     virtual void JustDied(Unit* /*killer*/) {}
@@ -110,7 +129,7 @@ public:
 
     // Called when the creature summon successfully other creature
     virtual void JustSummoned(Creature* /*summon*/) {}
-    virtual void IsSummonedBy(Unit* /*summoner*/) {}
+    virtual void IsSummonedBy(WorldObject* /*summoner*/) {}
 
     virtual void SummonedCreatureDespawn(Creature* /*summon*/) {}
     virtual void SummonedCreatureDies(Creature* /*summon*/, Unit* /*killer*/) {}
@@ -131,6 +150,9 @@ public:
 
     // Called at waypoint reached or point movement finished
     virtual void MovementInform(uint32 /*type*/, uint32 /*id*/) {}
+
+    // Called at MovePath End
+    virtual void PathEndReached(uint32 /*pathId*/) {}
 
     void OnCharmed(bool apply) override;
 
@@ -171,22 +193,42 @@ public:
     /// == Fields =======================================
     virtual void PassengerBoarded(Unit* /*passenger*/, int8 /*seatId*/, bool /*apply*/) {}
 
+    virtual bool BeforeSpellClick(Unit* /*clicker*/) { return true; }
+
     virtual void OnSpellClick(Unit* /*clicker*/, bool& /*result*/) { }
 
     virtual bool CanSeeAlways(WorldObject const* /*obj*/) { return false; }
 
     virtual bool CanBeSeen(Player const* /*seer*/) { return true; }
+    virtual bool CanAlwaysBeDetectable(WorldObject const* /*seer*/) { return false; }
+
+    virtual void PetStopAttack() { }
+
+    // boundary system methods
+    virtual bool CheckInRoom();
+    CreatureBoundary const* GetBoundary() const { return _boundary; }
+    void SetBoundary(CreatureBoundary const* boundary, bool negativeBoundaries = false);
+
+    static bool IsInBounds(CreatureBoundary const& boundary, Position const* who);
+    bool IsInBoundary(Position const* who = nullptr) const;
+
+    virtual void CalculateThreat(Unit* /*hatedUnit*/, float& /*threat*/, SpellInfo const* /*threatSpell*/) { }
+
+    virtual bool OnTeleportUnreacheablePlayer(Player* /*player*/) { return false; }
 
 protected:
     virtual void MoveInLineOfSight(Unit* /*who*/);
 
-    bool _EnterEvadeMode();
+    bool _EnterEvadeMode(EvadeReason why = EVADE_REASON_OTHER);
+
+    CreatureBoundary const* _boundary;
+    bool _negateBoundary;
 
 private:
     bool m_MoveInLineOfSight_locked;
 };
 
-enum Permitions
+enum Permitions : int32
 {
     PERMIT_BASE_NO                 = -1,
     PERMIT_BASE_IDLE               = 1,

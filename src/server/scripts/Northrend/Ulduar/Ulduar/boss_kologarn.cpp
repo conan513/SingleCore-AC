@@ -17,12 +17,12 @@
 
 #include "PassiveAI.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
-#include "ulduar.h"
 #include "Vehicle.h"
+#include "ulduar.h"
 
 enum KologarnSays
 {
@@ -185,9 +185,9 @@ public:
                 ScriptedAI::MoveInLineOfSight(who);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
-            if (!_EnterEvadeMode())
+            if (!_EnterEvadeMode(why))
                 return;
             Reset();
             me->setActive(false);
@@ -235,24 +235,26 @@ public:
             _looksAchievement = true;
 
             me->SetDisableGravity(true);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+            me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE);
             me->DisableRotate(true);
 
             events.Reset();
             summons.DespawnAll();
 
             if (m_pInstance)
+            {
                 m_pInstance->SetData(TYPE_KOLOGARN, NOT_STARTED);
+
+                // Open the door inside Kologarn chamber
+                if (GameObject* door = m_pInstance->instance->GetGameObject(m_pInstance->GetGuidData(GO_KOLOGARN_DOORS)))
+                    door->SetGoState(GO_STATE_ACTIVE);
+            }
 
             AttachLeftArm();
             AttachRightArm();
 
             // Reset breath on pull
             breathReady = false;
-
-            // Open the door inside Kologarn chamber
-            if (GameObject* door = me->FindNearestGameObject(GO_KOLOGARN_DOORS, 100.0f))
-                door->SetGoState(GO_STATE_ACTIVE);
         }
 
         void DoAction(int32 param) override
@@ -301,6 +303,13 @@ public:
 
             Talk(SAY_DEATH);
 
+            if (m_pInstance)
+            {
+                // Open the door inside Kologarn chamber
+                if (GameObject* door = m_pInstance->instance->GetGameObject(m_pInstance->GetGuidData(GO_KOLOGARN_DOORS)))
+                    door->SetGoState(GO_STATE_ACTIVE);
+            }
+
             if (GameObject* bridge = me->FindNearestGameObject(GO_KOLOGARN_BRIDGE, 100))
                 bridge->SetGoState(GO_STATE_READY);
 
@@ -309,7 +318,8 @@ public:
             {
                 me->RemoveGameObject(go, false);
                 go->SetSpellId(1); // hack to make it despawn
-                go->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+                go->ReplaceAllGameObjectFlags((GameObjectFlags)0);
+                go->SetLootRecipient(me);
             }
             if (Creature* arm = ObjectAccessor::GetCreature(*me, _left))
                 arm->DespawnOrUnsummon(3000); // visual
@@ -339,7 +349,7 @@ public:
                     if (me->IsInCombat())
                     {
                         Talk(SAY_LEFT_ARM_GONE);
-                        events.ScheduleEvent(EVENT_RESTORE_ARM_LEFT, 50000);
+                        events.ScheduleEvent(EVENT_RESTORE_ARM_LEFT, 50s);
                     }
                 }
                 else
@@ -348,13 +358,13 @@ public:
                     if (me->IsInCombat())
                     {
                         Talk(SAY_RIGHT_ARM_GONE);
-                        events.ScheduleEvent(EVENT_RESTORE_ARM_RIGHT, 50000);
+                        events.ScheduleEvent(EVENT_RESTORE_ARM_RIGHT, 50s);
                     }
                 }
 
                 me->CastSpell(me, SPELL_ARM_DEAD, true);
                 if (!_right && !_left)
-                    events.ScheduleEvent(EVENT_STONE_SHOUT, 5000);
+                    events.ScheduleEvent(EVENT_STONE_SHOUT, 5s);
             }
         }
 
@@ -367,31 +377,36 @@ public:
             }
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             if (m_pInstance)
                 m_pInstance->SetData(TYPE_KOLOGARN, IN_PROGRESS);
 
-            events.ScheduleEvent(EVENT_SMASH, 8000);
-            events.ScheduleEvent(EVENT_SWEEP, 17000);
-            events.ScheduleEvent(EVENT_GRIP, 15000);
-            events.ScheduleEvent(EVENT_FOCUSED_EYEBEAM, 10000);
-            events.ScheduleEvent(EVENT_PREPARE_BREATH, 3000);
+            events.ScheduleEvent(EVENT_SMASH, 8s);
+            events.ScheduleEvent(EVENT_SWEEP, 17s);
+            events.ScheduleEvent(EVENT_GRIP, 15s);
+            events.ScheduleEvent(EVENT_FOCUSED_EYEBEAM, 10s);
+            events.ScheduleEvent(EVENT_PREPARE_BREATH, 3s);
             //events.ScheduleEvent(EVENT_ENRAGE, x); no info
 
             Talk(SAY_AGGRO);
             me->setActive(true);
 
             // Close the door inside Kologarn chamber
-            if (GameObject* door = me->FindNearestGameObject(GO_KOLOGARN_DOORS, 100.0f))
-                door->SetGoState(GO_STATE_READY);
+            if (m_pInstance)
+            {
+                if (GameObject* door = m_pInstance->instance->GetGameObject(m_pInstance->GetGuidData(GO_KOLOGARN_DOORS)))
+                {
+                    door->SetGoState(GO_STATE_READY);
+                }
+            }
         }
 
         void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 return;
             }
 
@@ -411,7 +426,7 @@ public:
                     }
 
                     me->CastSpell(me->GetVictim(), SPELL_STONE_SHOUT, false);
-                    events.ScheduleEvent(EVENT_STONE_SHOUT, 2000);
+                    events.ScheduleEvent(EVENT_STONE_SHOUT, 2s);
                     break;
                 case EVENT_SMASH:
                     if (_left && _right)
@@ -419,8 +434,8 @@ public:
                     else if (_left || _right)
                         me->CastSpell(me->GetVictim(), SPELL_ONEARMED_OVERHEAD_SMASH, false);
 
-                    events.DelayEvents(1000);
-                    events.ScheduleEvent(EVENT_SMASH, 14000);
+                    events.DelayEvents(1s);
+                    events.ScheduleEvent(EVENT_SMASH, 14s);
                     return;
                 case EVENT_SWEEP:
                     if (_left)
@@ -432,11 +447,11 @@ public:
                             Talk(SAY_SHOCKWAVE);
                     }
 
-                    events.DelayEvents(1000);
-                    events.ScheduleEvent(EVENT_SWEEP, 17000);
+                    events.DelayEvents(1s);
+                    events.ScheduleEvent(EVENT_SWEEP, 17s);
                     return;
                 case EVENT_GRIP:
-                    events.ScheduleEvent(EVENT_GRIP, 25000);
+                    events.ScheduleEvent(EVENT_GRIP, 25s);
                     if (!_right)
                         break;
 
@@ -446,9 +461,9 @@ public:
                     return;
                 case EVENT_FOCUSED_EYEBEAM:
                 {
-                    events.ScheduleEvent(EVENT_FOCUSED_EYEBEAM, 20000);
+                    events.ScheduleEvent(EVENT_FOCUSED_EYEBEAM, 20s);
 
-                    if ((eyebeamTarget = SelectTarget(SELECT_TARGET_FARTHEST, 0, 0, true)))
+                    if ((eyebeamTarget = SelectTarget(SelectTargetMethod::MinDistance, 0, 0, true)))
                     {
                         me->CastSpell(eyebeamTarget, SPELL_FOCUSED_EYEBEAM_SUMMON, false);
                     }
@@ -509,7 +524,7 @@ public:
         int32 _damageDone;
         bool _combatStarted;
 
-        void EnterEvadeMode() override {}
+        void EnterEvadeMode(EvadeReason /*why*/ = EVADE_REASON_OTHER) override {}
         void MoveInLineOfSight(Unit*) override {}
         void AttackStart(Unit*) override {}
         void UpdateAI(uint32  /*diff*/) override {}
@@ -648,14 +663,14 @@ public:
 };
 
 // predicate function to select non main tank target
-class StoneGripTargetSelector : public Acore::unary_function<Unit*, bool>
+class StoneGripTargetSelector
 {
 public:
     StoneGripTargetSelector(Creature* me, Unit const* victim) : _me(me), _victim(victim) {}
 
     bool operator() (WorldObject* target) const
     {
-        if (target == _victim && _me->getThreatMgr().getThreatList().size() > 1)
+        if (target == _victim && _me->GetThreatMgr().GetThreatListSize() > 1)
             return true;
 
         if (target->GetTypeId() != TYPEID_PLAYER)
@@ -664,6 +679,7 @@ public:
         return false;
     }
 
+private:
     Creature* _me;
     Unit const* _victim;
 };

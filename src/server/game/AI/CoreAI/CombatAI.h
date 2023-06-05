@@ -21,6 +21,7 @@
 #include "ConditionMgr.h"
 #include "CreatureAI.h"
 #include "CreatureAIImpl.h"
+#include "EventMap.h"
 
 class Creature;
 
@@ -30,7 +31,7 @@ public:
     explicit AggressorAI(Creature* c) : CreatureAI(c) {}
 
     void UpdateAI(uint32) override;
-    static int Permissible(const Creature*);
+    static int32 Permissible(Creature const* creature);
 };
 
 typedef std::vector<uint32> SpellVct;
@@ -42,11 +43,11 @@ public:
 
     void InitializeAI() override;
     void Reset() override;
-    void EnterCombat(Unit* who) override;
+    void JustEngagedWith(Unit* who) override;
     void JustDied(Unit* killer) override;
     void UpdateAI(uint32 diff) override;
 
-    static int Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
+    static int32 Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
 
 protected:
     EventMap events;
@@ -60,7 +61,7 @@ public:
     void InitializeAI() override;
     void AttackStart(Unit* victim) override { AttackStartCaster(victim, m_attackDist); }
     void UpdateAI(uint32 diff) override;
-    void EnterCombat(Unit* /*who*/) override;
+    void JustEngagedWith(Unit* /*who*/) override;
 private:
     float m_attackDist;
 };
@@ -72,7 +73,7 @@ public:
     void AttackStart(Unit* who) override;
     void UpdateAI(uint32 diff) override;
 
-    static int Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
+    static int32 Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
 
 protected:
     float m_minRange;
@@ -82,11 +83,11 @@ struct TurretAI : public CreatureAI
 {
 public:
     explicit TurretAI(Creature* c);
-    bool CanAIAttack(const Unit* who) const override;
+    bool CanAIAttack(Unit const* who) const override;
     void AttackStart(Unit* who) override;
     void UpdateAI(uint32 diff) override;
 
-    static int Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
+    static int32 Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
 
 protected:
     float m_minRange;
@@ -104,7 +105,7 @@ public:
     void AttackStart(Unit*) override {}
     void OnCharmed(bool apply) override;
 
-    static int Permissible(Creature const* /*creature*/) { return PERMIT_BASE_NO; }
+    static int32 Permissible(Creature const* creature);
 
 private:
     void LoadConditions();

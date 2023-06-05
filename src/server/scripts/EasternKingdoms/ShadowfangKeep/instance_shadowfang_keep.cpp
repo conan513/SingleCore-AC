@@ -17,16 +17,13 @@
 
 #include "InstanceScript.h"
 #include "ScriptMgr.h"
-#include "shadowfang_keep.h"
 #include "TemporarySummon.h"
+#include "shadowfang_keep.h"
 
-//enum Creatures
-//{
-//    NPC_ASH                 = 3850,
-//    NPC_ADA                 = 3849,
-//    NPC_ARCHMAGE_ARUGAL     = 4275,
-//    NPC_ARUGAL_VOIDWALKER   = 4627
-//};
+enum Spells
+{
+    SPELL_SUMMON_VALENTINE_ADD = 68610
+};
 
 class instance_shadowfang_keep : public InstanceMapScript
 {
@@ -40,11 +37,35 @@ public:
 
     struct instance_shadowfang_keep_InstanceMapScript : public InstanceScript
     {
-        instance_shadowfang_keep_InstanceMapScript(Map* map) : InstanceScript(map) { }
+        instance_shadowfang_keep_InstanceMapScript(Map* map) : InstanceScript(map)
+        {
+            SetHeaders(DataHeader);
+        }
 
         void Initialize() override
         {
             memset(&_encounters, 0, sizeof(_encounters));
+        }
+
+        void OnCreatureCreate(Creature* creature) override
+        {
+            switch (creature->GetEntry())
+            {
+                case NPC_DND_CRAZED_APOTHECARY_GENERATOR:
+                    _crazedApothecaryGeneratorGUIDs.push_back(creature->GetGUID());
+                    break;
+                case NPC_APOTHECARY_HUMMEL:
+                    _apothecaryHummel = creature->GetGUID();
+                    break;
+                case NPC_CRAZED_APOTHECARY:
+                    if (Creature* hummel = instance->GetCreature(_apothecaryHummel))
+                    {
+                        hummel->AI()->JustSummoned(creature);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         void OnGameObjectCreate(GameObject* gameobject) override
@@ -63,6 +84,8 @@ public:
                     if (_encounters[TYPE_WOLF_MASTER_NANDOS] == DONE)
                         HandleGameObject(ObjectGuid::Empty, true, gameobject);
                     break;
+                default:
+                    break;
             }
         }
 
@@ -75,40 +98,39 @@ public:
                 case TYPE_WOLF_MASTER_NANDOS:
                     _encounters[type] = data;
                     break;
+                case DATA_SPAWN_VALENTINE_ADDS:
+                    for (ObjectGuid guid : _crazedApothecaryGeneratorGUIDs)
+                    {
+                        if (Creature* generator = instance->GetCreature(guid))
+                        {
+                            generator->CastSpell(nullptr, SPELL_SUMMON_VALENTINE_ADD);
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
 
             if (data == DONE)
                 SaveToDB();
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            std::ostringstream saveStream;
-            saveStream << "S K " << _encounters[0] << ' ' << _encounters[1] << ' ' << _encounters[2];
-            return saveStream.str();
+            data >> _encounters[0];
+            data >> _encounters[1];
+            data >> _encounters[2];
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-            if (dataHead1 == 'S' && dataHead2 == 'K')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    loadStream >> _encounters[i];
-                    if (_encounters[i] == IN_PROGRESS)
-                        _encounters[i] = NOT_STARTED;
-                }
-            }
+            data << _encounters[0] << ' ' << _encounters[1] << ' ' << _encounters[2];
         }
 
     private:
         uint32 _encounters[MAX_ENCOUNTERS];
+        GuidVector _crazedApothecaryGeneratorGUIDs;
+        ObjectGuid _apothecaryHummel;
     };
 };
 

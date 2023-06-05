@@ -31,9 +31,9 @@ EndContentData */
 
 #include "PassiveAI.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellInfo.h"
 #include "WorldSession.h"
 
@@ -102,7 +102,7 @@ public:
             _playerGUID.Clear();
             events.Reset();
             summons.DespawnAll();
-            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
         }
 
         void SetData(uint32 faction, uint32) override
@@ -113,13 +113,13 @@ public:
         void SetGUID(ObjectGuid guid, int32) override
         {
             _playerGUID = guid;
-            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
             events.Reset();
             summons.DespawnAll();
 
-            events.ScheduleEvent(EVENT_CHECK_PLAYER, 1000);
-            events.ScheduleEvent(EVENT_SUMMON_ARCHERS, 4000);
-            events.ScheduleEvent(EVENT_SUMMON_PEASANTS, 8000);
+            events.ScheduleEvent(EVENT_CHECK_PLAYER, 1s);
+            events.ScheduleEvent(EVENT_SUMMON_ARCHERS, 4s);
+            events.ScheduleEvent(EVENT_SUMMON_PEASANTS, 8s);
         }
 
         bool CanBeSeen(Player const* player) override
@@ -175,7 +175,7 @@ public:
                 float z = 159.65f;
                 creature->SetWalk(true);
                 creature->GetMotionMaster()->MovePoint(0, x, y, z);
-                creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+                creature->SetUnitFlag(UNIT_FLAG_PLAYER_CONTROLLED);
             }
         }
 
@@ -264,7 +264,7 @@ public:
         uint32 timer;
         ObjectGuid _targetGUID;
 
-        void SpellHit(Unit*, const SpellInfo* spellInfo) override
+        void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id == SPELL_SHOOT && roll_chance_i(7))
                 me->CastSpell(me, SPELL_DEATHS_DOOR, true);

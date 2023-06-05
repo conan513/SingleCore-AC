@@ -27,8 +27,8 @@ npc_webbed_creature
 EndContentData */
 
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 
 /*######
 ## npc_webbed_creature
@@ -53,7 +53,7 @@ public:
 
         void Reset() override { }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void JustDied(Unit* killer) override
         {
@@ -65,6 +65,16 @@ public:
                     if (Player* player = killer->ToPlayer())
                     {
                         player->KilledMonsterCredit(NPC_EXPEDITION_RESEARCHER);
+                    }
+                    else if (killer->IsPet())
+                    {
+                        if (Unit* owner = killer->GetOwner())
+                        {
+                            if (owner->GetTypeId() == TYPEID_PLAYER)
+                            {
+                                owner->ToPlayer()->KilledMonsterCredit(NPC_EXPEDITION_RESEARCHER);
+                            }
+                        }
                     }
                     spawnCreatureID = NPC_EXPEDITION_RESEARCHER;
                     break;

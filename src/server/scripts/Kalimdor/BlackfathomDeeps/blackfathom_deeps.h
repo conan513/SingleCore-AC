@@ -18,6 +18,8 @@
 #ifndef BFD_H_
 #define BFD_H_
 
+#define DataHeader "BFD"
+
 enum Data
 {
     TYPE_GELIHAST               = 0,
@@ -25,8 +27,9 @@ enum Data
     TYPE_FIRE2                  = 2,
     TYPE_FIRE3                  = 3,
     TYPE_FIRE4                  = 4,
-    TYPE_AKU_MAI                = 5,
-    MAX_ENCOUNTERS              = 6
+    TYPE_AKU_MAI_EVENT          = 5,
+    TYPE_AKU_MAI                = 6,
+    MAX_ENCOUNTERS              = 7
 };
 
 enum CreatureIds

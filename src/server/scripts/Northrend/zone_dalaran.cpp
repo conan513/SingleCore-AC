@@ -15,18 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Script Data Start
-SDName: Dalaran
-SDAuthor: WarHead, MaXiMiUS
-SD%Complete: 99%
-SDComment: For what is 63990+63991? Same function but don't work correct...
-SDCategory: Dalaran
-Script Data End */
-
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "World.h"
 
 // Ours
@@ -115,6 +107,10 @@ enum DisguiseMisc
     SPELL_EVOCATION_VISUAL          = 69659,
 
     NPC_AQUANOS_ENTRY               = 36851,
+
+    GOSSIP_MENU_AQUANOS             = 10854,
+    GOSSIP_AQUANOS_ALLIANCE         = 0,
+    GOSSIP_AQUANOS_HORDE            = 1,
 };
 
 enum spells
@@ -161,14 +157,14 @@ public:
                     _lSource = 0;
                     _canWash = false;
                     Talk(SAY_SHANDY1);
-                    _events.ScheduleEvent(EVENT_INTRO_DH1, 5000);
-                    _events.ScheduleEvent(EVENT_OUTRO_DH, 10 * MINUTE * IN_MILLISECONDS);
+                    _events.ScheduleEvent(EVENT_INTRO_DH1, 5s);
+                    _events.ScheduleEvent(EVENT_OUTRO_DH, 10min);
                     break;
                 default:
                     if(_lSource == type && _canWash)
                     {
                         _canWash = false;
-                        _events.ScheduleEvent(EVENT_INTRO_DH2, type == ACTION_UNMENTIONABLES ? 4000 : 10000);
+                        _events.ScheduleEvent(EVENT_INTRO_DH2, type == ACTION_UNMENTIONABLES ? 4s : 10s);
                         Talk(SAY_SHANDY2);
                         if (Creature* aquanos = ObjectAccessor::GetCreature(*me, _aquanosGUID))
                             aquanos->CastSpell(aquanos, SPELL_EVOCATION_VISUAL, false);
@@ -194,35 +190,35 @@ public:
             {
                 case EVENT_INTRO_DH1:
                     Talk(SAY_SHANDY3);
-                    _events.ScheduleEvent(EVENT_INTRO_DH2, 15000);
+                    _events.ScheduleEvent(EVENT_INTRO_DH2, 15s);
                     break;
                 case EVENT_INTRO_DH2:
                     if (_lCount++ > 6)
-                        _events.ScheduleEvent(EVENT_INTRO_DH3, 6000);
+                        _events.ScheduleEvent(EVENT_INTRO_DH3, 6s);
                     else
                         RollTask();
 
                     break;
                 case EVENT_INTRO_DH3:
                     Talk(SAY_SHANDY4);
-                    _events.ScheduleEvent(EVENT_INTRO_DH4, 20000);
+                    _events.ScheduleEvent(EVENT_INTRO_DH4, 20s);
                     break;
                 case EVENT_INTRO_DH4:
                     Talk(SAY_SHANDY5);
-                    _events.ScheduleEvent(EVENT_INTRO_DH5, 3000);
+                    _events.ScheduleEvent(EVENT_INTRO_DH5, 3s);
                     break;
                 case EVENT_INTRO_DH5:
                     me->SummonGameObject(201384, 5798.74f, 693.19f, 657.94f, 0.91f, 0, 0, 0, 0, 90000000);
-                    _events.ScheduleEvent(EVENT_INTRO_DH6, 1000);
+                    _events.ScheduleEvent(EVENT_INTRO_DH6, 1s);
                     break;
                 case EVENT_INTRO_DH6:
                     me->SetWalk(true);
                     me->GetMotionMaster()->MovePoint(0, 5797.55f, 691.97f, 657.94f);
-                    _events.RescheduleEvent(EVENT_OUTRO_DH, 30000);
+                    _events.RescheduleEvent(EVENT_OUTRO_DH, 30s);
                     break;
                 case EVENT_OUTRO_DH:
                     me->GetMotionMaster()->MoveTargetedHome();
-                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     _events.Reset();
                     break;
             }
@@ -246,9 +242,9 @@ public:
                 player->GetQuestStatus(QUEST_SUITABLE_DISGUISE_H) == QUEST_STATUS_INCOMPLETE)
         {
             if(player->GetTeamId() == TEAM_ALLIANCE)
-                AddGossipItemFor(player, 0, "Arcanist Tybalin said you might be able to lend me a certain tabard.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+                AddGossipItemFor(player, GOSSIP_MENU_AQUANOS, GOSSIP_AQUANOS_ALLIANCE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
             else
-                AddGossipItemFor(player, 0, "Magister Hathorel said you might be able to lend me a certain tabard.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+                AddGossipItemFor(player, GOSSIP_MENU_AQUANOS, GOSSIP_AQUANOS_HORDE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
         }
 
         SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
@@ -261,7 +257,7 @@ public:
         {
             case GOSSIP_ACTION_INFO_DEF:
                 CloseGossipMenuFor(player);
-                creature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+                creature->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
                 creature->AI()->SetData(ACTION_SHANDY_INTRO, 0);
                 break;
         }
@@ -433,14 +429,14 @@ public:
     {
         npc_mageguard_dalaranAI(Creature* creature) : ScriptedAI(creature)
         {
-            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            creature->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             creature->ApplySpellImmune(0, IMMUNITY_DAMAGE, SPELL_SCHOOL_NORMAL, true);
             creature->ApplySpellImmune(0, IMMUNITY_DAMAGE, SPELL_SCHOOL_MASK_MAGIC, true);
         }
 
         void Reset() override {}
 
-        void EnterCombat(Unit* /*who*/) override {}
+        void JustEngagedWith(Unit* /*who*/) override {}
 
         void AttackStart(Unit* /*who*/) override {}
 
@@ -580,15 +576,15 @@ public:
                             DoCast(player, SPELL_MANABONKED);
                             SendMailToPlayer(player);
                         }
-                        events.ScheduleEvent(EVENT_BLINK, 3 * IN_MILLISECONDS);
+                        events.ScheduleEvent(EVENT_BLINK, 3ms);
                         break;
                     case EVENT_BLINK:
                         {
                             DoCast(me, SPELL_IMPROVED_BLINK);
                             Position pos = me->GetRandomNearPosition((urand(15, 40)));
                             me->GetMotionMaster()->MovePoint(0, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
-                            events.ScheduleEvent(EVENT_DESPAWN, 3 * IN_MILLISECONDS);
-                            events.ScheduleEvent(EVENT_DESPAWN_VISUAL, 2.5 * IN_MILLISECONDS);
+                            events.ScheduleEvent(EVENT_DESPAWN, 3ms);
+                            events.ScheduleEvent(EVENT_DESPAWN_VISUAL, 3ms);
                             break;
                         }
                     case EVENT_DESPAWN_VISUAL:
@@ -652,7 +648,7 @@ public:
             me->AddAura(1908, me);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
         }
 
@@ -752,7 +748,7 @@ public:
             Initialize();
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             me->AddAura(1908, me);
             Battleshout_timer = 1000;

@@ -22,10 +22,10 @@ SDComment: Complete! Needs adjustments to use spell though.
 SDCategory: Karazhan
 EndScriptData */
 
-#include "karazhan.h"
 #include "PassiveAI.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "karazhan.h"
 
 enum TerestianIllhoof
 {
@@ -91,7 +91,7 @@ public:
             AmplifyTimer = 2000;
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
         }
 
@@ -148,7 +148,7 @@ public:
             SacrificeGUID.Clear();
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
         void AttackStart(Unit* /*who*/) override { }
         void MoveInLineOfSight(Unit* /*who*/) override { }
 
@@ -219,7 +219,7 @@ public:
             FireboltTimer = 2000;
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void UpdateAI(uint32 diff) override
         {
@@ -313,7 +313,7 @@ public:
                 DoCast(me, SPELL_SUMMON_IMP, true);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(SAY_AGGRO);
             DoZoneInCombat();
@@ -380,7 +380,7 @@ public:
 
             if (SacrificeTimer <= diff)
             {
-                Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100, true);
+                Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 100, true);
                 if (target && target->IsAlive())
                 {
                     DoCast(target, SPELL_SACRIFICE, true);
@@ -401,7 +401,7 @@ public:
 
             if (ShadowboltTimer <= diff)
             {
-                DoCast(SelectTarget(SELECT_TARGET_TOPAGGRO, 0), SPELL_SHADOW_BOLT);
+                DoCast(SelectTarget(SelectTargetMethod::MaxThreat, 0), SPELL_SHADOW_BOLT);
                 ShadowboltTimer = 10000;
             }
             else

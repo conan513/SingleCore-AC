@@ -18,9 +18,9 @@
 #ifndef AZEROTHCORE_CREATUREDATA_H
 #define AZEROTHCORE_CREATUREDATA_H
 
-#include "DBCEnums.h"
 #include "Cell.h"
 #include "Common.h"
+#include "DBCEnums.h"
 #include "DatabaseEnv.h"
 #include "ItemTemplate.h"
 #include "LootMgr.h"
@@ -33,13 +33,16 @@
 
 #define MAX_KILL_CREDIT 2
 #define CREATURE_REGEN_INTERVAL 2 * IN_MILLISECONDS
-#define PET_FOCUS_REGEN_INTERVAL 4 * IN_MILLISECONDS
 
 #define MAX_CREATURE_QUEST_ITEMS 6
 
 #define MAX_EQUIPMENT_ITEMS 3
+
+constexpr Milliseconds PET_FOCUS_REGEN_INTERVAL = 4s;
+
 enum class VisibilityDistanceType : uint8;
-// TODO: Implement missing flags from TC in places that custom flags from xinef&pussywizzard use flag values.
+
+/// @todo: Implement missing flags from TC in places that custom flags from xinef&pussywizzard use flag values.
 // EnumUtils: DESCRIBE THIS
 enum CreatureFlagsExtra : uint32
 {
@@ -54,7 +57,7 @@ enum CreatureFlagsExtra : uint32
     CREATURE_FLAG_EXTRA_NO_TAUNT                        = 0x00000100,   // creature is immune to taunt auras and 'attack me' effects
     CREATURE_FLAG_EXTRA_NO_MOVE_FLAGS_UPDATE            = 0x00000200,   // creature won't update movement flags
     CREATURE_FLAG_EXTRA_GHOST_VISIBILITY                = 0x00000400,   // creature will only be visible to dead players
-    CREATURE_FLAG_EXTRA_UNUSED_12                       = 0x00000800,   // TODO: Implement CREATURE_FLAG_EXTRA_USE_OFFHAND_ATTACK (creature will use offhand attacks)
+    CREATURE_FLAG_EXTRA_UNUSED_12                       = 0x00000800,   /// @todo: Implement CREATURE_FLAG_EXTRA_USE_OFFHAND_ATTACK (creature will use offhand attacks)
     CREATURE_FLAG_EXTRA_NO_SELL_VENDOR                  = 0x00001000,   // players can't sell items to this vendor
     CREATURE_FLAG_EXTRA_IGNORE_COMBAT                   = 0x00002000,
     CREATURE_FLAG_EXTRA_WORLDEVENT                      = 0x00004000,   // custom flag for world event creatures (left room for merging)
@@ -67,20 +70,105 @@ enum CreatureFlagsExtra : uint32
     CREATURE_FLAG_EXTRA_NO_PLAYER_DAMAGE_REQ            = 0x00200000,   // creature does not need to take player damage for kill credit
     CREATURE_FLAG_EXTRA_AVOID_AOE                       = 0x00400000,   // pussywizard: ignored by aoe attacks (for icc blood prince council npc - Dark Nucleus)
     CREATURE_FLAG_EXTRA_NO_DODGE                        = 0x00800000,   // xinef: target cannot dodge
-    CREATURE_FLAG_EXTRA_UNUSED_25                       = 0x01000000,
-    CREATURE_FLAG_EXTRA_UNUSED_26                       = 0x02000000,
-    CREATURE_FLAG_EXTRA_UNUSED_27                       = 0x04000000,
-    CREATURE_FLAG_EXTRA_UNUSED_28                       = 0x08000000,
+    CREATURE_FLAG_EXTRA_MODULE                          = 0x01000000,
+    CREATURE_FLAG_EXTRA_DONT_CALL_ASSISTANCE            = 0x02000000,   // Prevent creatures from calling for assistance on initial aggro
+    CREATURE_FLAG_EXTRA_IGNORE_ALL_ASSISTANCE_CALLS     = 0x04000000,   // Prevents creature from responding to assistance calls
+    CREATURE_FLAG_DONT_OVERRIDE_ENTRY_SAI               = 0x08000000,   // Load both ENTRY and GUID specific SAI
     CREATURE_FLAG_EXTRA_DUNGEON_BOSS                    = 0x10000000,   // creature is a dungeon boss (SET DYNAMICALLY, DO NOT ADD IN DB)
     CREATURE_FLAG_EXTRA_IGNORE_PATHFINDING              = 0x20000000,   // creature ignore pathfinding
     CREATURE_FLAG_EXTRA_IMMUNITY_KNOCKBACK              = 0x40000000,   // creature is immune to knockback effects
     CREATURE_FLAG_EXTRA_HARD_RESET                      = 0x80000000,
 
     // Masks
-    CREATURE_FLAG_EXTRA_UNUSED                          = (CREATURE_FLAG_EXTRA_UNUSED_12 | CREATURE_FLAG_EXTRA_UNUSED_25 | CREATURE_FLAG_EXTRA_UNUSED_26 |
-                                                           CREATURE_FLAG_EXTRA_UNUSED_27 | CREATURE_FLAG_EXTRA_UNUSED_28), // SKIP
+    CREATURE_FLAG_EXTRA_UNUSED                          = (CREATURE_FLAG_EXTRA_UNUSED_12), // SKIP
 
     CREATURE_FLAG_EXTRA_DB_ALLOWED                      = (0xFFFFFFFF & ~(CREATURE_FLAG_EXTRA_UNUSED | CREATURE_FLAG_EXTRA_DUNGEON_BOSS)) // SKIP
+};
+
+enum class CreatureGroundMovementType : uint8
+{
+    None,
+    Run,
+    Hover,
+
+    Max
+};
+
+enum class CreatureFlightMovementType : uint8
+{
+    None,
+    DisableGravity,
+    CanFly,
+
+    Max
+};
+
+enum class CreatureChaseMovementType : uint8
+{
+    Run,
+    CanWalk,
+    AlwaysWalk,
+
+    Max
+};
+
+enum class CreatureRandomMovementType : uint8
+{
+    Walk,
+    CanRun,
+    AlwaysRun,
+
+    Max
+};
+
+struct CreatureMovementData
+{
+    CreatureMovementData();
+
+    CreatureGroundMovementType Ground;
+    CreatureFlightMovementType Flight;
+    bool                       Swim;
+    bool                       Rooted;
+    CreatureChaseMovementType  Chase;
+    CreatureRandomMovementType Random;
+    uint32                     InteractionPauseTimer;
+
+    bool IsGroundAllowed() const
+    {
+        return Ground != CreatureGroundMovementType::None;
+    }
+
+    bool IsSwimAllowed() const
+    {
+        return Swim;
+    }
+
+    bool IsFlightAllowed() const
+    {
+        return Flight != CreatureFlightMovementType::None;
+    }
+
+    bool IsRooted() const
+    {
+        return Rooted;
+    }
+
+    CreatureChaseMovementType GetChase() const
+    {
+        return Chase;
+    }
+
+    CreatureRandomMovementType GetRandom() const
+    {
+        return Random;
+    }
+
+    uint32 GetInteractionPauseTimer() const
+    {
+        return InteractionPauseTimer;
+    }
+
+    std::string ToString() const;
 };
 
 // from `creature_template` table
@@ -104,6 +192,8 @@ struct CreatureTemplate
     uint32  npcflag;
     float   speed_walk;
     float   speed_run;
+    float   speed_swim;
+    float   speed_flight;
     float   detection_range;                                // Detection Range for Line of Sight aggro
     float   scale;
     uint32  rank;
@@ -135,7 +225,7 @@ struct CreatureTemplate
     uint32  maxgold;
     std::string AIName;
     uint32  MovementType;
-    uint32  InhabitType;
+    CreatureMovementData  Movement;
     float   HoverHeight;
     float   ModHealth;
     float   ModMana;
@@ -211,7 +301,7 @@ struct CreatureBaseStats
 
     uint32 GenerateHealth(CreatureTemplate const* info) const
     {
-        return uint32(ceil(BaseHealth[info->expansion] * info->ModHealth));
+        return uint32(std::ceil(BaseHealth[info->expansion] * info->ModHealth));
     }
 
     uint32 GenerateMana(CreatureTemplate const* info) const
@@ -220,12 +310,12 @@ struct CreatureBaseStats
         if (!BaseMana)
             return 0;
 
-        return uint32(ceil(BaseMana * info->ModMana));
+        return uint32(std::ceil(BaseMana * info->ModMana));
     }
 
     uint32 GenerateArmor(CreatureTemplate const* info) const
     {
-        return uint32(ceil(BaseArmor * info->ModArmor));
+        return uint32(std::ceil(BaseArmor * info->ModArmor));
     }
 
     float GenerateBaseDamage(CreatureTemplate const* info) const
@@ -267,8 +357,10 @@ typedef std::unordered_map<uint32, EquipmentInfoContainerInternal> EquipmentInfo
 // from `creature` table
 struct CreatureData
 {
-    CreatureData()  { }
-    uint32 id{0};                                              // entry in creature_template
+    CreatureData() = default;
+    uint32 id1{0};                                             // entry in creature_template
+    uint32 id2{0};                                             // entry in creature_template
+    uint32 id3{0};                                             // entry in creature_template
     uint16 mapid{0};
     uint32 phaseMask{0};
     uint32 displayid{0};
@@ -340,7 +432,6 @@ struct CreatureAddon
     uint32 bytes1;
     uint32 bytes2;
     uint32 emote;
-    bool isLarge;
     std::vector<uint32> auras;
     VisibilityDistanceType visibilityDistanceType;
 };
@@ -392,8 +483,7 @@ struct VendorItemData
 
 struct VendorItemCount
 {
-    explicit VendorItemCount(uint32 _item, uint32 _count)
-        : itemId(_item), count(_count), lastIncrementTime(time(nullptr)) {}
+    explicit VendorItemCount(uint32 _item, uint32 _count);
 
     uint32 itemId;
     uint32 count;
@@ -416,6 +506,7 @@ struct TrainerSpell
     uint32 reqSkillValue{0};
     uint32 reqLevel{0};
     uint32 learnedSpell[3];
+    uint32 reqSpell{0};
 
     // helpers
     [[nodiscard]] bool IsCastable() const { return learnedSpell[0] != spell; }
@@ -425,7 +516,7 @@ typedef std::unordered_map<uint32 /*spellid*/, TrainerSpell> TrainerSpellMap;
 
 struct TrainerSpellData
 {
-    TrainerSpellData()  {}
+    TrainerSpellData()  = default;
     ~TrainerSpellData() { spellList.clear(); }
 
     TrainerSpellMap spellList;
@@ -436,11 +527,11 @@ struct TrainerSpellData
 
 struct CreatureSpellCooldown
 {
-    CreatureSpellCooldown() : category(0), end(0) { }
+    CreatureSpellCooldown()  = default;
     CreatureSpellCooldown(uint16 categoryId, uint32 endTime) : category(categoryId), end(endTime) { }
 
-    uint16 category;
-    uint32 end;
+    uint16 category{0};
+    uint32 end{0};
 };
 
 typedef std::map<uint32, CreatureSpellCooldown> CreatureSpellCooldowns;

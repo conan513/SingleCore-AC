@@ -15,8 +15,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
 #include "zulaman.h"
 
@@ -56,12 +56,11 @@ enum PhaseHalazzi
 enum Yells
 {
     SAY_AGGRO                   = 0,
-    SAY_SABER                   = 1,
-    SAY_SPLIT                   = 2,
-    SAY_MERGE                   = 3,
-    SAY_KILL                    = 4,
-    SAY_DEATH                   = 5,
-    SAY_BERSERK                 = 6
+    SAY_KILL                    = 1,
+    SAY_SABER                   = 2,
+    SAY_SPLIT                   = 3,
+    SAY_MERGE                   = 4,
+    SAY_DEATH                   = 5
 };
 
 class boss_halazzi : public CreatureScript
@@ -106,7 +105,7 @@ public:
             EnterPhase(PHASE_LYNX);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             instance->SetData(DATA_HALAZZIEVENT, IN_PROGRESS);
             Talk(SAY_AGGRO);
@@ -127,7 +126,7 @@ public:
                 damage = 0;
         }
 
-        void SpellHit(Unit*, const SpellInfo* spell) override
+        void SpellHit(Unit*, SpellInfo const* spell) override
         {
             if (spell->Id == SPELL_TRANSFORM_SPLIT2)
                 EnterPhase(PHASE_HUMAN);
@@ -176,7 +175,7 @@ public:
                     if (Unit* pLynx = ObjectAccessor::GetUnit(*me, LynxGUID))
                     {
                         Talk(SAY_MERGE);
-                        pLynx->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        pLynx->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                         pLynx->GetMotionMaster()->Clear();
                         pLynx->GetMotionMaster()->MoveFollow(me, 0, 0);
                         me->GetMotionMaster()->Clear();
@@ -197,7 +196,6 @@ public:
 
             if (BerserkTimer <= diff)
             {
-                Talk(SAY_BERSERK);
                 DoCast(me, SPELL_BERSERK, true);
                 BerserkTimer = 60000;
             }
@@ -207,6 +205,7 @@ public:
             {
                 if (SaberlashTimer <= diff)
                 {
+                    Talk(SAY_SABER);
                     // A tank with more than 490 defense skills should receive no critical hit
                     //DoCast(me, 41296, true);
                     DoCastVictim(SPELL_SABER_LASH, true);
@@ -245,7 +244,7 @@ public:
 
                 if (ShockTimer <= diff)
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                     {
                         if (target->IsNonMeleeSpellCast(false))
                             DoCast(target, SPELL_EARTHSHOCK);
@@ -347,11 +346,11 @@ public:
 
         void AttackStart(Unit* who) override
         {
-            if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+            if (!me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
                 ScriptedAI::AttackStart(who);
         }
 
-        void EnterCombat(Unit* /*who*/) override {/*DoZoneInCombat();*/ }
+        void JustEngagedWith(Unit* /*who*/) override {/*DoZoneInCombat();*/ }
 
         void UpdateAI(uint32 diff) override
         {

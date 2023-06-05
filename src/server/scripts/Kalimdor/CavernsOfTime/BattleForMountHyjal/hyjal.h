@@ -18,8 +18,10 @@
 #ifndef DEF_HYJAL_H
 #define DEF_HYJAL_H
 
-#include "GridNotifiers.h"
 #include "CreatureAIImpl.h"
+#include "GridNotifiers.h"
+
+#define DataHeader "HY"
 
 #define HyjalScriptName "instance_hyjal"
 

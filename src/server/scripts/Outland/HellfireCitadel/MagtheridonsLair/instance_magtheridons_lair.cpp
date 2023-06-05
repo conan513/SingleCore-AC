@@ -16,14 +16,18 @@
  */
 
 #include "InstanceScript.h"
-#include "magtheridons_lair.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "magtheridons_lair.h"
+
+BossBoundaryData const boundaries =
+{
+    { TYPE_MAGTHERIDON, new CircleBoundary(Position(-18.70f, 2.24f), 52.30) }
+};
 
 DoorData const doorData[] =
 {
-    { GO_MAGTHERIDON_DOORS,  TYPE_MAGTHERIDON,   DOOR_TYPE_ROOM,  BOUNDARY_S },
-    { 0,                0,              DOOR_TYPE_ROOM,     BOUNDARY_NONE } // END
+    { GO_MAGTHERIDON_DOORS,     TYPE_MAGTHERIDON,           DOOR_TYPE_ROOM },
+    { 0,                        0,                          DOOR_TYPE_ROOM } // END
 };
 
 MinionData const minionData[] =
@@ -40,9 +44,11 @@ public:
     {
         instance_magtheridons_lair_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTER);
             LoadDoorData(doorData);
             LoadMinionData(minionData);
+            LoadBossBoundaries(boundaries);
         }
 
         void Initialize() override
@@ -143,7 +149,7 @@ public:
                 {
                     for (ObjectGuid const& guid : _cubesSet)
                         if (GameObject* cube = instance->GetGameObject(guid))
-                            cube->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            cube->SetGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
 
                     if (state == NOT_STARTED)
                         SetData(DATA_COLLAPSE, GO_READY);
@@ -164,7 +170,7 @@ public:
                 case DATA_ACTIVATE_CUBES:
                     for (ObjectGuid const& guid : _cubesSet)
                         if (GameObject* cube = instance->GetGameObject(guid))
-                            cube->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            cube->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     break;
                 case DATA_COLLAPSE:
                     for (ObjectGuid const& guid : _columnSet)
@@ -172,49 +178,6 @@ public:
                             column->SetGoState(GOState(data));
                     break;
             }
-        }
-
-        std::string GetSaveData() override
-        {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "M L " << GetBossSaveData();
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
-        }
-
-        void Load(char const* str) override
-        {
-            if (!str)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(str);
-
-            char dataHead1, dataHead2;
-
-            std::istringstream loadStream(str);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'M' && dataHead2 == 'L')
-            {
-                for (uint32 i = 0; i < MAX_ENCOUNTER; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                        tmpState = NOT_STARTED;
-                    SetBossState(i, EncounterState(tmpState));
-                }
-            }
-            else
-                OUT_LOAD_INST_DATA_FAIL;
-
-            OUT_LOAD_INST_DATA_COMPLETE;
         }
 
     private:

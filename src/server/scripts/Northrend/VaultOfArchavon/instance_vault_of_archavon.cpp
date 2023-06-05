@@ -17,9 +17,10 @@
 
 #include "Battlefield.h"
 #include "BattlefieldMgr.h"
+#include "GameTime.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
 #include "vault_of_archavon.h"
 
@@ -43,6 +44,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
             ArchavonDeath = 0;
@@ -78,7 +80,7 @@ public:
                         if (bf->GetTimer() <= (16 * MINUTE * IN_MILLISECONDS) && bf->GetTimer() >= (15 * MINUTE * IN_MILLISECONDS))
                         {
                             Map::PlayerList const& PlayerList = instance->GetPlayers();
-                            if (!PlayerList.isEmpty())
+                            if (!PlayerList.IsEmpty())
                                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                                     if (Player* player = i->GetSource())
                                         player->TextEmote("This instance will reset in 15 minutes.", nullptr, true);
@@ -102,7 +104,7 @@ public:
                         else if (bf->GetTimer() <= (2 * MINUTE * IN_MILLISECONDS) && bf->GetTimer() > (MINUTE * IN_MILLISECONDS))
                         {
                             Map::PlayerList const& PlayerList = instance->GetPlayers();
-                            if (!PlayerList.isEmpty())
+                            if (!PlayerList.IsEmpty())
                                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                                     if (Player* player = i->GetSource())
                                         player->TextEmote("This instance is about to reset. Prepare to be removed.", nullptr, true);
@@ -115,10 +117,10 @@ public:
                                         cr->AI()->EnterEvadeMode();
 
                             Map::PlayerList const& PlayerList = instance->GetPlayers();
-                            if (!PlayerList.isEmpty())
+                            if (!PlayerList.IsEmpty())
                                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                                     if (Player* player = i->GetSource())
-                                        player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, player->GetOrientation());
+                                        player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, player->m_homebindO);
                         }
                     }
                 }
@@ -190,13 +192,13 @@ public:
                 switch (type)
                 {
                     case EVENT_ARCHAVON:
-                        ArchavonDeath = time(nullptr);
+                        ArchavonDeath = GameTime::GetGameTime().count();
                         break;
                     case EVENT_EMALON:
-                        EmalonDeath = time(nullptr);
+                        EmalonDeath = GameTime::GetGameTime().count();
                         break;
                     case EVENT_KORALON:
-                        KoralonDeath = time(nullptr);
+                        KoralonDeath = GameTime::GetGameTime().count();
                         break;
                     default:
                         return;
@@ -216,10 +218,10 @@ public:
                     if (ArchavonDeath && EmalonDeath && KoralonDeath)
                     {
                         // instance difficulty check is already done in db (achievement_criteria_data)
-                        // int() for Visual Studio, compile errors with abs(time_t)
-                        return (abs(int(ArchavonDeath - EmalonDeath)) < MINUTE && \
-                                abs(int(EmalonDeath - KoralonDeath)) < MINUTE && \
-                                abs(int(KoralonDeath - ArchavonDeath)) < MINUTE);
+                        // int() for Visual Studio, compile errors with std::abs(time_t)
+                        return (std::abs(int(ArchavonDeath - EmalonDeath)) < MINUTE && \
+                                std::abs(int(EmalonDeath - KoralonDeath)) < MINUTE && \
+                                std::abs(int(KoralonDeath - ArchavonDeath)) < MINUTE);
                     }
                     break;
                 default:
@@ -229,44 +231,20 @@ public:
             return false;
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "V O A " << m_auiEncounter[0] << ' ' << m_auiEncounter[1] << ' ' << m_auiEncounter[2] << ' ' << m_auiEncounter[3];
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
+            data >> m_auiEncounter[0];
+            data >> m_auiEncounter[1];
+            data >> m_auiEncounter[2];
+            data >> m_auiEncounter[3];
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2, dataHead3;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> dataHead3;
-
-            if (dataHead1 == 'V' && dataHead2 == 'O' && dataHead3 == 'A')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                {
-                    loadStream >> m_auiEncounter[i];
-                    if (m_auiEncounter[i] == IN_PROGRESS)
-                        m_auiEncounter[i] = NOT_STARTED;
-                }
-
-                OUT_LOAD_INST_DATA_COMPLETE;
-            }
-            else
-                OUT_LOAD_INST_DATA_FAIL;
+            data << m_auiEncounter[0] << ' '
+                << m_auiEncounter[1] << ' '
+                << m_auiEncounter[2] << ' '
+                << m_auiEncounter[3];
         }
 
     private:

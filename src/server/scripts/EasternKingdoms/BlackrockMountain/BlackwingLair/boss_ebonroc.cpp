@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackwing_lair.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "blackwing_lair.h"
 
 enum Spells
 {
@@ -42,13 +42,28 @@ public:
     {
         boss_ebonrocAI(Creature* creature) : BossAI(creature, DATA_EBONROC) { }
 
-        void EnterCombat(Unit* who) override
+        void MovementInform(uint32 type, uint32 id) override
         {
-            BossAI::EnterCombat(who);
+            if (type != WAYPOINT_MOTION_TYPE || id != 12)
+            {
+                return;
+            }
 
-            events.ScheduleEvent(EVENT_SHADOWFLAME, 10000, 20000);
-            events.ScheduleEvent(EVENT_WINGBUFFET, 30000);
-            events.ScheduleEvent(EVENT_SHADOWOFEBONROC, 8000, 10000);
+            me->GetMotionMaster()->MoveRandom(10.f);
+
+            me->m_Events.AddEventAtOffset([this]()
+            {
+                me->GetMotionMaster()->Initialize();
+            }, 15s);
+        }
+
+        void JustEngagedWith(Unit* who) override
+        {
+            BossAI::JustEngagedWith(who);
+
+            events.ScheduleEvent(EVENT_SHADOWFLAME, 18s);
+            events.ScheduleEvent(EVENT_WINGBUFFET, 30s);
+            events.ScheduleEvent(EVENT_SHADOWOFEBONROC, 8s, 10s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -67,15 +82,15 @@ public:
                 {
                     case EVENT_SHADOWFLAME:
                         DoCastVictim(SPELL_SHADOWFLAME);
-                        events.ScheduleEvent(EVENT_SHADOWFLAME, 10000, 20000);
+                        events.ScheduleEvent(EVENT_SHADOWFLAME, 15s, 25s);
                         break;
                     case EVENT_WINGBUFFET:
                         DoCastVictim(SPELL_WINGBUFFET);
-                        events.ScheduleEvent(EVENT_WINGBUFFET, 30000);
+                        events.ScheduleEvent(EVENT_WINGBUFFET, 30s);
                         break;
                     case EVENT_SHADOWOFEBONROC:
                         DoCastVictim(SPELL_SHADOWOFEBONROC);
-                        events.ScheduleEvent(EVENT_SHADOWOFEBONROC, 8000, 10000);
+                        events.ScheduleEvent(EVENT_SHADOWOFEBONROC, 8s, 10s);
                         break;
                 }
 

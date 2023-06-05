@@ -18,10 +18,12 @@
 #ifndef DEF_THE_BOTANICA_H
 #define DEF_THE_BOTANICA_H
 
-#include "SpellScript.h"
 #include "CreatureAIImpl.h"
+#include "SpellScript.h"
 
 #define TheBotanicaScriptName "instance_the_botanica"
+
+#define DataHeader "BC"
 
 enum DataTypes
 {
@@ -57,5 +59,7 @@ inline AI* GetTheBotanicaAI(T* obj)
 {
     return GetInstanceAI<AI>(obj, TheBotanicaScriptName);
 }
+
+#define RegisterTheBotanicaCreatureAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetTheBotanicaAI)
 
 #endif

@@ -16,12 +16,10 @@
  */
 
 #include "Metric.h"
-#include "Common.h"
 #include "Config.h"
 #include "DeadlineTimer.h"
 #include "Log.h"
 #include "Strand.h"
-#include "Util.h"
 #include "Tokenize.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -58,7 +56,7 @@ bool Metric::Connect()
     auto error = stream.error();
     if (error)
     {
-        FMT_LOG_ERROR("metric", "Error connecting to '{}:{}', disabling Metric. Error message: {}",
+        LOG_ERROR("metric", "Error connecting to '{}:{}', disabling Metric. Error message: {}",
             _hostname, _port, error.message());
 
         _enabled = false;
@@ -77,14 +75,14 @@ void Metric::LoadFromConfigs()
 
     if (_updateInterval < 1)
     {
-        FMT_LOG_ERROR("metric", "'Metric.Interval' config set to {}, overriding to 1.", _updateInterval);
+        LOG_ERROR("metric", "'Metric.Interval' config set to {}, overriding to 1.", _updateInterval);
         _updateInterval = 1;
     }
 
     _overallStatusTimerInterval = sConfigMgr->GetOption<int32>("Metric.OverallStatusInterval", 1);
     if (_overallStatusTimerInterval < 1)
     {
-        FMT_LOG_ERROR("metric", "'Metric.OverallStatusInterval' config set to {}, overriding to 1.", _overallStatusTimerInterval);
+        LOG_ERROR("metric", "'Metric.OverallStatusInterval' config set to {}, overriding to 1.", _overallStatusTimerInterval);
         _overallStatusTimerInterval = 1;
     }
 
@@ -104,14 +102,14 @@ void Metric::LoadFromConfigs()
         std::string connectionInfo = sConfigMgr->GetOption<std::string>("Metric.ConnectionInfo", "");
         if (connectionInfo.empty())
         {
-            FMT_LOG_ERROR("metric", "'Metric.ConnectionInfo' not specified in configuration file.");
+            LOG_ERROR("metric", "'Metric.ConnectionInfo' not specified in configuration file.");
             return;
         }
 
         std::vector<std::string_view> tokens = Acore::Tokenize(connectionInfo, ';', true);
         if (tokens.size() != 3)
         {
-            FMT_LOG_ERROR("metric", "'Metric.ConnectionInfo' specified with wrong format in configuration file.");
+            LOG_ERROR("metric", "'Metric.ConnectionInfo' specified with wrong format in configuration file.");
             return;
         }
 
@@ -224,7 +222,7 @@ void Metric::SendBatch()
 
     if (status_code != 204)
     {
-        FMT_LOG_ERROR("metric", "Error sending data, returned HTTP code: {}", status_code);
+        LOG_ERROR("metric", "Error sending data, returned HTTP code: {}", status_code);
     }
 
     // Read and ignore the status description
@@ -324,7 +322,7 @@ std::string Metric::FormatInfluxDBValue(float value)
 
 std::string Metric::FormatInfluxDBTagValue(std::string const& value)
 {
-    // ToDo: should handle '=' and ',' characters too
+    /// @todo: should handle '=' and ',' characters too
     return boost::replace_all_copy(value, " ", "\\ ");
 }
 

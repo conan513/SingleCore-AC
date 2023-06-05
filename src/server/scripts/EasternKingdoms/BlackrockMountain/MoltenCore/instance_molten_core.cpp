@@ -15,12 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
 #include "InstanceScript.h"
 #include "ObjectMgr.h"
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "InstanceScript.h"
 #include "TemporarySummon.h"
 #include "molten_core.h"
 
@@ -54,6 +51,8 @@ MCBossObject const linkedBossObjData[MAX_MC_LINKED_BOSS_OBJ]=
     { DATA_SULFURON,    GO_RUNE_KORO,       GO_CIRCLE_SULFURON  },
 };
 
+constexpr uint8 SAY_SPAWN = 1;
+
 class instance_molten_core : public InstanceMapScript
 {
 public:
@@ -63,6 +62,7 @@ public:
     {
         instance_molten_core_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTER);
             LoadMinionData(minionData);
         }
@@ -164,7 +164,7 @@ public:
 
                         if (GetBossState(linkedBossObjData[i].bossId) == DONE)
                         {
-                            go->DespawnOrUnsummon();
+                            go->DespawnOrUnsummon(0ms, Seconds(WEEK));
                         }
                         else
                         {
@@ -191,7 +191,7 @@ public:
 
                         if (GetBossState(linkedBossObjData[i].bossId) == DONE)
                         {
-                            go->SetGoState(GO_STATE_ACTIVE);
+                            go->UseDoorOrButton(WEEK * IN_MILLISECONDS);
                         }
                         else
                         {
@@ -208,6 +208,14 @@ public:
                 case GO_LAVA_SPLASH:
                 {
                     _lavaSplashGUID = go->GetGUID();
+                    break;
+                }
+                case GO_LAVA_BURST:
+                {
+                    if (Creature* ragnaros = instance->GetCreature(_ragnarosGUID))
+                    {
+                        ragnaros->AI()->SetGUID(go->GetGUID(), GO_LAVA_BURST);
+                    }
                     break;
                 }
             }
@@ -243,7 +251,11 @@ public:
 
             if (bossId == DATA_MAJORDOMO_EXECUTUS && state == DONE)
             {
-                DoRespawnGameObject(_cacheOfTheFirelordGUID, 7 * DAY);
+                if (GameObject* cache = instance->GetGameObject(_cacheOfTheFirelordGUID))
+                {
+                    cache->SetRespawnTime(7 * DAY);
+                    cache->SetLootRecipient(instance);
+                }
             }
             else if (bossId == DATA_GOLEMAGG)
             {
@@ -303,13 +315,13 @@ public:
             {
                 if (GameObject* circle = instance->GetGameObject(_circlesGUIDs[bossId]))
                 {
-                    circle->DespawnOrUnsummon();
+                    circle->DespawnOrUnsummon(0ms, Seconds(WEEK));
                     _circlesGUIDs[bossId].Clear();
                 }
 
                 if (GameObject* rune = instance->GetGameObject(_runesGUIDs[bossId]))
                 {
-                    rune->SetGoState(GO_STATE_ACTIVE);
+                    rune->UseDoorOrButton(WEEK * IN_MILLISECONDS);
                     _runesGUIDs[bossId].Clear();
                 }
 
@@ -351,7 +363,17 @@ public:
                 return;
             }
 
-            instance->SummonCreature(NPC_MAJORDOMO_EXECUTUS, GetBossState(DATA_MAJORDOMO_EXECUTUS) != DONE ? MajordomoSummonPos : MajordomoRagnaros);
+            if (GetBossState(DATA_MAJORDOMO_EXECUTUS) != DONE)
+            {
+                if (Creature* creature = instance->SummonCreature(NPC_MAJORDOMO_EXECUTUS, MajordomoSummonPos))
+                {
+                    creature->AI()->Talk(SAY_SPAWN);
+                }
+            }
+            else
+            {
+                instance->SummonCreature(NPC_MAJORDOMO_EXECUTUS, MajordomoRagnaros);
+            }
         }
 
         bool CheckMajordomoExecutus() const
@@ -381,59 +403,6 @@ public:
             }
 
             return true;
-        }
-
-        std::string GetSaveData() override
-        {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "M C " << GetBossSaveData();
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
-        }
-
-        void Load(char const* data) override
-        {
-            if (!data)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(data);
-
-            char dataHead1, dataHead2;
-
-            std::istringstream loadStream(data);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'M' && dataHead2 == 'C')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > TO_BE_DECIDED)
-                    {
-                        tmpState = NOT_STARTED;
-                    }
-
-                    SetBossState(i, static_cast<EncounterState>(tmpState));
-                }
-
-                if (CheckMajordomoExecutus())
-                {
-                    SummonMajordomoExecutus();
-                }
-            }
-            else
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-            }
-
-            OUT_LOAD_INST_DATA_COMPLETE;
         }
 
     private:

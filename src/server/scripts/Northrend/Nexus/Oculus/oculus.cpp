@@ -15,15 +15,15 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "oculus.h"
 #include "CombatAI.h"
 #include "InstanceScript.h"
 #include "MotionMaster.h"
 #include "ObjectAccessor.h"
-#include "oculus.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
@@ -132,7 +132,7 @@ public:
                 }
                 if (resetPosition)
                 {
-                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
                     switch (me->GetEntry())
                     {
                     case NPC_VERDISA:
@@ -161,7 +161,7 @@ public:
             {
                 Talk(SAY_BELGARISTRASZ);
             }
-            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
         }
     };
 
@@ -352,8 +352,13 @@ public:
         bool JustSummoned;
         uint16 despawnTimer;
 
-        void IsSummonedBy(Unit* summoner) override
+        void IsSummonedBy(WorldObject* summoner) override
         {
+            if (summoner->GetTypeId() != TYPEID_PLAYER)
+            {
+                return;
+            }
+
             if (m_pInstance->GetBossState(DATA_EREGOS) == IN_PROGRESS)
                 if (Creature* eregos = me->FindNearestCreature(NPC_EREGOS, 450.0f, true))
                     eregos->DespawnOrUnsummon(); // On retail this kills abusive call of drake during engaged Eregos
@@ -363,13 +368,13 @@ public:
             switch (me->GetEntry())
             {
                 case NPC_RUBY_DRAKE:
-                    me->CastSpell(summoner, SPELL_RIDE_RUBY_DRAKE_QUE);
+                    me->CastSpell(summoner->ToUnit(), SPELL_RIDE_RUBY_DRAKE_QUE);
                     break;
                 case NPC_EMERALD_DRAKE:
-                    me->CastSpell(summoner, SPELL_RIDE_EMERALD_DRAKE_QUE);
+                    me->CastSpell(summoner->ToUnit(), SPELL_RIDE_EMERALD_DRAKE_QUE);
                     break;
                 case NPC_AMBER_DRAKE:
-                    me->CastSpell(summoner, SPELL_RIDE_AMBER_DRAKE_QUE);
+                    me->CastSpell(summoner->ToUnit(), SPELL_RIDE_AMBER_DRAKE_QUE);
                     break;
                 default:
                     return;
@@ -497,7 +502,7 @@ public:
 
         void Reset() override {}
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             DoCast(IsHeroic() ? H_SPELL_EMPOWERING_BLOWS : SPELL_EMPOWERING_BLOWS);
         }
@@ -926,7 +931,7 @@ public:
                 case EFFECT_1:
                     _drakeGUID = drake->GetGUID();
                     caster->AddAura(SPELL_DRAKE_FLAG_VISUAL, caster);
-                    caster->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    caster->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     caster->RemoveAurasByType(SPELL_AURA_MOD_SHAPESHIFT);
                     drake->CastSpell(drake, SPELL_SOAR_TRIGGER);
                     if (drake->GetEntry() == NPC_RUBY_DRAKE)
@@ -950,12 +955,12 @@ public:
 
             if (drake)
             {
-                drake->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_POSSESSED);
+                drake->RemoveUnitFlag(UNIT_FLAG_POSSESSED);
                 drake->RemoveAurasDueToSpell(GetId());
                 drake->RemoveAurasDueToSpell(SPELL_SOAR_TRIGGER);
                 drake->RemoveAurasDueToSpell(SPELL_RUBY_EVASIVE_AURA);
             }
-            caster->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            caster->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             caster->RemoveAurasDueToSpell(SPELL_DRAKE_FLAG_VISUAL);
         }
 
@@ -993,7 +998,7 @@ public:
 
             if (!drake)
             {
-                caster->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                caster->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 caster->RemoveAurasDueToSpell(SPELL_DRAKE_FLAG_VISUAL);
             }
         }

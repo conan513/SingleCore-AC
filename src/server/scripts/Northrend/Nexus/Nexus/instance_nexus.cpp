@@ -15,16 +15,16 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nexus.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "nexus.h"
 
 DoorData const doorData[] =
 {
-    { GO_TELESTRA_SPHERE,   DATA_TELESTRA_ORB,  DOOR_TYPE_PASSAGE,  BOUNDARY_NONE },
-    { GO_ANOMALUS_SPHERE,   DATA_ANOMALUS_ORB,  DOOR_TYPE_PASSAGE,  BOUNDARY_NONE },
-    { GO_ORMOROK_SPHERE,    DATA_ORMOROK_ORB,   DOOR_TYPE_PASSAGE,  BOUNDARY_NONE },
-    { 0,                    0,                  DOOR_TYPE_ROOM,     BOUNDARY_NONE }
+    { GO_TELESTRA_SPHERE,   DATA_TELESTRA_ORB,  DOOR_TYPE_PASSAGE },
+    { GO_ANOMALUS_SPHERE,   DATA_ANOMALUS_ORB,  DOOR_TYPE_PASSAGE },
+    { GO_ORMOROK_SPHERE,    DATA_ORMOROK_ORB,   DOOR_TYPE_PASSAGE },
+    { 0,                    0,                  DOOR_TYPE_ROOM    }
 };
 
 class instance_nexus : public InstanceMapScript
@@ -43,6 +43,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             LoadDoorData(doorData);
         }
@@ -51,7 +52,7 @@ public:
         {
             Map::PlayerList const& players = instance->GetPlayers();
             TeamId TeamIdInInstance = TEAM_NEUTRAL;
-            if (!players.isEmpty())
+            if (!players.IsEmpty())
                 if (Player* pPlayer = players.begin()->GetSource())
                     TeamIdInInstance = pPlayer->GetTeamId();
 
@@ -91,17 +92,17 @@ public:
             {
                 case GO_TELESTRA_SPHERE:
                     if (GetBossState(DATA_TELESTRA_ORB) != DONE && GetBossState(DATA_MAGUS_TELESTRA_EVENT) == DONE)
-                        gameObject->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameObject->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     AddDoor(gameObject, true);
                     break;
                 case GO_ANOMALUS_SPHERE:
                     if (GetBossState(DATA_ANOMALUS_ORB) != DONE && GetBossState(DATA_ANOMALUS_EVENT) == DONE)
-                        gameObject->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameObject->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     AddDoor(gameObject, true);
                     break;
                 case GO_ORMOROK_SPHERE:
                     if (GetBossState(DATA_ORMOROK_ORB) != DONE && GetBossState(DATA_ORMOROK_EVENT) == DONE)
-                        gameObject->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameObject->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     AddDoor(gameObject, true);
                     break;
             }
@@ -148,36 +149,8 @@ public:
 
             BossInfo const* bossInfo = GetBossInfo(id + DATA_TELESTRA_ORB);
             for (DoorSet::const_iterator i = bossInfo->door[DOOR_TYPE_PASSAGE].begin(); i != bossInfo->door[DOOR_TYPE_PASSAGE].end(); ++i)
-                (*i)->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                (*i)->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
             return true;
-        }
-
-        std::string GetSaveData() override
-        {
-            std::ostringstream saveStream;
-            saveStream << "N E X " << GetBossSaveData();
-            return saveStream.str();
-        }
-
-        void Load(const char* in) override
-        {
-            if( !in )
-                return;
-
-            char dataHead1, dataHead2, dataHead3;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> dataHead3;
-            if (dataHead1 == 'N' && dataHead2 == 'E' && dataHead3 == 'X')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                        tmpState = NOT_STARTED;
-                    SetBossState(i, EncounterState(tmpState));
-                }
-            }
         }
     };
 };
@@ -217,19 +190,19 @@ public:
             restoreTimer = 0;
             abilityTimer1 = 0;
             abilityTimer2 = 30000;
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+            me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             _allowDeath = me->GetInstanceScript()->GetBossState(DATA_ORMOROK_EVENT) == DONE;
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             if (me->isRegeneratingHealth())
-                ScriptedAI::EnterEvadeMode();
+                ScriptedAI::EnterEvadeMode(why);
         }
 
         void DamageTaken(Unit*, uint32& damage, DamageEffectType, SpellSchoolMask) override
@@ -239,13 +212,13 @@ public:
                 if (!_allowDeath)
                 {
                     me->RemoveAllAuras();
-                    me->DeleteThreatList();
+                    me->GetThreatMgr().ClearAllThreat();
                     me->CombatStop(true);
                     damage = 0;
 
                     me->SetReactState(REACT_PASSIVE);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     me->SetRegeneratingHealth(false);
                     me->CastSpell(me, SPELL_SUMMON_SEED_POD, true);
                     me->CastSpell(me, SPELL_SEED_POD, true);
@@ -266,8 +239,8 @@ public:
                     me->SetRegeneratingHealth(true);
                     restoreTimer = 0;
                     me->SetReactState(REACT_AGGRESSIVE);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 }
                 return;
             }

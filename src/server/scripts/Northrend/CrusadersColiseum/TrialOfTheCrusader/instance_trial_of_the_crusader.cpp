@@ -15,13 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "GameTime.h"
 #include "Group.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "trial_of_the_crusader.h"
 
-#define CLEANUP_CHECK_INTERVAL  5000
 std::map<uint32, bool> validDedicatedInsanityItems;
 
 class instance_trial_of_the_crusader : public InstanceMapScript
@@ -31,7 +31,11 @@ public:
 
     struct instance_trial_of_the_crusader_InstanceMapScript : public InstanceScript
     {
-        instance_trial_of_the_crusader_InstanceMapScript(Map* pMap) : InstanceScript(pMap) { Initialize(); }
+        instance_trial_of_the_crusader_InstanceMapScript(Map* pMap) : InstanceScript(pMap)
+        {
+            SetHeaders(DataHeader);
+            Initialize();
+        }
 
         bool CLEANED;
         uint32 EncounterStatus;
@@ -106,7 +110,7 @@ public:
             }
         }
 
-        bool IsValidDedicatedInsanityItem(const ItemTemplate* item)
+        bool IsValidDedicatedInsanityItem(ItemTemplate const* item)
         {
             if (!item) // should not happen, but checked in GetAverageItemLevel()
                 return true;
@@ -317,7 +321,7 @@ public:
                         if (Creature* trigger = instance->SummonCreature(WORLD_TRIGGER, Locs[LOC_CENTER], nullptr, 25000))
                         {
                             trigger->SetDisplayId(11686);
-                            trigger->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            trigger->ReplaceAllUnitFlags(UNIT_FLAG_NOT_SELECTABLE);
                             trigger->SetFaction(FACTION_MONSTER);
                             trigger->SetInCombatWithZone();
                         }
@@ -339,7 +343,7 @@ public:
                             if (Creature* trigger = instance->SummonCreature(WORLD_TRIGGER, Locs[LOC_CENTER], nullptr, 25000))
                             {
                                 trigger->SetDisplayId(11686);
-                                trigger->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                                trigger->ReplaceAllUnitFlags(UNIT_FLAG_NOT_SELECTABLE);
                                 trigger->SetFaction(FACTION_MONSTER);
                                 trigger->SetInCombatWithZone();
                             }
@@ -348,7 +352,7 @@ public:
                                 c->DespawnOrUnsummon(10000);
                             if( Creature* c = instance->GetCreature(NPC_DreadscaleGUID) )
                                 c->DespawnOrUnsummon(10000);
-                            if( AchievementTimer + 10 >= time(nullptr) )
+                            if( AchievementTimer + 10 >= GameTime::GetGameTime().count() )
                                 DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, SPELL_JORMUNGAR_ACHIEV);
                             AchievementTimer = 0;
 
@@ -365,7 +369,7 @@ public:
                         }
                         else // first one died, start timer for achievement
                         {
-                            AchievementTimer = time(nullptr);
+                            AchievementTimer = GameTime::GetGameTime().count();
                         }
                     }
                     else
@@ -447,14 +451,14 @@ public:
 
                             HandleGameObject(GO_EnterGateGUID, true);
 
-                            if( AchievementTimer + 60 >= time(nullptr) )
+                            if( AchievementTimer + 60 >= GameTime::GetGameTime().count() )
                                 DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, SPELL_RESILIENCE_WILL_FIX_IT_CREDIT);
                             AchievementTimer = 0;
 
                             SaveToDB();
                         }
                         else if( Counter == 1 )
-                            AchievementTimer = time(nullptr);
+                            AchievementTimer = GameTime::GetGameTime().count();
                     }
                     break;
                 case TYPE_FACTION_CHAMPIONS_START:
@@ -566,9 +570,11 @@ public:
                             DoCheckDedicatedInsanity();
                         bSwitcher = !bSwitcher;
 
-                        if( DoNeedCleanup(false) )
+                        if (DoNeedCleanup())
+                        {
                             InstanceCleanup();
-                        events.RepeatEvent(CLEANUP_CHECK_INTERVAL);
+                        }
+                        events.Repeat(5s);
                     }
                     break;
                 case EVENT_OPEN_GATE:
@@ -655,7 +661,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_GormokGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                             if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
@@ -703,7 +709,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_DreadscaleGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                             if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
@@ -714,7 +720,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_AcidmawGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                             if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
@@ -751,7 +757,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_IcehowlGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                             if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
@@ -766,7 +772,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_TirionGUID) )
                             c->AI()->Talk(SAY_STAGE_0_06);
                         if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                            c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                            c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         break;
                     }
                 case EVENT_SCENE_101:
@@ -906,7 +912,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_JaraxxusGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                             if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
@@ -945,7 +951,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_TirionGUID) )
                             c->AI()->Talk(SAY_STAGE_1_11);
                         if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                            c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                            c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         break;
                     }
                 case EVENT_SCENE_201:
@@ -1103,7 +1109,7 @@ public:
                             if (Creature* c = instance->GetCreature(guid))
                             {
                                 c->SetReactState(REACT_AGGRESSIVE);
-                                c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                                 c->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                                 //if( Unit* target = c->SelectNearestTarget(200.0f) )
                                 //  c->AI()->AttackStart(target);
@@ -1119,7 +1125,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_TirionGUID) )
                             c->AI()->Talk(SAY_STAGE_2_06);
                         if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                            c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                            c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         break;
                     }
                 case EVENT_SCENE_301:
@@ -1170,7 +1176,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_LightbaneGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             /*if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
                                 c->AI()->AttackStart(target);
@@ -1180,7 +1186,7 @@ public:
                         if( Creature* c = instance->GetCreature(NPC_DarkbaneGUID) )
                         {
                             c->SetReactState(REACT_AGGRESSIVE);
-                            c->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            c->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             /*if( Unit* target = c->SelectNearestTarget(200.0f) )
                             {
                                 c->AI()->AttackStart(target);
@@ -1400,27 +1406,37 @@ public:
             else
                 plr->SendUpdateWorldState(UPDATE_STATE_UI_SHOW, 0);
 
-            if( DoNeedCleanup(true) )
+            if (DoNeedCleanup(plr))
+            {
                 InstanceCleanup();
+            }
 
             // if missing spawn anub'arak
             SpawnAnubArak();
 
-            events.RescheduleEvent(EVENT_CHECK_PLAYERS, CLEANUP_CHECK_INTERVAL);
+            events.RescheduleEvent(EVENT_CHECK_PLAYERS, 5s);
         }
 
-        bool DoNeedCleanup(bool /*enter*/)
+        bool DoNeedCleanup(Player* ignoredPlayer = nullptr)
         {
             uint8 aliveCount = 0;
-            Map::PlayerList const& pl = instance->GetPlayers();
-            for( Map::PlayerList::const_iterator itr = pl.begin(); itr != pl.end(); ++itr )
-                if( Player* plr = itr->GetSource() )
-                    if( plr->IsAlive() && !plr->IsGameMaster() )
+            for (auto const& itr: instance->GetPlayers())
+            {
+                if (Player* plr = itr.GetSource())
+                {
+                    if (plr != ignoredPlayer && plr->IsAlive() && !plr->IsGameMaster())
+                    {
                         ++aliveCount;
+                    }
+                }
+            }
 
             bool need = aliveCount == 0;
-            if( !need && CLEANED )
+            if (!need && CLEANED)
+            {
                 CLEANED = false;
+            }
+
             return need;
         }
 
@@ -1434,11 +1450,11 @@ public:
             {
                 case INSTANCE_PROGRESS_INITIAL:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                        c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     break;
                 case INSTANCE_PROGRESS_INTRO_DONE:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                        c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     if( Creature* c = instance->GetCreature(NPC_GormokGUID) )
                     {
                         c->AI()->DoAction(-1); // despawn summons
@@ -1458,7 +1474,7 @@ public:
                     break;
                 case INSTANCE_PROGRESS_BEASTS_DEAD:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                        c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     if( Creature* c = instance->GetCreature(NPC_FizzlebangGUID) )
                         c->DespawnOrUnsummon();
                     NPC_FizzlebangGUID.Clear();
@@ -1477,19 +1493,19 @@ public:
                         c->DespawnOrUnsummon();
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
                     {
-                        c->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         if( Creature* jaraxxus = c->SummonCreature(NPC_JARAXXUS, Locs[LOC_CENTER].GetPositionX(), Locs[LOC_CENTER].GetPositionY(), Locs[LOC_CENTER].GetPositionZ(), Locs[LOC_CENTER].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 630000000) )
                         {
                             jaraxxus->CastSpell(jaraxxus, 67924, true);
                             jaraxxus->SetReactState(REACT_AGGRESSIVE);
-                            jaraxxus->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            jaraxxus->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             jaraxxus->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                         }
                     }
                     break;
                 case INSTANCE_PROGRESS_JARAXXUS_DEAD:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                        c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     for (ObjectGuid const& guid : NPC_ChampionGUIDs)
                         if (Creature* c = instance->GetCreature(guid))
                             c->DespawnOrUnsummon();
@@ -1497,7 +1513,7 @@ public:
                     break;
                 case INSTANCE_PROGRESS_FACTION_CHAMPIONS_DEAD:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                        c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     if( Creature* c = instance->GetCreature(NPC_DarkbaneGUID) )
                     {
                         c->AI()->DoAction(-1);
@@ -1520,11 +1536,11 @@ public:
                         if (InstanceProgress == INSTANCE_PROGRESS_ANUB_ARAK)
                         {
                             c->SetVisible(false);
-                            c->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                            c->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         }
                         else
                         {
-                            c->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                            c->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                             c->SetVisible(true);
                             c->SetFacingTo(c->GetOrientation());
                         }
@@ -1549,7 +1565,7 @@ public:
                     if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
                     {
                         c->SetVisible(false);
-                        c->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        c->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     }
                     break;
             }
@@ -1565,7 +1581,7 @@ public:
 
             if( instance->IsHeroic() && AttemptsLeft == 0 )
                 if( Creature* c = instance->GetCreature(NPC_BarrettGUID) )
-                    c->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    c->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 
             HandleGameObject(GO_MainGateGUID, false);
             HandleGameObject(GO_EnterGateGUID, true);
@@ -1573,57 +1589,35 @@ public:
             Counter = 0;
             EncounterStatus = NOT_STARTED;
             events.Reset();
-            events.RescheduleEvent(EVENT_CHECK_PLAYERS, CLEANUP_CHECK_INTERVAL);
+            events.RescheduleEvent(EVENT_CHECK_PLAYERS, 5s);
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-            std::ostringstream saveStream;
-            saveStream << "T C " << InstanceProgress;
-            if( instance->IsHeroic() )
-                saveStream << ' ' << AttemptsLeft << ' ' << (bDedicatedInsanity ? (uint32)1 : (uint32)0) << ' ' << (bNooneDied ? (uint32)1 : (uint32)0);
-            str_data = saveStream.str();
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return str_data;
+            data >> InstanceProgress;
+
+            if (instance->IsHeroic())
+            {
+                data >> AttemptsLeft;
+                uint32 temp = 0;
+                data >> temp;
+                bDedicatedInsanity = !!temp;
+                data >> temp;
+                bNooneDied = !!temp;
+            }
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            EncounterStatus = NOT_STARTED;
-            CLEANED = false;
-            events.Reset();
-            events.RescheduleEvent(EVENT_CHECK_PLAYERS, 0);
+            data << InstanceProgress;
 
-            if( !in )
+            if (instance->IsHeroic())
             {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
+                data << ' '
+                    << AttemptsLeft << ' '
+                    << (bDedicatedInsanity ? 1 : 0) << ' '
+                    << (bNooneDied ? 1 : 0);
             }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2;
-            uint16 data0;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> data0;
-
-            if( dataHead1 == 'T' && dataHead2 == 'C' )
-            {
-                InstanceProgress = data0;
-                if( instance->IsHeroic() )
-                {
-                    uint32 data1 = 0, data2 = 0, data3 = 0;
-                    loadStream >> data1 >> data2 >> data3;
-                    AttemptsLeft = data1;
-                    bDedicatedInsanity = !!data2;
-                    bNooneDied = !!data3;
-                }
-            }
-            else
-                OUT_LOAD_INST_DATA_FAIL;
-
-            OUT_LOAD_INST_DATA_COMPLETE;
         }
 
         bool CheckAchievementCriteriaMeet(uint32 criteria_id, Player const*  /*source*/, Unit const*  /*target*/, uint32  /*miscvalue1*/) override

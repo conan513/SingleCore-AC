@@ -19,9 +19,9 @@
  * Interaction between core and LFGScripts
  */
 
+#include "LFGScripts.h"
 #include "Group.h"
 #include "LFGMgr.h"
-#include "LFGScripts.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -29,17 +29,14 @@
 
 namespace lfg
 {
-
-    LFGPlayerScript::LFGPlayerScript() : PlayerScript("LFGPlayerScript")
-    {
-    }
+    LFGPlayerScript::LFGPlayerScript() : PlayerScript("LFGPlayerScript") { }
 
     void LFGPlayerScript::OnLevelChanged(Player* player, uint8 /*oldLevel*/)
     {
         if (!sLFGMgr->isOptionEnabled(LFG_OPTION_ENABLE_DUNGEON_FINDER | LFG_OPTION_ENABLE_RAID_BROWSER | LFG_OPTION_ENABLE_SEASONAL_BOSSES))
             return;
 
-        sLFGMgr->InitializeLockedDungeons(player);
+        sLFGMgr->InitializeLockedDungeons(player, player->GetGroup());
     }
 
     void LFGPlayerScript::OnLogout(Player* player)
@@ -71,7 +68,8 @@ namespace lfg
         ObjectGuid guid = player->GetGUID();
         ObjectGuid gguid = sLFGMgr->GetGroup(guid);
 
-        if (Group const* group = player->GetGroup())
+        Group const* group = player->GetGroup();
+        if (group)
         {
             ObjectGuid gguid2 = group->GetGUID();
             if (gguid != gguid2)
@@ -80,16 +78,16 @@ namespace lfg
             }
         }
 
-        sLFGMgr->InitializeLockedDungeons(player);
+        sLFGMgr->InitializeLockedDungeons(player, group);
         sLFGMgr->SetTeam(player->GetGUID(), player->GetTeamId());
-        // TODO - Restore LfgPlayerData and send proper status to player if it was in a group
+        /// @todo - Restore LfgPlayerData and send proper status to player if it was in a group
     }
 
     void LFGPlayerScript::OnBindToInstance(Player* player, Difficulty difficulty, uint32 mapId, bool /*permanent*/)
     {
         MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
         if (mapEntry->IsDungeon() && difficulty > DUNGEON_DIFFICULTY_NORMAL)
-            sLFGMgr->InitializeLockedDungeons(player);
+            sLFGMgr->InitializeLockedDungeons(player, player->GetGroup());
     }
 
     void LFGPlayerScript::OnMapChanged(Player* player)
@@ -108,9 +106,9 @@ namespace lfg
                 sLFGMgr->LeaveLfg(player->GetGUID());
                 sLFGMgr->LeaveAllLfgQueues(player->GetGUID(), true);
                 player->RemoveAurasDueToSpell(LFG_SPELL_LUCK_OF_THE_DRAW);
-                player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, 0.0f);
-                LOG_DEBUG("lfg", "LFGPlayerScript::OnMapChanged, Player %s (%s) is in LFG dungeon map but does not have a valid group! Teleporting to homebind.",
-                    player->GetName().c_str(), player->GetGUID().ToString().c_str());
+                player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, player->m_homebindO);
+                LOG_DEBUG("lfg", "LFGPlayerScript::OnMapChanged, Player {} ({}) is in LFG dungeon map but does not have a valid group! Teleporting to homebind.",
+                    player->GetName(), player->GetGUID().ToString());
                 return;
             }
 
@@ -146,15 +144,15 @@ namespace lfg
 
         if (leader == guid)
         {
-            LOG_DEBUG("lfg", "LFGScripts::OnAddMember [%s]: added [%s] leader [%s]", gguid.ToString().c_str(), guid.ToString().c_str(), leader.ToString().c_str());
+            LOG_DEBUG("lfg", "LFGScripts::OnAddMember [{}]: added [{}] leader [{}]", gguid.ToString(), guid.ToString(), leader.ToString());
             sLFGMgr->SetLeader(gguid, guid);
         }
         else
         {
             LfgState gstate = sLFGMgr->GetState(gguid);
             LfgState state = sLFGMgr->GetState(guid);
-            LOG_DEBUG("lfg", "LFGScripts::OnAddMember [%s]: added [%s] leader [%s] gstate: %u, state: %u",
-                gguid.ToString().c_str(), guid.ToString().c_str(), leader.ToString().c_str(), gstate, state);
+            LOG_DEBUG("lfg", "LFGScripts::OnAddMember [{}]: added [{}] leader [{}] gstate: {}, state: {}",
+                gguid.ToString(), guid.ToString(), leader.ToString(), gstate, state);
 
             if (state == LFG_STATE_QUEUED)
                 sLFGMgr->LeaveLfg(guid);
@@ -187,8 +185,8 @@ namespace lfg
             return;
 
         ObjectGuid gguid = group->GetGUID();
-        LOG_DEBUG("lfg", "LFGScripts::OnRemoveMember [%s]: remove [%s] Method: %d Kicker: [%s] Reason: %s",
-            gguid.ToString().c_str(), guid.ToString().c_str(), method, kicker.ToString().c_str(), (reason ? reason : ""));
+        LOG_DEBUG("lfg", "LFGScripts::OnRemoveMember [{}]: remove [{}] Method: {} Kicker: [{}] Reason: {}",
+            gguid.ToString(), guid.ToString(), method, kicker.ToString(), (reason ? reason : ""));
 
         bool isLFG = group->isLFGGroup();
         LfgState state = sLFGMgr->GetState(gguid);
@@ -253,7 +251,7 @@ namespace lfg
             return;
 
         ObjectGuid gguid = group->GetGUID();
-        LOG_DEBUG("lfg", "LFGScripts::OnDisband [%s]", gguid.ToString().c_str());
+        LOG_DEBUG("lfg", "LFGScripts::OnDisband [{}]", gguid.ToString());
 
         // pussywizard: after all necessary actions handle raid browser
         if (sLFGMgr->GetState(group->GetLeaderGUID()) == LFG_STATE_RAIDBROWSER)
@@ -269,8 +267,8 @@ namespace lfg
 
         ObjectGuid gguid = group->GetGUID();
 
-        LOG_DEBUG("lfg", "LFGScripts::OnChangeLeader [%s]: old [%s] new [%s]",
-            gguid.ToString().c_str(), newLeaderGuid.ToString().c_str(), oldLeaderGuid.ToString().c_str());
+        LOG_DEBUG("lfg", "LFGScripts::OnChangeLeader [{}]: old [{}] new [{}]",
+            gguid.ToString(), newLeaderGuid.ToString(), oldLeaderGuid.ToString());
         sLFGMgr->SetLeader(gguid, newLeaderGuid);
 
         // pussywizard: after all necessary actions handle raid browser
@@ -288,7 +286,7 @@ namespace lfg
 
         ObjectGuid gguid = group->GetGUID();
         ObjectGuid leader = group->GetLeaderGUID();
-        LOG_DEBUG("lfg", "LFGScripts::OnInviteMember [%s]: invite [%s] leader [%s]", gguid.ToString().c_str(), guid.ToString().c_str(), leader.ToString().c_str());
+        LOG_DEBUG("lfg", "LFGScripts::OnInviteMember [{}]: invite [{}] leader [{}]", gguid.ToString(), guid.ToString(), leader.ToString());
         // No gguid ==  new group being formed
         // No leader == after group creation first invite is new leader
         // leader and no gguid == first invite after leader is added to new group (this is the real invite)

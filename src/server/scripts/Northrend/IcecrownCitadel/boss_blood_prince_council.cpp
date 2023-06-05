@@ -15,12 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -210,9 +210,9 @@ public:
                     c->CastSpell(c, SPELL_FEIGN_DEATH, true);
                 }
 
-                me->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                me->SetDynamicFlag(UNIT_DYNFLAG_DEAD);
+                me->SetUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
+                me->SetImmuneToAll(true);
                 me->SetReactState(REACT_PASSIVE);
             }
         }
@@ -234,7 +234,7 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             bool valid = true;
             if (Creature* keleseth = instance->instance->GetCreature(instance->GetGuidData(DATA_PRINCE_KELESETH_GUID)))
@@ -248,7 +248,7 @@ public:
                     valid = false;
             if (!valid)
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 return;
             }
 
@@ -271,8 +271,8 @@ public:
             me->resetAttackTimer(BASE_ATTACK);
             DoAction(ACTION_REMOVE_INVOCATION);
             events.Reset();
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
-            events.ScheduleEvent(EVENT_SHADOW_RESONANCE, urand(10000, 15000));
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
+            events.ScheduleEvent(EVENT_SHADOW_RESONANCE, 10s, 15s);
             if (IsHeroic())
                 me->AddAura(SPELL_SHADOW_PRISON, me);
         }
@@ -367,9 +367,10 @@ public:
             {
                 case ACTION_STAND_UP:
                     summons.DespawnEntry(WORLD_TRIGGER);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-                    me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+                    me->RemoveUnitFlag(UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetImmuneToAll(false);
+                    me->RemoveDynamicFlag(UNIT_DYNFLAG_DEAD);
+                    me->RemoveUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
                     me->SetReactState(REACT_AGGRESSIVE);
                     me->ForceValuesUpdateAtIndex(UNIT_NPC_FLAGS);   // was in sniff. don't ask why
                     me->m_Events.AddEvent(new StandUpEvent(*me), me->m_Events.CalculateTime(1000));
@@ -411,14 +412,14 @@ public:
                 case EVENT_SHADOW_RESONANCE:
                     Talk(SAY_KELESETH_SPECIAL);
                     me->CastSpell(me, SPELL_SHADOW_RESONANCE, false);
-                    events.ScheduleEvent(EVENT_SHADOW_RESONANCE, urand(10000, 15000));
+                    events.ScheduleEvent(EVENT_SHADOW_RESONANCE, 10s, 15s);
                     break;
             }
 
             DoSpellAttackIfReady(_isEmpowered ? SPELL_EMPOWERED_SHADOW_LANCE : SPELL_SHADOW_LANCE);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             if (_evading)
                 return;
@@ -430,7 +431,7 @@ public:
                 taldaram->AI()->EnterEvadeMode();
             if (Creature* valanar = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PRINCE_VALANAR_GUID)))
                 valanar->AI()->EnterEvadeMode();
-            ScriptedAI::EnterEvadeMode();
+            ScriptedAI::EnterEvadeMode(why);
             _evading = false;
         }
     };
@@ -469,9 +470,9 @@ public:
                     c->CastSpell(c, SPELL_FEIGN_DEATH, true);
                 }
 
-                me->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                me->SetDynamicFlag(UNIT_DYNFLAG_DEAD);
+                me->SetUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
+                me->SetImmuneToAll(true);
                 me->SetReactState(REACT_PASSIVE);
             }
         }
@@ -493,7 +494,7 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             bool valid = true;
             if (Creature* keleseth = instance->instance->GetCreature(instance->GetGuidData(DATA_PRINCE_KELESETH_GUID)))
@@ -507,7 +508,7 @@ public:
                     valid = false;
             if (!valid)
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 return;
             }
 
@@ -529,9 +530,9 @@ public:
 
             DoAction(ACTION_REMOVE_INVOCATION);
             events.Reset();
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
-            events.ScheduleEvent(EVENT_GLITTERING_SPARKS, urand(12000, 15000));
-            events.ScheduleEvent(EVENT_CONJURE_FLAME, 20000);
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
+            events.ScheduleEvent(EVENT_GLITTERING_SPARKS, 12s, 15s);
+            events.ScheduleEvent(EVENT_CONJURE_FLAME, 20s);
             if (IsHeroic())
                 me->AddAura(SPELL_SHADOW_PRISON, me);
         }
@@ -583,9 +584,9 @@ public:
         {
             summons.Summon(summon);
 
-            Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, -10.0f, true);
+            Unit* target = SelectTarget(SelectTargetMethod::Random, 0, -10.0f, true);
             if (!target)
-                target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true);
+                target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true);
             if (target)
             {
                 if (summon->GetEntry() == NPC_BALL_OF_INFERNO_FLAME)
@@ -636,9 +637,10 @@ public:
             {
                 case ACTION_STAND_UP:
                     summons.DespawnEntry(WORLD_TRIGGER);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-                    me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+                    me->RemoveUnitFlag(UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetImmuneToAll(false);
+                    me->RemoveDynamicFlag(UNIT_DYNFLAG_DEAD);
+                    me->RemoveUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
                     me->SetReactState(REACT_AGGRESSIVE);
                     me->ForceValuesUpdateAtIndex(UNIT_NPC_FLAGS);   // was in sniff. don't ask why
                     me->m_Events.AddEvent(new StandUpEvent(*me), me->m_Events.CalculateTime(1000));
@@ -682,18 +684,18 @@ public:
                     break;
                 case EVENT_GLITTERING_SPARKS:
                     me->CastSpell(me->GetVictim(), SPELL_GLITTERING_SPARKS, false);
-                    events.ScheduleEvent(EVENT_GLITTERING_SPARKS, urand(15000, 25000));
+                    events.ScheduleEvent(EVENT_GLITTERING_SPARKS, 15s, 25s);
                     break;
                 case EVENT_CONJURE_FLAME:
                     if (_isEmpowered)
                     {
                         me->CastSpell(me, SPELL_CONJURE_EMPOWERED_FLAME, false);
-                        events.ScheduleEvent(EVENT_CONJURE_FLAME, 15000);
+                        events.ScheduleEvent(EVENT_CONJURE_FLAME, 15s);
                     }
                     else
                     {
                         me->CastSpell(me, SPELL_CONJURE_FLAME, false);
-                        events.ScheduleEvent(EVENT_CONJURE_FLAME, urand(20000, 25000));
+                        events.ScheduleEvent(EVENT_CONJURE_FLAME, 20s, 25s);
                     }
                     Talk(SAY_TALDARAM_SPECIAL);
                     break;
@@ -702,7 +704,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             if (_evading)
                 return;
@@ -711,10 +713,10 @@ public:
             DoAction(ACTION_REMOVE_INVOCATION);
             _evading = true;
             if (Creature* keleseth = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PRINCE_KELESETH_GUID)))
-                keleseth->AI()->EnterEvadeMode();
+                keleseth->AI()->EnterEvadeMode(why);
             if (Creature* valanar = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PRINCE_VALANAR_GUID)))
-                valanar->AI()->EnterEvadeMode();
-            ScriptedAI::EnterEvadeMode();
+                valanar->AI()->EnterEvadeMode(why);
+            ScriptedAI::EnterEvadeMode(why);
             _evading = false;
         }
     };
@@ -753,9 +755,9 @@ public:
                     c->CastSpell(c, SPELL_FEIGN_DEATH, true);
                 }
 
-                me->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                me->SetDynamicFlag(UNIT_DYNFLAG_DEAD);
+                me->SetUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
+                me->SetImmuneToAll(true);
                 me->SetReactState(REACT_PASSIVE);
             }
         }
@@ -777,7 +779,7 @@ public:
             instance->SetBossState(DATA_BLOOD_PRINCE_COUNCIL, NOT_STARTED);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             bool valid = true;
             if (Creature* keleseth = instance->instance->GetCreature(instance->GetGuidData(DATA_PRINCE_KELESETH_GUID)))
@@ -791,7 +793,7 @@ public:
                     valid = false;
             if (!valid)
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 return;
             }
 
@@ -819,10 +821,10 @@ public:
             invocationOrder[1] = RAND(DATA_PRINCE_KELESETH_GUID, DATA_PRINCE_TALDARAM_GUID);
             invocationOrder[2] = DATA_PRINCE_KELESETH_GUID + DATA_PRINCE_TALDARAM_GUID - invocationOrder[1];
 
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
-            events.ScheduleEvent(EVENT_KINETIC_BOMB, urand(18000, 24000));
-            events.ScheduleEvent(EVENT_SHOCK_VORTEX, urand(15000, 20000));
-            events.ScheduleEvent(EVENT_INVOCATION_OF_BLOOD, 45000);
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
+            events.ScheduleEvent(EVENT_KINETIC_BOMB, 18s, 24s);
+            events.ScheduleEvent(EVENT_SHOCK_VORTEX, 15s, 20s);
+            events.ScheduleEvent(EVENT_INVOCATION_OF_BLOOD, 45s);
             if (IsHeroic())
             {
                 me->AddAura(SPELL_SHADOW_PRISON, me);
@@ -929,9 +931,10 @@ public:
             {
                 case ACTION_STAND_UP:
                     summons.DespawnEntry(WORLD_TRIGGER);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-                    me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+                    me->RemoveUnitFlag(UNIT_FLAG_PREVENT_EMOTES_FROM_CHAT_TEXT | UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetImmuneToAll(false);
+                    me->RemoveDynamicFlag(UNIT_DYNFLAG_DEAD);
+                    me->RemoveUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
                     me->SetReactState(REACT_AGGRESSIVE);
                     me->ForceValuesUpdateAtIndex(UNIT_NPC_FLAGS);   // was in sniff. don't ask why
                     me->m_Events.AddEvent(new StandUpEvent(*me), me->m_Events.CalculateTime(1000));
@@ -959,10 +962,10 @@ public:
         {
             Creature* keleseth = instance->instance->GetCreature(instance->GetGuidData(DATA_PRINCE_KELESETH_GUID));
             Creature* taldaram = instance->instance->GetCreature(instance->GetGuidData(DATA_PRINCE_TALDARAM_GUID));
-            if (keleseth && taldaram && CheckBoundary(me) && CheckBoundary(keleseth) && CheckBoundary(taldaram))
+            if (keleseth && taldaram && IsInBoundary(me) && IsInBoundary(keleseth) && IsInBoundary(taldaram))
                 return true;
 
-            EnterEvadeMode();
+            EnterEvadeMode(EVADE_REASON_OTHER);
             return false;
         }
 
@@ -999,7 +1002,7 @@ public:
                         }
                         if (!visualSpellId || !current || !next || !current->IsInCombat() || !next->IsInCombat())
                         {
-                            EnterEvadeMode();
+                            EnterEvadeMode(EVADE_REASON_OTHER);
                             return;
                         }
                         next->SetHealth(current->GetHealth());
@@ -1008,32 +1011,32 @@ public:
                         current->CastSpell((Unit*)nullptr, visualSpellId, true);
                         next->AI()->Talk(1);
                     }
-                    events.ScheduleEvent(EVENT_INVOCATION_OF_BLOOD, 46000);
+                    events.ScheduleEvent(EVENT_INVOCATION_OF_BLOOD, 46s);
                     break;
                 case EVENT_BERSERK:
                     me->CastSpell(me, SPELL_BERSERK, true);
                     Talk(SAY_VALANAR_BERSERK);
                     break;
                 case EVENT_KINETIC_BOMB:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true))
                     {
                         me->CastSpell(target, SPELL_KINETIC_BOMB_TARGET, false);
                         Talk(SAY_VALANAR_SPECIAL);
                     }
-                    events.ScheduleEvent(EVENT_KINETIC_BOMB, me->GetMap()->Is25ManRaid() ? 20500 : 30500);
+                    events.ScheduleEvent(EVENT_KINETIC_BOMB, me->GetMap()->Is25ManRaid() ? 20s + 500ms : 30s + 500ms);
                     break;
                 case EVENT_SHOCK_VORTEX:
                     if (_isEmpowered)
                     {
                         me->CastSpell(me, SPELL_EMPOWERED_SHOCK_VORTEX, false);
                         Talk(EMOTE_VALANAR_SHOCK_VORTEX);
-                        events.ScheduleEvent(EVENT_SHOCK_VORTEX, 30000);
+                        events.ScheduleEvent(EVENT_SHOCK_VORTEX, 30s);
                     }
                     else
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true))
                             me->CastSpell(target, SPELL_SHOCK_VORTEX, false);
-                        events.ScheduleEvent(EVENT_SHOCK_VORTEX, urand(18000, 23000));
+                        events.ScheduleEvent(EVENT_SHOCK_VORTEX, 18s, 23s);
                     }
                     break;
             }
@@ -1041,7 +1044,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             if (_evading)
                 return;
@@ -1050,10 +1053,10 @@ public:
             DoAction(ACTION_REMOVE_INVOCATION);
             _evading = true;
             if (Creature* keleseth = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PRINCE_KELESETH_GUID)))
-                keleseth->AI()->EnterEvadeMode();
+                keleseth->AI()->EnterEvadeMode(why);
             if (Creature* taldaram = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PRINCE_TALDARAM_GUID)))
-                taldaram->AI()->EnterEvadeMode();
-            BossAI::EnterEvadeMode();
+                taldaram->AI()->EnterEvadeMode(why);
+            BossAI::EnterEvadeMode(why);
             _evading = false;
         }
     };
@@ -1106,7 +1109,7 @@ public:
             _introDone = true;
             Talk(SAY_INTRO_1);
             _events.SetPhase(1);
-            _events.ScheduleEvent(EVENT_INTRO_1, 14000);
+            _events.ScheduleEvent(EVENT_INTRO_1, 14s);
             // summon a visual trigger
             if (Creature* summon = DoSummon(NPC_FLOATING_TRIGGER, triggerPos, 15000, TEMPSUMMON_TIMED_DESPAWN))
             {
@@ -1202,7 +1205,7 @@ public:
             if (!attacker || attacker == me || attacker == me->GetVictim() || (det != DIRECT_DAMAGE && det != SPELL_DIRECT_DAMAGE))
                 return;
 
-            me->DeleteThreatList();
+            me->GetThreatMgr().ClearAllThreat();
             me->AddThreat(attacker, 500000000.0f);
         }
 
@@ -1366,7 +1369,7 @@ public:
         float _groundZ;
         bool exploded;
 
-        void IsSummonedBy(Unit* /*summoner*/) override
+        void IsSummonedBy(WorldObject* /*summoner*/) override
         {
             if (InstanceScript* instance = me->GetInstanceScript())
             {
@@ -1380,7 +1383,7 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.RescheduleEvent(EVENT_BOMB_DESPAWN, 60000);
+            _events.RescheduleEvent(EVENT_BOMB_DESPAWN, 1min);
             me->SetWalk(true);
             exploded = false;
 
@@ -1397,7 +1400,7 @@ public:
             if (action == SPELL_KINETIC_BOMB_EXPLOSION)
             {
                 exploded = true;
-                _events.RescheduleEvent(EVENT_BOMB_DESPAWN, 1000);
+                _events.RescheduleEvent(EVENT_BOMB_DESPAWN, 1s);
             }
             else if (action == ACTION_KINETIC_BOMB_JUMP)
             {
@@ -1407,7 +1410,7 @@ public:
                     me->StopMoving();
                     me->GetMotionMaster()->MoveCharge(_x, _y, me->GetPositionZ() + 60.0f, me->GetSpeed(MOVE_RUN));
                 }
-                _events.RescheduleEvent(EVENT_CONTINUE_FALLING, 3000);
+                _events.RescheduleEvent(EVENT_CONTINUE_FALLING, 3s);
             }
         }
 
@@ -1418,7 +1421,7 @@ public:
             {
                 case EVENT_BOMB_DESPAWN:
                     me->RemoveAllAuras();
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->DespawnOrUnsummon(exploded ? 5000 : 0);
                     break;
                 case EVENT_CONTINUE_FALLING:
@@ -1722,7 +1725,7 @@ public:
             if (Position* dest = const_cast<WorldLocation*>(GetExplTargetDest()))
             {
                 float angle = dest->GetAngle(GetCaster());
-                Position offset = {6.0f * cos(angle), 6.0f * sin(angle), 10.0f, 0.0f};
+                Position offset = {6.0f * cos(angle), 6.0f * std::sin(angle), 10.0f, 0.0f};
                 dest->RelocateOffset(offset);
                 GetCaster()->UpdateAllowedPositionZ(dest->GetPositionX(), dest->GetPositionY(), dest->m_positionZ);
             }
@@ -1762,11 +1765,13 @@ public:
                 for (uint8 i = 6; i > 0; --i)
                 {
                     float destX = summoner->GetPositionX() + cos(angle + a * M_PI) * i * 10.0f;
-                    float destY = summoner->GetPositionY() + sin(angle + a * M_PI) * i * 10.0f;
-                    if (summoner->GetMap()->isInLineOfSight(summoner->GetPositionX(), summoner->GetPositionY(), summoner->GetPositionZ() + 10.0f, destX, destY, summoner->GetPositionZ() + 10.0f, summoner->GetPhaseMask(), LINEOFSIGHT_ALL_CHECKS) && destX > 4585.0f && destY > 2716.0f && destY < 2822.0f)
+                    float destY = summoner->GetPositionY() + std::sin(angle + a * M_PI) * i * 10.0f;
+                    if (summoner->GetMap()->isInLineOfSight(summoner->GetPositionX(), summoner->GetPositionY(), summoner->GetPositionZ() + 10.0f, destX, destY,
+                        summoner->GetPositionZ() + 10.0f, summoner->GetPhaseMask(), LINEOFSIGHT_ALL_CHECKS, VMAP::ModelIgnoreFlags::Nothing) &&
+                        destX > 4585.0f && destY > 2716.0f && destY < 2822.0f)
                     {
                         float destZ = summoner->GetMapHeight(summoner->GetPhaseMask(), destX, destY, summoner->GetPositionZ());
-                        if (fabs(destZ - summoner->GetPositionZ()) < 10.0f) // valid z found
+                        if (std::fabs(destZ - summoner->GetPositionZ()) < 10.0f) // valid z found
                         {
                             dest._position.Relocate(destX, destY, destZ);
                             return;

@@ -15,12 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gnomeregan.h"
 #include "InstanceScript.h"
 #include "PassiveAI.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "SpellScript.h"
+#include "gnomeregan.h"
 
 class instance_gnomeregan : public InstanceMapScript
 {
@@ -36,7 +36,60 @@ public:
     {
         instance_gnomeregan_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
         }
+
+        void OnCreatureCreate(Creature* creature) override
+        {
+            switch (creature->GetEntry())
+            {
+                case NPC_EMI_SHORTFUSE:
+                    if (_encounters[TYPE_GRUBBIS] == DONE)
+                    {
+                        creature->DespawnOrUnsummon();
+                    }
+                    break;
+            }
+        }
+
+        void OnGameObjectCreate(GameObject* gameobject) override
+        {
+            switch (gameobject->GetEntry())
+            {
+                case GO_CAVE_IN_1:
+                case GO_CAVE_IN_2:
+                case GO_WORKSHOP_DOOR:
+                case GO_FINAL_CHAMBER_DOOR:
+                    gameobject->UpdateSaveToDb(true);
+                    break;
+            }
+        }
+
+        void SetData(uint32 type, uint32 data) override
+        {
+            switch (type)
+            {
+            case TYPE_GRUBBIS:
+                _encounters[type] = data;
+                break;
+            }
+
+            if (data == DONE)
+                SaveToDB();
+        }
+
+        void ReadSaveDataMore(std::istringstream& data) override
+        {
+            data >> _encounters[TYPE_GRUBBIS];
+        }
+
+        void WriteSaveDataMore(std::ostringstream& data) override
+        {
+            data << _encounters[TYPE_GRUBBIS];
+        }
+
+    private:
+        uint32 _encounters[MAX_ENCOUNTERS];
     };
 };
 

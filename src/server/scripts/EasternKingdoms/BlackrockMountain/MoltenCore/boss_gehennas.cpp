@@ -43,12 +43,12 @@ public:
     {
         boss_gehennasAI(Creature* creature) : BossAI(creature, DATA_GEHENNAS) {}
 
-        void EnterCombat(Unit* /*attacker*/) override
+        void JustEngagedWith(Unit* /*attacker*/) override
         {
-            _EnterCombat();
-            events.ScheduleEvent(EVENT_GEHENNAS_CURSE, urand(6000, 9000));
-            events.ScheduleEvent(EVENT_RAIN_OF_FIRE, 10000);
-            events.ScheduleEvent(EVENT_SHADOW_BOLT, urand(3000, 5000));
+            _JustEngagedWith();
+            events.ScheduleEvent(EVENT_GEHENNAS_CURSE, 6s, 9s);
+            events.ScheduleEvent(EVENT_RAIN_OF_FIRE, 10s);
+            events.ScheduleEvent(EVENT_SHADOW_BOLT, 3s, 5s);
         }
 
         void ExecuteEvent(uint32 eventId) override
@@ -63,7 +63,7 @@ public:
                 }
                 case EVENT_RAIN_OF_FIRE:
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 0.0f, true))
                     {
                         DoCast(target, SPELL_RAIN_OF_FIRE, true);
                     }
@@ -74,7 +74,7 @@ public:
                 {
                     if (urand(0, 1))
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 0.0f, true))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 0.0f, true))
                         {
                             DoCast(target, SPELL_SHADOW_BOLT_RANDOM);
                         }

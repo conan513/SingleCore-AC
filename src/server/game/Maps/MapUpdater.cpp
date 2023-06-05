@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AvgDiffTracker.h"
+#include "DatabaseEnv.h"
 #include "LFGMgr.h"
 #include "Map.h"
 #include "MapUpdater.h"
@@ -59,10 +59,7 @@ public:
 
     void call() override
     {
-        uint32 startTime = getMSTime();
         sLFGMgr->Update(m_diff, 1);
-        uint32 totalTime = getMSTimeDiff(startTime, getMSTime());
-        lfgDiffTracker.Update(totalTime);
         m_updater.update_finished();
     }
 private:
@@ -72,11 +69,6 @@ private:
 
 MapUpdater::MapUpdater(): pending_requests(0)
 {
-}
-
-MapUpdater::~MapUpdater()
-{
-    deactivate();
 }
 
 void MapUpdater::activate(size_t num_threads)
@@ -149,6 +141,10 @@ void MapUpdater::update_finished()
 
 void MapUpdater::WorkerThread()
 {
+    LoginDatabase.WarnAboutSyncQueries(true);
+    CharacterDatabase.WarnAboutSyncQueries(true);
+    WorldDatabase.WarnAboutSyncQueries(true);
+
     while (1)
     {
         UpdateRequest* request = nullptr;

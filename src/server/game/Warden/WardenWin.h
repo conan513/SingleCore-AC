@@ -22,7 +22,7 @@
 #include "Cryptography/ARC4.h"
 #include "Cryptography/BigNumber.h"
 #include "Warden.h"
-#include <map>
+#include <list>
 
 #if defined(__GNUC__)
 #pragma pack(1)
@@ -81,6 +81,8 @@ public:
     void RequestHash() override;
     void HandleHashResult(ByteBuffer& buff) override;
     void RequestChecks() override;
+    bool IsCheckInProgress() override;
+    void ForceChecks() override;
     void HandleData(ByteBuffer& buff) override;
 
 private:

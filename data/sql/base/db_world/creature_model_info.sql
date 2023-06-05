@@ -1,31 +1,32 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.creature_model_info
+-- Dumping structure for table acore_world.creature_model_info
 DROP TABLE IF EXISTS `creature_model_info`;
 CREATE TABLE IF NOT EXISTS `creature_model_info` (
-  `DisplayID` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `BoundingRadius` float NOT NULL DEFAULT 0,
-  `CombatReach` float NOT NULL DEFAULT 0,
-  `Gender` TINYINT unsigned NOT NULL DEFAULT 2,
-  `DisplayID_Other_Gender` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `DisplayID` int unsigned NOT NULL DEFAULT '0',
+  `BoundingRadius` float NOT NULL DEFAULT '0',
+  `CombatReach` float NOT NULL DEFAULT '0',
+  `Gender` tinyint unsigned NOT NULL DEFAULT '2',
+  `DisplayID_Other_Gender` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`DisplayID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='Creature System (Model related info)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Creature System (Model related info)';
 
--- Дамп данных таблицы _acore_world.creature_model_info: 24 143 rows
+-- Dumping data for table acore_world.creature_model_info: ~23,729 rows (approximately)
 DELETE FROM `creature_model_info`;
-/*!40000 ALTER TABLE `creature_model_info` DISABLE KEYS */;
 INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`, `Gender`, `DisplayID_Other_Gender`) VALUES
 	(4, 2, 3, 2, 0),
 	(13, 0, 0, 2, 0),
@@ -2107,7 +2108,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(2578, 0, 0, 0, 2579),
 	(2579, 2, 3, 1, 2578),
 	(2581, 0, 0, 0, 2590),
-	(2582, 0.3825, 1.875, 2, 15880),
+	(2582, 0.3825, 1.875, 2, 0),
 	(2583, 0, 0, 1, 0),
 	(2584, 0.347, 1.5, 0, 0),
 	(2585, 0.347, 1.5, 1, 0),
@@ -2287,7 +2288,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(2833, 0, 0, 2, 0),
 	(2834, 0.403, 1.5, 1, 0),
 	(2835, 0.2958, 1.0625, 2, 0),
-	(2836, 1.5, 4, 2, 0),
+	(2836, 1.5, 1.5, 2, 0),
 	(2837, 2, 10, 2, 0),
 	(2838, 0.244, 2, 2, 0),
 	(2850, 1.8057, 3.25, 2, 0),
@@ -9958,7 +9959,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(15552, 0.306, 1.5, 0, 15552),
 	(15553, 0, 0, 0, 0),
 	(15554, 0.6, 1, 2, 0),
-	(15555, 2, 0, 2, 0),
+	(15555, 2, 8, 2, 0),
 	(15556, 1, 15, 2, 0),
 	(15557, 0.3519, 1.725, 0, 0),
 	(15558, 0.347, 1.5, 0, 0),
@@ -10194,10 +10195,10 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(15787, 1, 1, 2, 0),
 	(15788, 0.96, 2.5, 2, 0),
 	(15789, 1.1, 1, 2, 0),
-	(15790, 2, 0, 2, 0),
+	(15790, 2, 15, 2, 0),
 	(15791, 0, 0, 2, 0),
 	(15792, 0, 0, 2, 0),
-	(15793, 1.1, 1, 2, 0),
+	(15793, 1.1, 15, 2, 0),
 	(15794, 0.558, 5, 2, 0),
 	(15795, 0, 0, 1, 15796),
 	(15796, 0, 0, 1, 15795),
@@ -12821,7 +12822,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(18510, 2, 0, 2, 0),
 	(18511, 0, 0, 0, 0),
 	(18512, 1.2, 1.5, 0, 18513),
-	(18513, 1.25, 1.5, 0, 18571),
+	(18513, 1.25, 1.5, 0, 18514),
 	(18514, 1.15, 1.5, 0, 18512),
 	(18515, 0.5, 1, 2, 0),
 	(18516, 0.341, 1.1, 2, 0),
@@ -23944,7 +23945,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(31004, 1.125, 2.25, 2, 0),
 	(31005, 0.31, 8, 0, 0),
 	(31006, 0.31, 8, 0, 0),
-	(31007, 0, 0, 2, 31248),
+	(31007, 0, 0, 2, 0),
 	(31008, 0, 0, 0, 0),
 	(31011, 0.612, 3, 0, 0),
 	(31012, 0.306, 1.5, 0, 0),
@@ -24006,8 +24007,8 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(31163, 0, 0, 2, 0),
 	(31164, 0, 0, 2, 0),
 	(31165, 1.24, 7.2, 1, 0),
-	(31166, 0, 0, 0, 0),
-	(31167, 0, 0, 0, 0),
+	(31166, 0.4596, 1.8, 0, 0),
+	(31167, 0.4596, 1.8, 0, 0),
 	(31168, 0, 0, 0, 0),
 	(31169, 0, 0, 1, 0),
 	(31170, 0, 0, 0, 0),
@@ -24023,7 +24024,7 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(31196, 0, 6.5, 2, 0),
 	(31197, 0, 0, 0, 31182),
 	(31201, 0, 0, 0, 0),
-	(31248, 0, 0, 2, 31007),
+	(31248, 0, 0, 2, 0),
 	(31286, 0.612, 3, 0, 0),
 	(31299, 0, 0, 0, 31300),
 	(31300, 0, 0, 0, 31299),
@@ -24172,8 +24173,8 @@ INSERT INTO `creature_model_info` (`DisplayID`, `BoundingRadius`, `CombatReach`,
 	(32179, 1.75, 12.25, 0, 0),
 	(32670, 0.09, 0, 2, 0),
 	(32754, 1.25, 6.25, 2, 0);
-/*!40000 ALTER TABLE `creature_model_info` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -29,7 +29,7 @@ public:
     ZoneScript() {}
     virtual ~ZoneScript() {}
 
-    virtual uint32 GetCreatureEntry(ObjectGuid::LowType /*guidlow*/, CreatureData const* data) { return data->id; }
+    virtual uint32 GetCreatureEntry(ObjectGuid::LowType /*guidlow*/, CreatureData const* data) { return data->id1; }
     virtual uint32 GetGameObjectEntry(ObjectGuid::LowType /*guidlow*/, uint32 entry) { return entry; }
 
     virtual void OnCreatureCreate(Creature*) { }
@@ -39,6 +39,7 @@ public:
     virtual void OnGameObjectRemove(GameObject*) { }
 
     virtual void OnUnitDeath(Unit*) { }
+    virtual void OnCreatureEvade(Creature*) { }
 
     //All-purpose data storage 64 bit
     virtual ObjectGuid GetGuidData(uint32 /*DataId*/) const { return ObjectGuid::Empty; }

@@ -15,13 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ObjectAccessor.h"
+#include "Player.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
-#include "molten_core.h"
-#include "Player.h"
 #include "ScriptedGossip.h"
-#include "ObjectAccessor.h"
 #include "SpellScript.h"
+#include "molten_core.h"
 
 enum Texts
 {
@@ -40,6 +40,7 @@ enum Texts
     // Majordomo
     SAY_RAG_SUM_1                           = 9,
     SAY_RAG_SUM_2                           = 10,
+    SAY_DEATH                               = 11,
 
     // Ragnaros
     SAY_ARRIVAL1_RAG                        = 1,
@@ -72,9 +73,7 @@ enum Spells
 
 enum Events
 {
-    EVENT_MAGIC_REFLECTION                  = 1,
-    EVENT_DAMAGE_REFLECTION,
-    EVENT_BLAST_WAVE,
+    EVENT_SHIELD_REFLECTION                 = 1,
     EVENT_TELEPORT_RANDOM,
     EVENT_TELEPORT_TARGET,
     EVENT_AEGIS_OF_RAGNAROS,
@@ -121,6 +120,16 @@ Position const MajordomoSummonPos = {759.542f, -1173.43f, -118.974f, 3.3048f };
 Position const MajordomoMoveRagPos = { 830.9636f, -814.7055f, -228.9733f, 0.0f };   // Position used at Ragnaros summoning event
 Position const RagnarosSummonPos = { 838.3082f, -831.4665f, -232.1853f, 2.199115f };
 
+struct MajordomoAddData
+{
+    ObjectGuid guid;
+    uint32 creatureEntry;
+    Position spawnPos;
+
+    MajordomoAddData() { }
+    MajordomoAddData(ObjectGuid _guid, uint32 _creatureEntry, Position _spawnPos) : guid(_guid), creatureEntry(_creatureEntry), spawnPos(_spawnPos) { }
+};
+
 class boss_majordomo : public CreatureScript
 {
 public:
@@ -128,10 +137,13 @@ public:
 
     struct boss_majordomoAI : public BossAI
     {
-        boss_majordomoAI(Creature* creature) : BossAI(creature, DATA_MAJORDOMO_EXECUTUS), spawnInTextTimer(0) {}
+        boss_majordomoAI(Creature* creature) : BossAI(creature, DATA_MAJORDOMO_EXECUTUS) {}
 
-        // Disabled events
-        void JustDied(Unit* /*killer*/) override {}
+        void JustDied(Unit* /*killer*/) override
+        {
+            Talk(SAY_DEATH);
+            me->DespawnOrUnsummon(10s, 0s);
+        }
 
         void JustSummoned(Creature* summon) override
         {
@@ -139,7 +151,8 @@ public:
             {
                 summon->CastSpell(summon, SPELL_RAGNAROS_FADE);
                 summon->CastSpell(summon, SPELL_RAGNAROS_SUBMERGE_EFFECT, true);
-                summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_NON_ATTACKABLE);
+                summon->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                summon->SetImmuneToAll(true);
                 summon->SetReactState(REACT_PASSIVE);
             }
         }
@@ -160,17 +173,16 @@ public:
                         if (summon)
                         {
                             static_minionsGUIDS.insert(summon->GetGUID());
+                            majordomoSummonsData[summon->GetGUID().GetCounter()] = MajordomoAddData(summon->GetGUID(), summon->GetEntry(), summon->GetPosition());
                         }
                     }
                 }
-
-                spawnInTextTimer = 10000;
             }
             else
             {
                 events.SetPhase(PHASE_NONE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC|UNIT_FLAG_IMMUNE_TO_NPC);
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->SetImmuneToAll(true);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 me->SetFaction(FACTION_MAJORDOMO_FRIENDLY);
             }
         }
@@ -185,10 +197,29 @@ public:
             {
                 events.SetPhase(PHASE_COMBAT);
                 instance->SetBossState(DATA_MAJORDOMO_EXECUTUS, NOT_STARTED);
+
+                for (auto const& summon : majordomoSummonsData)
+                {
+                    if (ObjectAccessor::GetCreature(*me, summon.second.guid))
+                    {
+                        continue;
+                    }
+
+                    if (Creature* spawn = me->SummonCreature(summon.second.creatureEntry, summon.second.spawnPos))
+                    {
+                        static_minionsGUIDS.erase(summon.second.guid); // Erase the guid from the previous, no longer existing, spawn.
+                        static_minionsGUIDS.insert(spawn->GetGUID());
+                        majordomoSummonsData.erase(summon.second.guid.GetCounter());
+                        majordomoSummonsData[spawn->GetGUID().GetCounter()] = MajordomoAddData(spawn->GetGUID(), spawn->GetEntry(), spawn->GetPosition());
+                    }
+                }
+
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             }
             else
             {
                 static_minionsGUIDS.clear();
+                majordomoSummonsData.clear();
                 summons.DespawnAll();
             }
         }
@@ -206,24 +237,21 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*attacker*/) override
+        void JustEngagedWith(Unit* /*attacker*/) override
         {
             if (!events.IsInPhase(PHASE_COMBAT))
             {
                 return;
             }
 
-            _EnterCombat();
+            _JustEngagedWith();
             DoCastAOE(SPELL_SEPARATION_ANXIETY);
-            spawnInTextTimer = 0;
             Talk(SAY_AGGRO);
             DoCastSelf(SPELL_AEGIS_OF_RAGNAROS, true);
 
-            events.ScheduleEvent(EVENT_MAGIC_REFLECTION, 30000, PHASE_COMBAT, PHASE_COMBAT);
-            events.ScheduleEvent(EVENT_DAMAGE_REFLECTION, 15000, PHASE_COMBAT, PHASE_COMBAT);
-            events.ScheduleEvent(EVENT_BLAST_WAVE, 10000, PHASE_COMBAT, PHASE_COMBAT);
-            events.ScheduleEvent(EVENT_TELEPORT_RANDOM, 15000, PHASE_COMBAT, PHASE_COMBAT);
-            events.ScheduleEvent(EVENT_TELEPORT_TARGET, 30000, PHASE_COMBAT, PHASE_COMBAT);
+            events.ScheduleEvent(EVENT_SHIELD_REFLECTION, 30s, PHASE_COMBAT, PHASE_COMBAT);
+            events.ScheduleEvent(EVENT_TELEPORT_RANDOM, 25s, PHASE_COMBAT, PHASE_COMBAT);
+            events.ScheduleEvent(EVENT_TELEPORT_TARGET, 15s, PHASE_COMBAT, PHASE_COMBAT);
 
             aliveMinionsGUIDS.clear();
             aliveMinionsGUIDS = static_minionsGUIDS;
@@ -252,23 +280,12 @@ public:
                 }
                 else if (!remainingAdds)
                 {
-                    if (!static_minionsGUIDS.empty())
-                    {
-                        for (ObjectGuid const& guid : static_minionsGUIDS)
-                        {
-                            if (Creature* minion = ObjectAccessor::GetCreature(*me, guid))
-                            {
-                                minion->DespawnOrUnsummon();
-                            }
-                        }
-
-                        static_minionsGUIDS.clear();
-                    }
+                    static_minionsGUIDS.clear();
 
                     instance->SetBossState(DATA_MAJORDOMO_EXECUTUS, DONE);
                     events.CancelEventGroup(PHASE_COMBAT);
                     me->GetMap()->UpdateEncounterState(ENCOUNTER_CREDIT_KILL_CREATURE, me->GetEntry(), me);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC|UNIT_FLAG_IMMUNE_TO_NPC);
+                    me->SetImmuneToAll(true);
                     me->SetFaction(FACTION_MAJORDOMO_FRIENDLY);
                     EnterEvadeMode();
                     Talk(SAY_DEFEAT);
@@ -285,7 +302,7 @@ public:
             {
                 events.Reset();
                 events.SetPhase(PHASE_DEFEAT_OUTRO);
-                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_1, 7500, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
+                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_1, 7500ms, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
             }
         }
 
@@ -299,18 +316,6 @@ public:
 
         void UpdateAI(uint32 diff) override
         {
-            if (spawnInTextTimer)
-            {
-                if (spawnInTextTimer <= diff)
-                {
-                    spawnInTextTimer = 0;
-                    Talk(SAY_SPAWN);
-                }
-                else
-                {
-                    spawnInTextTimer -= diff;
-                }
-            }
 
             switch (events.GetPhaseMask())
             {
@@ -332,33 +337,28 @@ public:
                     {
                         switch (eventId)
                         {
-                            case EVENT_MAGIC_REFLECTION:
+                            case EVENT_SHIELD_REFLECTION:
                             {
-                                DoCastSelf(SPELL_MAGIC_REFLECTION);
+                                if (rand_chance() <= 50.f)
+                                {
+                                    DoCastSelf(SPELL_MAGIC_REFLECTION);
+                                }
+                                else
+                                {
+                                    DoCastSelf(SPELL_DAMAGE_REFLECTION);
+                                }
                                 events.RepeatEvent(30000);
-                                break;
-                            }
-                            case EVENT_DAMAGE_REFLECTION:
-                            {
-                                DoCastSelf(SPELL_DAMAGE_REFLECTION);
-                                events.RepeatEvent(30000);
-                                break;
-                            }
-                            case EVENT_BLAST_WAVE:
-                            {
-                                DoCastVictim(SPELL_BLAST_WAVE);
-                                events.RepeatEvent(10000);
                                 break;
                             }
                             case EVENT_TELEPORT_RANDOM:
                             {
-                                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 0.0f, true))
+                                if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 0.0f, true))
                                 {
                                     DoCastSelf(SPELL_HATE_TO_ZERO, true);
                                     DoCast(target, SPELL_TELEPORT_RANDOM);
                                 }
 
-                                events.RepeatEvent(15000);
+                                events.RepeatEvent(30000);
                                 break;
                             }
                             case EVENT_TELEPORT_TARGET:
@@ -389,13 +389,13 @@ public:
                             case EVENT_DEFEAT_OUTRO_1:
                             {
                                 Talk(SAY_DEFEAT_2);
-                                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_2, 8000, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
+                                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_2, 8s, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
                                 break;
                             }
                             case EVENT_DEFEAT_OUTRO_2:
                             {
                                 Talk(SAY_DEFEAT_3);
-                                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_3, 21500, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
+                                events.ScheduleEvent(EVENT_DEFEAT_OUTRO_3, 21500ms, PHASE_DEFEAT_OUTRO, PHASE_DEFEAT_OUTRO);
                                 break;
                             }
                             case EVENT_DEFEAT_OUTRO_3:
@@ -440,8 +440,8 @@ public:
                                 }
 
                                 Talk(SAY_SUMMON_MAJ);
-                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_3, 16700, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
-                                events.ScheduleEvent(EVENT_RAGNAROS_EMERGE, 15000, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_3, 16700ms, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                                events.ScheduleEvent(EVENT_RAGNAROS_EMERGE, 15s, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
                                 break;
                             }
                             case EVENT_RAGNAROS_SUMMON_3:
@@ -450,13 +450,13 @@ public:
                                 {
                                     ragnaros->AI()->Talk(SAY_ARRIVAL1_RAG);
                                 }
-                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_4, 11700, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_4, 11700ms, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
                                 break;
                             }
                             case EVENT_RAGNAROS_SUMMON_4:
                             {
                                 Talk(SAY_ARRIVAL2_MAJ);
-                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_5, 8700, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_5, 8700ms, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
                                 break;
                             }
                             case EVENT_RAGNAROS_SUMMON_5:
@@ -466,7 +466,7 @@ public:
                                     ragnaros->AI()->Talk(SAY_ARRIVAL3_RAG);
                                 }
 
-                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_6, 16500, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_6, 16500ms, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
                                 break;
                             }
                             case EVENT_RAGNAROS_SUMMON_6:
@@ -499,7 +499,7 @@ public:
             if (type == POINT_MOTION_TYPE && pointId == POINT_RAGNAROS_SUMMON)
             {
                 DoCastAOE(SPELL_SUMMON_RAGNAROS);
-                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_2, 11500, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_2, 11500ms, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
             }
         }
 
@@ -507,7 +507,7 @@ public:
         {
             if (events.IsInPhase(PHASE_DEFEAT_OUTRO) && spellInfo->Id == SPELL_TELEPORT_SELF)
             {
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 me->SetHomePosition(MajordomoRagnaros);
                 me->NearTeleportTo(MajordomoRagnaros.GetPositionX(), MajordomoRagnaros.GetPositionY(), MajordomoRagnaros.GetPositionZ(), MajordomoRagnaros.GetOrientation());
                 events.SetPhase(PHASE_NONE);
@@ -519,13 +519,13 @@ public:
             if (action == ACTION_START_RAGNAROS_INTRO && !events.IsInPhase(PHASE_RAGNAROS_SUMMONING))
             {
                 events.SetPhase(PHASE_RAGNAROS_SUMMONING);
-                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_1, 5000, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
+                events.ScheduleEvent(EVENT_RAGNAROS_SUMMON_1, 5s, PHASE_RAGNAROS_SUMMONING, PHASE_RAGNAROS_SUMMONING);
             }
         }
     private:
         GuidSet static_minionsGUIDS;    // contained data should be changed on encounter completion
         GuidSet aliveMinionsGUIDS;      // used for calculations
-        uint32 spawnInTextTimer;
+        std::unordered_map<uint32, MajordomoAddData> majordomoSummonsData;
     };
 
     bool OnGossipHello(Player* player, Creature* creature) override
@@ -561,7 +561,7 @@ public:
             case GOSSIP_ACTION_INFO_DEF+3:
             {
                 CloseGossipMenuFor(player);
-                creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 creature->AI()->Talk(SAY_RAG_SUM_1, player);
                 creature->AI()->DoAction(ACTION_START_RAGNAROS_INTRO);
                 break;
@@ -600,7 +600,7 @@ public:
             {
                 if (Creature* creatureCaster = caster->ToCreature())
                 {
-                    creatureCaster->getThreatMgr().resetAllAggro();
+                    creatureCaster->GetThreatMgr().ResetAllThreat();
                 }
             }
         }

@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackrock_spire.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "blackrock_spire.h"
 
 enum Spells
 {
@@ -36,7 +36,8 @@ enum Events
     EVENT_CONFLAGRATION,
     EVENT_THUNDERCLAP,
     EVENT_PIERCE_ARMOR,
-    EVENT_RAGE
+    EVENT_RAGE,
+    EVENT_CHECK_CONFLAGRATION_TARGET
 };
 
 class boss_drakkisath : public CreatureScript
@@ -46,17 +47,20 @@ public:
 
     struct boss_drakkisathAI : public BossAI
     {
-        boss_drakkisathAI(Creature* creature) : BossAI(creature, DATA_GENERAL_DRAKKISATH) { }
-
-        void EnterCombat(Unit* /*who*/) override
+        boss_drakkisathAI(Creature* creature) : BossAI(creature, DATA_GENERAL_DRAKKISATH)
         {
-            _EnterCombat();
-            events.ScheduleEvent(EVENT_FLAMESTRIKE, 6000);
-            events.ScheduleEvent(EVENT_CLEAVE,    8000);
-            events.ScheduleEvent(EVENT_CONFLAGRATION, 15000);
-            events.ScheduleEvent(EVENT_THUNDERCLAP,    17000);
-            events.ScheduleEvent(EVENT_PIERCE_ARMOR, 5000);
-            events.ScheduleEvent(EVENT_RAGE, 1000);
+            _conflagrateThreat = 0.0f;
+        }
+
+        void JustEngagedWith(Unit* /*who*/) override
+        {
+            _JustEngagedWith();
+            events.ScheduleEvent(EVENT_FLAMESTRIKE, 6s);
+            events.ScheduleEvent(EVENT_CLEAVE, 8s);
+            events.ScheduleEvent(EVENT_CONFLAGRATION, 15s);
+            events.ScheduleEvent(EVENT_THUNDERCLAP, 17s);
+            events.ScheduleEvent(EVENT_PIERCE_ARMOR, 5s);
+            events.ScheduleEvent(EVENT_RAGE, 1s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -75,32 +79,50 @@ public:
                 {
                     case EVENT_FLAMESTRIKE:
                         DoCastAOE(SPELL_FLAMESTRIKE);
-                        events.ScheduleEvent(EVENT_FLAMESTRIKE, 10000);
+                        events.ScheduleEvent(EVENT_FLAMESTRIKE, 10s);
                         break;
                     case EVENT_CLEAVE:
                         DoCastVictim(SPELL_CLEAVE);
-                        events.ScheduleEvent(EVENT_CLEAVE, 8000);
+                        events.ScheduleEvent(EVENT_CLEAVE, 8s);
                         break;
                     case EVENT_CONFLAGRATION:
                         DoCastVictim(SPELL_CONFLAGRATION);
-                        events.ScheduleEvent(EVENT_CONFLAGRATION, 18000);
+
+                        if (Unit* target = me->GetVictim())
+                        {
+                            _conflagrateTarget = me->GetVictim()->GetGUID();
+                            _conflagrateThreat = me->GetThreatMgr().GetThreat(me->GetVictim());
+                            me->GetThreatMgr().ModifyThreatByPercent(target, -100);
+                        }
+                        events.ScheduleEvent(EVENT_CONFLAGRATION, 10s, 13s);
+                        events.ScheduleEvent(EVENT_CHECK_CONFLAGRATION_TARGET, 10s);
                         break;
                     case EVENT_THUNDERCLAP:
                         DoCastVictim(SPELL_THUNDERCLAP);
-                        events.ScheduleEvent(EVENT_THUNDERCLAP, 20000);
+                        events.ScheduleEvent(EVENT_THUNDERCLAP, 20s);
                         break;
                     case EVENT_PIERCE_ARMOR:
                         DoCastVictim(SPELL_PIERCE_ARMOR);
-                        events.ScheduleEvent(EVENT_PIERCE_ARMOR, 40000);
+                        events.ScheduleEvent(EVENT_PIERCE_ARMOR, 40s);
                         break;
                     case EVENT_RAGE:
                         DoCastSelf(SPELL_RAGE);
-                        events.ScheduleEvent(EVENT_RAGE, 35000);
+                        events.ScheduleEvent(EVENT_RAGE, 35s);
+                        break;
+                    case EVENT_CHECK_CONFLAGRATION_TARGET:
+                        if (Unit* target = ObjectAccessor::GetUnit(*me, _conflagrateTarget))
+                        {
+                            me->GetThreatMgr().AddThreat(target, _conflagrateThreat);
+                        }
                         break;
                 }
             }
             DoMeleeAttackIfReady();
         }
+
+        private:
+            float _conflagrateThreat;
+            ObjectGuid _conflagrateTarget;
     };
 
     CreatureAI* GetAI(Creature* creature) const override

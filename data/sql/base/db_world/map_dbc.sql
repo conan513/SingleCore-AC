@@ -1,94 +1,95 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.map_dbc
+-- Dumping structure for table acore_world.map_dbc
 DROP TABLE IF EXISTS `map_dbc`;
 CREATE TABLE IF NOT EXISTS `map_dbc` (
-  `ID` INT NOT NULL DEFAULT 0,
-  `Directory` varchar(100) DEFAULT NULL,
-  `InstanceType` INT NOT NULL DEFAULT 0,
-  `Flags` INT NOT NULL DEFAULT 0,
-  `PVP` INT NOT NULL DEFAULT 0,
-  `MapName_Lang_enUS` varchar(100) DEFAULT NULL,
-  `MapName_Lang_enGB` varchar(100) DEFAULT NULL,
-  `MapName_Lang_koKR` varchar(100) DEFAULT NULL,
-  `MapName_Lang_frFR` varchar(100) DEFAULT NULL,
-  `MapName_Lang_deDE` varchar(100) DEFAULT NULL,
-  `MapName_Lang_enCN` varchar(100) DEFAULT NULL,
-  `MapName_Lang_zhCN` varchar(100) DEFAULT NULL,
-  `MapName_Lang_enTW` varchar(100) DEFAULT NULL,
-  `MapName_Lang_zhTW` varchar(100) DEFAULT NULL,
-  `MapName_Lang_esES` varchar(100) DEFAULT NULL,
-  `MapName_Lang_esMX` varchar(100) DEFAULT NULL,
-  `MapName_Lang_ruRU` varchar(100) DEFAULT NULL,
-  `MapName_Lang_ptPT` varchar(100) DEFAULT NULL,
-  `MapName_Lang_ptBR` varchar(100) DEFAULT NULL,
-  `MapName_Lang_itIT` varchar(100) DEFAULT NULL,
-  `MapName_Lang_Unk` varchar(100) DEFAULT NULL,
-  `MapName_Lang_Mask` INT unsigned NOT NULL DEFAULT 0,
-  `AreaTableID` INT NOT NULL DEFAULT 0,
-  `MapDescription0_Lang_enUS` text DEFAULT NULL,
-  `MapDescription0_Lang_enGB` text DEFAULT NULL,
-  `MapDescription0_Lang_koKR` text DEFAULT NULL,
-  `MapDescription0_Lang_frFR` text DEFAULT NULL,
-  `MapDescription0_Lang_deDE` text DEFAULT NULL,
-  `MapDescription0_Lang_enCN` text DEFAULT NULL,
-  `MapDescription0_Lang_zhCN` text DEFAULT NULL,
-  `MapDescription0_Lang_enTW` text DEFAULT NULL,
-  `MapDescription0_Lang_zhTW` text DEFAULT NULL,
-  `MapDescription0_Lang_esES` text DEFAULT NULL,
-  `MapDescription0_Lang_esMX` text DEFAULT NULL,
-  `MapDescription0_Lang_ruRU` text DEFAULT NULL,
-  `MapDescription0_Lang_ptPT` text DEFAULT NULL,
-  `MapDescription0_Lang_ptBR` text DEFAULT NULL,
-  `MapDescription0_Lang_itIT` text DEFAULT NULL,
-  `MapDescription0_Lang_Unk` varchar(100) DEFAULT NULL,
-  `MapDescription0_Lang_Mask` INT unsigned NOT NULL DEFAULT 0,
-  `MapDescription1_Lang_enUS` text DEFAULT NULL,
-  `MapDescription1_Lang_enGB` text DEFAULT NULL,
-  `MapDescription1_Lang_koKR` text DEFAULT NULL,
-  `MapDescription1_Lang_frFR` text DEFAULT NULL,
-  `MapDescription1_Lang_deDE` text DEFAULT NULL,
-  `MapDescription1_Lang_enCN` text DEFAULT NULL,
-  `MapDescription1_Lang_zhCN` text DEFAULT NULL,
-  `MapDescription1_Lang_enTW` text DEFAULT NULL,
-  `MapDescription1_Lang_zhTW` text DEFAULT NULL,
-  `MapDescription1_Lang_esES` text DEFAULT NULL,
-  `MapDescription1_Lang_esMX` text DEFAULT NULL,
-  `MapDescription1_Lang_ruRU` text DEFAULT NULL,
-  `MapDescription1_Lang_ptPT` text DEFAULT NULL,
-  `MapDescription1_Lang_ptBR` text DEFAULT NULL,
-  `MapDescription1_Lang_itIT` text DEFAULT NULL,
-  `MapDescription1_Lang_Unk` varchar(100) DEFAULT NULL,
-  `MapDescription1_Lang_Mask` INT unsigned NOT NULL DEFAULT 0,
-  `LoadingScreenID` INT NOT NULL DEFAULT 0,
-  `MinimapIconScale` float NOT NULL DEFAULT 0,
-  `CorpseMapID` INT NOT NULL DEFAULT 0,
-  `CorpseX` float NOT NULL DEFAULT 0,
-  `CorpseY` float NOT NULL DEFAULT 0,
-  `TimeOfDayOverride` INT NOT NULL DEFAULT 0,
-  `ExpansionID` INT NOT NULL DEFAULT 0,
-  `RaidOffset` INT NOT NULL DEFAULT 0,
-  `MaxPlayers` INT NOT NULL DEFAULT 0,
+  `ID` int NOT NULL DEFAULT '0',
+  `Directory` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `InstanceType` int NOT NULL DEFAULT '0',
+  `Flags` int NOT NULL DEFAULT '0',
+  `PVP` int NOT NULL DEFAULT '0',
+  `MapName_Lang_enUS` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_enGB` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_koKR` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_frFR` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_deDE` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_enCN` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_zhCN` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_enTW` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_zhTW` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_esES` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_esMX` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_ruRU` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_ptPT` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_ptBR` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_itIT` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_Unk` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapName_Lang_Mask` int unsigned NOT NULL DEFAULT '0',
+  `AreaTableID` int NOT NULL DEFAULT '0',
+  `MapDescription0_Lang_enUS` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_enGB` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_koKR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_frFR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_deDE` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_enCN` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_zhCN` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_enTW` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_zhTW` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_esES` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_esMX` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_ruRU` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_ptPT` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_ptBR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_itIT` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription0_Lang_Unk` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapDescription0_Lang_Mask` int unsigned NOT NULL DEFAULT '0',
+  `MapDescription1_Lang_enUS` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_enGB` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_koKR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_frFR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_deDE` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_enCN` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_zhCN` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_enTW` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_zhTW` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_esES` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_esMX` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_ruRU` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_ptPT` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_ptBR` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_itIT` text COLLATE utf8mb4_unicode_ci,
+  `MapDescription1_Lang_Unk` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MapDescription1_Lang_Mask` int unsigned NOT NULL DEFAULT '0',
+  `LoadingScreenID` int NOT NULL DEFAULT '0',
+  `MinimapIconScale` float NOT NULL DEFAULT '0',
+  `CorpseMapID` int NOT NULL DEFAULT '0',
+  `CorpseX` float NOT NULL DEFAULT '0',
+  `CorpseY` float NOT NULL DEFAULT '0',
+  `TimeOfDayOverride` int NOT NULL DEFAULT '0',
+  `ExpansionID` int NOT NULL DEFAULT '0',
+  `RaidOffset` int NOT NULL DEFAULT '0',
+  `MaxPlayers` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Дамп данных таблицы _acore_world.map_dbc: 0 rows
+-- Dumping data for table acore_world.map_dbc: ~0 rows (approximately)
 DELETE FROM `map_dbc`;
-/*!40000 ALTER TABLE `map_dbc` DISABLE KEYS */;
-/*!40000 ALTER TABLE `map_dbc` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

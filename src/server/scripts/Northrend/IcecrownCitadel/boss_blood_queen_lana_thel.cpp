@@ -16,12 +16,12 @@
  */
 
 #include "GridNotifiers.h"
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "Spell.h"
 #include "SpellAuraEffects.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -164,15 +164,26 @@ public:
 
             events.Reset();
             summons.DespawnAll();
+
+            me->SetCanFly(false);
+            me->SetDisableGravity(false);
+
+            if (bEnteredCombat)
+            {
+                bEnteredCombat = false;
+                if (me->IsAlive() && instance->GetBossState(DATA_BLOOD_QUEEN_LANA_THEL) != DONE)
+                    instance->SetBossState(DATA_BLOOD_QUEEN_LANA_THEL, FAIL);
+            }
+
             if (instance->GetBossState(DATA_BLOOD_QUEEN_LANA_THEL) != DONE)
                 instance->SetBossState(DATA_BLOOD_QUEEN_LANA_THEL, NOT_STARTED);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (!instance->CheckRequiredBosses(DATA_BLOOD_QUEEN_LANA_THEL, who->ToPlayer()) || !me->IsVisible())
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 instance->DoCastSpellOnPlayers(LIGHT_S_HAMMER_TELEPORT);
                 return;
             }
@@ -181,14 +192,14 @@ public:
             me->CastSpell(me, SPELL_SHROUD_OF_SORROW, true);
             me->CastSpell(me, SPELL_FRENZIED_BLOODTHIRST_VISUAL, true);
             events.Reset();
-            events.ScheduleEvent(EVENT_BERSERK, 330000);
-            events.ScheduleEvent(EVENT_VAMPIRIC_BITE, 15000);
-            events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500);
-            events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, urand(10000, 12000));
-            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 20000);
-            events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 30000);
-            events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, urand(15000, 25000));
-            events.ScheduleEvent(EVENT_AIR_PHASE, 124000 + uint32(Is25ManRaid() ? 3000 : 0));
+            events.ScheduleEvent(EVENT_BERSERK, 330s);
+            events.ScheduleEvent(EVENT_VAMPIRIC_BITE, 15s);
+            events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500ms);
+            events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 10s, 12s);
+            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 20s);
+            events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 30s);
+            events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, 15s, 25s);
+            events.ScheduleEvent(EVENT_AIR_PHASE, Is25ManRaid() ? 127s : 124s);
 
             CleanAuras();
             me->setActive(true);
@@ -253,20 +264,6 @@ public:
                 GoToMinchar();
         }
 
-        void JustReachedHome() override
-        {
-            me->SetCanFly(false);
-            me->SetDisableGravity(false);
-
-            _JustReachedHome();
-            if (bEnteredCombat)
-            {
-                bEnteredCombat = false;
-                if (me->IsAlive() && instance->GetBossState(DATA_BLOOD_QUEEN_LANA_THEL) != DONE)
-                    instance->SetBossState(DATA_BLOOD_QUEEN_LANA_THEL, FAIL);
-            }
-        }
-
         void KilledUnit(Unit* victim) override
         {
             if (victim->GetTypeId() == TYPEID_PLAYER)
@@ -282,14 +279,14 @@ public:
             {
                 case POINT_CENTER:
                     me->CastSpell(me, SPELL_INCITE_TERROR, false);
-                    events.ScheduleEvent(EVENT_AIR_PHASE, 100000 + uint32(Is25ManRaid() ? 0 : 20000));
-                    events.ScheduleEvent(EVENT_AIR_START_FLYING, 2500);
+                    events.ScheduleEvent(EVENT_AIR_PHASE, Is25ManRaid() ? 100s : 120s);
+                    events.ScheduleEvent(EVENT_AIR_START_FLYING, 2500ms);
                     break;
                 case POINT_AIR:
                     _bloodboltedPlayers.clear();
                     me->CastSpell(me, SPELL_BLOODBOLT_WHIRL, false);
                     Talk(SAY_AIR_PHASE);
-                    events.ScheduleEvent(EVENT_AIR_FLY_DOWN, 7000);
+                    events.ScheduleEvent(EVENT_AIR_FLY_DOWN, 7s);
                     break;
                 case POINT_GROUND:
                     me->SetCanFly(false);
@@ -297,8 +294,8 @@ public:
                     me->SetReactState(REACT_AGGRESSIVE);
                     if (Unit* target = me->SelectVictim())
                         AttackStart(target);
-                    events.RescheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5000);
-                    events.RescheduleEvent(EVENT_SWARMING_SHADOWS, 20000);
+                    events.RescheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5s);
+                    events.RescheduleEvent(EVENT_SWARMING_SHADOWS, 20s);
                     break;
                 case POINT_MINCHAR:
                     me->CastSpell(me, SPELL_ANNIHILATE, true);
@@ -311,7 +308,7 @@ public:
 
         void UpdateAI(uint32 diff) override
         {
-            if (!UpdateVictim() || !CheckInRoom())
+            if (!UpdateVictim())
                 return;
 
             events.Update(diff);
@@ -335,7 +332,7 @@ public:
                             if (Player* p = itr->GetSource())
                                 if (p->IsAlive() && p != me->GetVictim() && p->GetGUID() != _offtankGUID && !p->IsGameMaster() && p->GetDistance(me) < 70.0f)
                                 {
-                                    float th = me->getThreatMgr().getThreatWithoutTemp(p);
+                                    float th = me->GetThreatMgr().getThreatWithoutTemp(p);
                                     if (!target || th > maxThreat)
                                     {
                                         target = p;
@@ -369,7 +366,7 @@ public:
                             Player* target = myList.front();
                             if (me->GetVictim()->GetGUID() != _tankGUID || target->GetGUID() != _offtankGUID)
                             {
-                                // remove manually from previous, single target flag has nothing to do with this shit as caster is in every case different... tc retards
+                                // remove manually from previous, single target flag has nothing to do with this as caster is in every case different.
                                 if (_tankGUID)
                                     if (Player* prevTank = ObjectAccessor::GetPlayer(*me, _tankGUID))
                                     {
@@ -384,7 +381,7 @@ public:
                                 {
                                     _tankGUID.Clear();
                                     _offtankGUID.Clear();
-                                    events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500);
+                                    events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500ms);
                                     break;
                                 }
 
@@ -400,7 +397,7 @@ public:
                             }
                         }
                     }
-                    events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500);
+                    events.ScheduleEvent(EVENT_BLOOD_MIRROR, 2500ms);
                     break;
                 case EVENT_DELIRIOUS_SLASH:
                     if (!me->HasReactState(REACT_PASSIVE))
@@ -415,14 +412,14 @@ public:
                                 target = me->GetVictim();
                         if (!target)
                         {
-                            events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 5000);
+                            events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 5s);
                             break;
                         }
                         me->CastSpell(target, SPELL_DELIRIOUS_SLASH, false);
-                        events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, urand(20000, 24000));
+                        events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 20s, 24s);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 5000);
+                    events.ScheduleEvent(EVENT_DELIRIOUS_SLASH, 5s);
                     break;
                 case EVENT_PACT_OF_THE_DARKFALLEN:
                     if (!me->HasReactState(REACT_PASSIVE))
@@ -439,13 +436,13 @@ public:
                             Talk(SAY_PACT_OF_THE_DARKFALLEN);
                             for (std::list<Player*>::iterator itr = myList.begin(); itr != myList.end(); ++itr)
                                 me->CastSpell(*itr, SPELL_PACT_OF_THE_DARKFALLEN, false);
-                            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 30000);
+                            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 30s);
                         }
                         else
-                            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5000);
+                            events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5s);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5000);
+                    events.ScheduleEvent(EVENT_PACT_OF_THE_DARKFALLEN, 5s);
                     break;
                 case EVENT_SWARMING_SHADOWS:
                     if (!me->HasReactState(REACT_PASSIVE))
@@ -466,10 +463,10 @@ public:
                             me->CastSpell(target, SPELL_SWARMING_SHADOWS, false);
                         }
 
-                        events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 30000);
+                        events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 30s);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 5000);
+                    events.ScheduleEvent(EVENT_SWARMING_SHADOWS, 5s);
                     break;
                 case EVENT_TWILIGHT_BLOODBOLT:
                     if (!me->HasReactState(REACT_PASSIVE))
@@ -485,10 +482,10 @@ public:
                         for (std::list<Player*>::iterator itr = myList.begin(); itr != myList.end(); ++itr)
                             me->CastSpell(*itr, SPELL_TWILIGHT_BLOODBOLT, false);
                         me->CastSpell(me, SPELL_TWILIGHT_BLOODBOLT_TARGET, false);
-                        events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, urand(10000, 15000));
+                        events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, 10s, 15s);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, 5000);
+                    events.ScheduleEvent(EVENT_TWILIGHT_BLOODBOLT, 5s);
                     break;
                 case EVENT_AIR_PHASE:
                     me->AttackStop();
@@ -552,7 +549,7 @@ public:
             }
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             const Map::PlayerList& pl = me->GetMap()->GetPlayers();
             for (Map::PlayerList::const_iterator itr = pl.begin(); itr != pl.end(); ++itr)
@@ -564,7 +561,7 @@ public:
             {
                 if (!me->IsAlive())
                     return;
-                _EnterEvadeMode();
+                _EnterEvadeMode(why);
                 Reset();
                 GoToMinchar();
                 return;
@@ -573,7 +570,7 @@ public:
             BossAI::EnterEvadeMode();
         }
 
-        bool CanAIAttack(const Unit*  /*target*/) const override
+        bool CanAIAttack(Unit const*  /*target*/) const override
         {
             return me->IsVisible();
         }

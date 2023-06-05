@@ -18,7 +18,12 @@
 #ifndef DEF_MOLTEN_CORE_H
 #define DEF_MOLTEN_CORE_H
 
-#define MCScriptName "instance_molten_core"
+#include "CreatureAIImpl.h"
+#include "Object.h"
+
+#define DataHeader "MC"
+
+constexpr auto MCScriptName = "instance_molten_core";
 
 constexpr uint32 MAX_ENCOUNTER = 10;
 
@@ -106,6 +111,7 @@ enum MCGameObjects
     // Ragnaros event related
     GO_LAVA_STEAM                   = 178107,
     GO_LAVA_SPLASH                  = 178108,
+    GO_LAVA_BURST                   = 178088,
 };
 
 enum MCSpells

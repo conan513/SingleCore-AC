@@ -15,12 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "naxxramas.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
+#include "naxxramas.h"
 
 enum Spells
 {
@@ -56,8 +56,7 @@ enum Events
     EVENT_MARK_CAST                     = 1,
     EVENT_PRIMARY_SPELL                 = 2,
     EVENT_SECONDARY_SPELL               = 3,
-    EVENT_PUNISH                        = 4,
-    EVENT_BERSERK                       = 5
+    EVENT_BERSERK                       = 4
 };
 
 enum Misc
@@ -75,12 +74,12 @@ enum Misc
 
 enum FourHorsemen
 {
-    SAY_AGGRO       = 0,
-    SAY_TAUNT       = 1,
-    SAY_SPECIAL     = 2,
-    SAY_SLAY        = 3,
-    SAY_DEATH       = 4,
-    EMOTE_RAGECAST  = 7
+    SAY_AGGRO                           = 0,
+    SAY_TAUNT                           = 1,
+    SAY_SPECIAL                         = 2,
+    SAY_SLAY                            = 3,
+    SAY_DEATH                           = 4,
+    EMOTE_RAGECAST                      = 7
 };
 
 // MARKS
@@ -193,16 +192,15 @@ public:
             currentWaypoint = 0;
             me->SetReactState(REACT_AGGRESSIVE);
             events.Reset();
-            events.RescheduleEvent(EVENT_MARK_CAST, 24000);
-            events.RescheduleEvent(EVENT_BERSERK, 600000);
+            events.RescheduleEvent(EVENT_MARK_CAST, 24s);
+            events.RescheduleEvent(EVENT_BERSERK, 10min);
             if ((me->GetEntry() != NPC_LADY_BLAUMEUX && me->GetEntry() != NPC_SIR_ZELIEK))
             {
-                events.RescheduleEvent(EVENT_PRIMARY_SPELL, 10000 + rand() % 5000);
+                events.RescheduleEvent(EVENT_PRIMARY_SPELL, 10s, 15s);
             }
             else
             {
-                events.RescheduleEvent(EVENT_PUNISH, 5000);
-                events.RescheduleEvent(EVENT_SECONDARY_SPELL, 15000);
+                events.RescheduleEvent(EVENT_SECONDARY_SPELL, 15s);
             }
             if (pInstance)
             {
@@ -276,11 +274,14 @@ public:
             {
                 if (pInstance->GetBossState(BOSS_HORSEMAN) == DONE)
                 {
-                    if (!me->GetMap()->GetPlayers().isEmpty())
+                    if (!me->GetMap()->GetPlayers().IsEmpty())
                     {
                         if (Player* player = me->GetMap()->GetPlayers().getFirst()->GetSource())
                         {
-                            player->SummonGameObject(RAID_MODE(GO_HORSEMEN_CHEST_10, GO_HORSEMEN_CHEST_25), 2514.8f, -2944.9f, 245.55f, 5.51f, 0, 0, 0, 0, 0);
+                            if (GameObject* chest = player->SummonGameObject(RAID_MODE(GO_HORSEMEN_CHEST_10, GO_HORSEMEN_CHEST_25), 2514.8f, -2944.9f, 245.55f, 5.51f, 0, 0, 0, 0, 0))
+                            {
+                                chest->SetLootRecipient(me);
+                            }
                         }
                     }
                     if (GameObject* go = me->GetMap()->GetGameObject(pInstance->GetGuidData(DATA_HORSEMEN_GATE)))
@@ -292,9 +293,9 @@ public:
             Talk(SAY_DEATH);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             if (movementPhase == MOVE_PHASE_NONE)
             {
                 Talk(SAY_AGGRO);
@@ -334,7 +335,7 @@ public:
             {
                 case EVENT_MARK_CAST:
                     me->CastSpell(me, TABLE_SPELL_MARK[horsemanId], false);
-                    events.RepeatEvent((me->GetEntry() == NPC_LADY_BLAUMEUX || me->GetEntry() == NPC_SIR_ZELIEK) ? 15000 : 12000);
+                    events.Repeat((me->GetEntry() == NPC_LADY_BLAUMEUX || me->GetEntry() == NPC_SIR_ZELIEK) ? 15s : 12s);
                     return;
                 case EVENT_BERSERK:
                     Talk(SAY_SPECIAL);
@@ -343,27 +344,31 @@ public:
                 case EVENT_PRIMARY_SPELL:
                     Talk(SAY_TAUNT);
                     me->CastSpell(me->GetVictim(), RAID_MODE(TABLE_SPELL_PRIMARY_10[horsemanId], TABLE_SPELL_PRIMARY_25[horsemanId]), false);
-                    events.RepeatEvent(15000);
-                    return;
-                case EVENT_PUNISH:
-                    if (!SelectTarget(SELECT_TARGET_NEAREST, 0, 45.0f, true))
-                    {
-                        me->CastSpell(me, TABLE_SPELL_PUNISH[horsemanId], false);
-                        Talk(EMOTE_RAGECAST);
-                    }
-                    events.RepeatEvent(2010);
+                    events.Repeat(15s);
                     return;
                 case EVENT_SECONDARY_SPELL:
                     me->CastSpell(me->GetVictim(), RAID_MODE(TABLE_SPELL_SECONDARY_10[horsemanId], TABLE_SPELL_SECONDARY_25[horsemanId]), false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     return;
             }
 
-            if ((me->GetEntry() == NPC_LADY_BLAUMEUX || me->GetEntry() == NPC_SIR_ZELIEK))
+            if (me->GetEntry() == NPC_LADY_BLAUMEUX || me->GetEntry() == NPC_SIR_ZELIEK)
             {
-                if (Unit* target = SelectTarget(SELECT_TARGET_NEAREST, 0, 45.0f, true))
+                if (Unit* pTarget = me->SelectNearestPlayer(300.0f))
                 {
-                    me->CastSpell(target, RAID_MODE(TABLE_SPELL_PRIMARY_10[horsemanId], TABLE_SPELL_PRIMARY_25[horsemanId]), false);
+                    if (pTarget && me->IsValidAttackTarget(pTarget))
+                    {
+                        AttackStart(pTarget);
+                    }
+                }
+                if (me->IsWithinDistInMap(me->GetVictim(), 45.0f) && me->IsValidAttackTarget(me->GetVictim()))
+                {
+                    DoCastVictim(RAID_MODE(TABLE_SPELL_PRIMARY_10[horsemanId], TABLE_SPELL_PRIMARY_25[horsemanId]));
+                }
+                else if (!me->IsWithinDistInMap(me->GetVictim(), 45.0f) || !me->IsValidAttackTarget(me->GetVictim()))
+                {
+                    DoCastAOE(TABLE_SPELL_PUNISH[horsemanId]);
+                    Talk(EMOTE_RAGECAST);
                 }
             }
             else
@@ -403,7 +408,7 @@ public:
                         damage = 4000;
                         break;
                     case 5:
-                        damage = 12000;
+                        damage = 12500;
                         break;
                     case 6:
                         damage = 20000;
@@ -431,8 +436,25 @@ public:
     }
 };
 
+class spell_four_horsemen_consumption : public SpellScript
+{
+    PrepareSpellScript(spell_four_horsemen_consumption);
+
+    void HandleDamageCalc(SpellEffIndex /*effIndex*/)
+    {
+        uint32 damage = GetCaster()->GetMap()->ToInstanceMap()->GetDifficulty() == REGULAR_DIFFICULTY ? 2750 : 4250;
+        SetHitDamage(damage);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_four_horsemen_consumption::HandleDamageCalc, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+    }
+};
+
 void AddSC_boss_four_horsemen()
 {
     new boss_four_horsemen();
     new spell_four_horsemen_mark();
+    RegisterSpellScript(spell_four_horsemen_consumption);
 }

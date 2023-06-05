@@ -17,13 +17,13 @@
 
 #include "GridNotifiers.h"
 #include "Group.h"
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "Spell.h"
 #include "SpellAuraEffects.h"
 #include "Vehicle.h"
+#include "icecrown_citadel.h"
 
 enum ScriptTexts
 {
@@ -201,10 +201,10 @@ private:
 };
 
 // xinef: malleable goo selector, check for target validity
-struct MalleableGooSelector : public Acore::unary_function<Unit*, bool>
+struct MalleableGooSelector
 {
-    const Unit* me;
-    MalleableGooSelector(Unit const* unit) : me(unit) {}
+public:
+    MalleableGooSelector(Unit const* unit) : me(unit) { }
 
     bool operator()(Unit const* target) const
     {
@@ -216,6 +216,8 @@ struct MalleableGooSelector : public Acore::unary_function<Unit*, bool>
 
         return me->IsValidAttackTarget(target);
     }
+private:
+    Unit const* me;
 };
 
 class boss_professor_putricide : public CreatureScript
@@ -251,7 +253,7 @@ public:
             me->SetStandState(UNIT_STAND_STATE_STAND);
 
             if (instance->GetBossState(DATA_ROTFACE) == DONE && instance->GetBossState(DATA_FESTERGUT) == DONE)
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
         }
 
         uint32 GetData(uint32 type) const override
@@ -275,24 +277,18 @@ public:
                 _experimentState = (data ? 1 : 0);
         }
 
-        void AttackStart(Unit* who) override
-        {
-            if (instance->CheckRequiredBosses(DATA_PROFESSOR_PUTRICIDE))
-                BossAI::AttackStart(who);
-        }
-
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return me->IsVisible() && target->GetPositionZ() > 388.0f && target->GetPositionZ() < 410.0f && target->GetPositionY() > 3157.1f && target->GetExactDist2dSq(4356.0f, 3211.0f) < 80.0f * 80.0f;
         }
 
         void MoveInLineOfSight(Unit* who) override
         {
-            if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+            if (!me->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
                 BossAI::MoveInLineOfSight(who);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             Position homePos = me->GetHomePosition();
             if (!instance->CheckRequiredBosses(DATA_PROFESSOR_PUTRICIDE, who->ToPlayer()) || me->GetExactDist2d(&homePos) > 10.0f || !me->IsVisible()) // check home position because during festergut/rotface fight, trigger missile after their death can trigger putricide combat
@@ -305,11 +301,11 @@ public:
             bEnteredCombat = true;
             me->CastSpell(me, SPELL_OOZE_TANK_PROTECTION, true);
             events.Reset();
-            events.ScheduleEvent(EVENT_BERSERK, 600000);
-            events.ScheduleEvent(EVENT_SLIME_PUDDLE, 10000, EVENT_GROUP_ABILITIES);
-            events.ScheduleEvent(EVENT_UNSTABLE_EXPERIMENT, urand(30000, 35000), EVENT_GROUP_ABILITIES);
+            events.ScheduleEvent(EVENT_BERSERK, 10min);
+            events.ScheduleEvent(EVENT_SLIME_PUDDLE, 10s, EVENT_GROUP_ABILITIES);
+            events.ScheduleEvent(EVENT_UNSTABLE_EXPERIMENT, 30s, 35s, EVENT_GROUP_ABILITIES);
             if (IsHeroic())
-                events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 20000, EVENT_GROUP_ABILITIES);
+                events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 20s, EVENT_GROUP_ABILITIES);
 
             instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_GAS_VARIABLE);
             instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_OOZE_VARIABLE);
@@ -461,7 +457,7 @@ public:
                     me->SetFacingTo(tablePos.GetOrientation());
                     me->GetMotionMaster()->Clear(false);
                     me->GetMotionMaster()->MoveIdle();
-                    events.ScheduleEvent(EVENT_TABLE_DRINK_STUFF, IsHeroic() ? 25000 : 0);
+                    events.ScheduleEvent(EVENT_TABLE_DRINK_STUFF, IsHeroic() ? 25s : 0ms);
                     break;
             }
         }
@@ -499,7 +495,7 @@ public:
                 {
                     sayFestergutDeathTimer = 0;
                     Talk(SAY_FESTERGUT_DEATH);
-                    EnterEvadeMode();
+                    EnterEvadeMode(EVADE_REASON_OTHER);
                 }
                 else
                     sayFestergutDeathTimer -= diff;
@@ -510,7 +506,7 @@ public:
                 {
                     sayRotfaceDeathTimer = 0;
                     Talk(SAY_ROTFACE_DEATH);
-                    EnterEvadeMode();
+                    EnterEvadeMode(EVADE_REASON_OTHER);
                 }
                 else
                     sayRotfaceDeathTimer -= diff;
@@ -518,11 +514,11 @@ public:
             else if (bCallEvade)
             {
                 bCallEvade = false;
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 return;
             }
 
-            if (!UpdateVictim() || !CheckInRoom())
+            if (!UpdateVictim())
                 return;
 
             events.Update(diff);
@@ -546,17 +542,17 @@ public:
                 case EVENT_SLIME_PUDDLE:
                     {
                         std::list<Unit*> targets;
-                        SelectTargetList(targets, 2, SELECT_TARGET_RANDOM, 0.0f, true);
+                        SelectTargetList(targets, 2, SelectTargetMethod::Random, 0, 0.0f, true);
                         if (!targets.empty())
                             for (std::list<Unit*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
                                 me->CastSpell(*itr, SPELL_SLIME_PUDDLE_TRIGGER, true);
-                        events.ScheduleEvent(EVENT_SLIME_PUDDLE, 35000, EVENT_GROUP_ABILITIES);
+                        events.ScheduleEvent(EVENT_SLIME_PUDDLE, 35s, EVENT_GROUP_ABILITIES);
                     }
                     break;
                 case EVENT_UNSTABLE_EXPERIMENT:
                     Talk(EMOTE_UNSTABLE_EXPERIMENT);
                     me->CastSpell(me, SPELL_UNSTABLE_EXPERIMENT, false);
-                    events.ScheduleEvent(EVENT_UNSTABLE_EXPERIMENT, urand(35000, 40000), EVENT_GROUP_ABILITIES);
+                    events.ScheduleEvent(EVENT_UNSTABLE_EXPERIMENT, 35s, 40s, EVENT_GROUP_ABILITIES);
                     break;
                 case EVENT_GO_TO_TABLE:
                     me->CastSpell(me, SPELL_TEAR_GAS_PERIODIC_TRIGGER, true);
@@ -592,14 +588,14 @@ public:
                                     me->SetFacingToObject(face);
                                 me->SetStandState(UNIT_STAND_STATE_KNEEL);
                                 Talk(SAY_TRANSFORM_1);
-                                events.ScheduleEvent(EVENT_RESUME_ATTACK, 5500);
+                                events.ScheduleEvent(EVENT_RESUME_ATTACK, 5500ms);
                                 break;
                             case 3:
                                 if (Creature* face = me->FindNearestCreature(NPC_TEAR_GAS_TARGET_STALKER, 50.0f))
                                     me->SetFacingToObject(face);
                                 me->SetStandState(UNIT_STAND_STATE_KNEEL);
                                 Talk(SAY_TRANSFORM_2);
-                                events.ScheduleEvent(EVENT_RESUME_ATTACK, 8500);
+                                events.ScheduleEvent(EVENT_RESUME_ATTACK, 8500ms);
                                 break;
                             default:
                                 break;
@@ -619,20 +615,20 @@ public:
                     instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_OOZE_VARIABLE);
                     break;
                 case EVENT_UNBOUND_PLAGUE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, UnboundPlagueTargetSelector(me)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, UnboundPlagueTargetSelector(me)))
                     {
                         me->CastSpell(target, SPELL_UNBOUND_PLAGUE, false);
                         me->CastSpell(target, SPELL_UNBOUND_PLAGUE_SEARCHER, false);
-                        events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 90000, EVENT_GROUP_ABILITIES);
+                        events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 90s, EVENT_GROUP_ABILITIES);
                     }
                     else
-                        events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 3500, EVENT_GROUP_ABILITIES);
+                        events.ScheduleEvent(EVENT_UNBOUND_PLAGUE, 3500ms, EVENT_GROUP_ABILITIES);
                     break;
                 case EVENT_MALLEABLE_GOO:
                     if (Is25ManRaid())
                     {
                         std::list<Unit*> targets;
-                        SelectTargetList(targets, MalleableGooSelector(me), (IsHeroic() ? 3 : 2), SELECT_TARGET_RANDOM);
+                        SelectTargetList(targets, (IsHeroic() ? 3 : 2), SelectTargetMethod::Random, 0, MalleableGooSelector(me));
 
                         if (!targets.empty())
                         {
@@ -643,18 +639,18 @@ public:
                     }
                     else
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, MalleableGooSelector(me)))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, MalleableGooSelector(me)))
                         {
                             Talk(EMOTE_MALLEABLE_GOO);
                             me->CastSpell(target, SPELL_MALLEABLE_GOO, true);
                         }
                     }
-                    events.ScheduleEvent(EVENT_MALLEABLE_GOO, urand(25000, 30000), EVENT_GROUP_ABILITIES);
+                    events.ScheduleEvent(EVENT_MALLEABLE_GOO, 25s, 30s, EVENT_GROUP_ABILITIES);
                     break;
                 case EVENT_CHOKING_GAS_BOMB:
                     Talk(EMOTE_CHOKING_GAS_BOMB);
                     me->CastSpell(me, SPELL_CHOKING_GAS_BOMB, false);
-                    events.ScheduleEvent(EVENT_CHOKING_GAS_BOMB, urand(35000, 40000), EVENT_GROUP_ABILITIES);
+                    events.ScheduleEvent(EVENT_CHOKING_GAS_BOMB, 35s, 40s, EVENT_GROUP_ABILITIES);
                     break;
                 default:
                     break;
@@ -663,12 +659,12 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             Position p = me->GetHomePosition();
             if (!me->IsInCombat() && me->GetExactDist2d(&p) > 10.0f)
                 me->GetMotionMaster()->MoveCharge(tablePos.GetPositionX(), tablePos.GetPositionY(), tablePos.GetPositionZ(), 15.0f, POINT_TABLE);
-            BossAI::EnterEvadeMode();
+            BossAI::EnterEvadeMode(why);
         }
 
         void ChangePhase()
@@ -679,7 +675,7 @@ public:
             if (!IsHeroic())
             {
                 me->CastSpell(me, SPELL_TEAR_GAS, false);
-                events.ScheduleEvent(EVENT_GO_TO_TABLE, 2500);
+                events.ScheduleEvent(EVENT_GO_TO_TABLE, 2500ms);
             }
             else
             {
@@ -754,7 +750,7 @@ public:
             targetGUID = guid;
     }
 
-    void IsSummonedBy(Unit* /*summoner*/) override
+    void IsSummonedBy(WorldObject* /*summoner*/) override
     {
         if (InstanceScript* instance = me->GetInstanceScript())
             if (Creature* professor = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PROFESSOR_PUTRICIDE)))
@@ -797,7 +793,7 @@ public:
             else if (targetGUID)
             {
                 Unit* target = ObjectAccessor::GetUnit(*me, targetGUID);
-                if (me->GetVictim()->GetGUID() != targetGUID || !target || !me->IsValidAttackTarget(target) || target->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH) || target->GetExactDist2dSq(4356.0f, 3211.0f) > 80.0f * 80.0f || target->GetPositionZ() < 380.0f || target->GetPositionZ() > 405.0f)
+                if (me->GetVictim()->GetGUID() != targetGUID || !target || !me->IsValidAttackTarget(target) || target->HasUnitFlag2(UNIT_FLAG2_FEIGN_DEATH) || target->GetExactDist2dSq(4356.0f, 3211.0f) > 80.0f * 80.0f || target->GetPositionZ() < 380.0f || target->GetPositionZ() > 405.0f)
                     SelectNewTarget();
             }
         }
@@ -893,8 +889,8 @@ public:
         // big hax to unlock Abomination Eat Ooze ability, requires caster aura spell from difficulty X, but unlocks clientside when got base aura
         void HandleScript(SpellEffIndex  /*effIndex*/)
         {
-            const SpellInfo* s1 = sSpellMgr->GetSpellInfo(70346);
-            const SpellInfo* s2 = sSpellMgr->GetSpellInfo(72456);
+            SpellInfo const* s1 = sSpellMgr->GetSpellInfo(70346);
+            SpellInfo const* s2 = sSpellMgr->GetSpellInfo(72456);
             if (s1 && s2)
                 if (Unit* target = GetHitUnit())
                 {
@@ -1006,9 +1002,12 @@ public:
                     break;
                 }
 
-            if (Aura* aura = target->GetAura(uint32(GetSpellInfo()->Effects[stage].CalcValue())))
-                if (aura->GetOwner() == target) // avoid assert(false) at any cost
-                    aura->UpdateOwner(5000, target); // update whole aura so previous periodic ticks before refreshed by new one
+            if (target)
+            {
+                if (Aura* aura = target->GetAura(uint32(GetSpellInfo()->Effects[stage].CalcValue())))
+                    if (aura->GetOwner() == target) // avoid assert(false) at any cost
+                        aura->UpdateOwner(5000, target); // update whole aura so previous periodic ticks before refreshed by new one
+            }
 
             GetCaster()->CastSpell(target, uint32(GetSpellInfo()->Effects[stage].CalcValue()), true, nullptr, nullptr, GetCaster()->GetGUID());
         }
@@ -1137,7 +1136,7 @@ public:
         void StartAttack()
         {
             GetCaster()->ClearUnitState(UNIT_STATE_CASTING);
-            GetCaster()->DeleteThreatList();
+            GetCaster()->GetThreatMgr().ClearAllThreat();
             GetCaster()->ToCreature()->SetInCombatWithZone();
             GetCaster()->ToCreature()->AI()->AttackStart(GetHitUnit());
             GetCaster()->AddThreat(GetHitUnit(), 500000000.0f);    // value seen in sniff

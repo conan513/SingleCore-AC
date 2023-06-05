@@ -19,11 +19,11 @@
 #include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -157,8 +157,9 @@ public:
     }
 };
 
-struct ManaVoidSelector : public Acore::unary_function<Unit*, bool>
+struct ManaVoidSelector
 {
+public:
     explicit ManaVoidSelector(WorldObject const* source) : _source(source) { }
 
     bool operator()(Unit* unit) const
@@ -166,6 +167,7 @@ struct ManaVoidSelector : public Acore::unary_function<Unit*, bool>
         return unit->getPowerType() == POWER_MANA && _source->GetDistance(unit) > 15.0f;
     }
 
+private:
     WorldObject const* _source;
 };
 
@@ -325,10 +327,10 @@ public:
 
             _instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me);
             _events.Reset();
-            _events.ScheduleEvent(EVENT_INTRO_TALK, 15000);
-            _events.ScheduleEvent(EVENT_DREAM_PORTAL, urand(45000, 48000));
+            _events.ScheduleEvent(EVENT_INTRO_TALK, 15s);
+            _events.ScheduleEvent(EVENT_DREAM_PORTAL, 45s, 48s);
             if (IsHeroic())
-                _events.ScheduleEvent(EVENT_BERSERK, 420000);
+                _events.ScheduleEvent(EVENT_BERSERK, 7min);
         }
 
         void HealReceived(Unit* healer, uint32& heal) override
@@ -348,7 +350,7 @@ public:
                 me->CastSpell(me, SPELL_ACHIEVEMENT_CHECK, true);
                 me->CastSpell((Unit*)nullptr, SPELL_DREAMWALKERS_RAGE, false);
                 _events.Reset();
-                _events.ScheduleEvent(EVENT_DREAM_SLIP, 3500);
+                _events.ScheduleEvent(EVENT_DREAM_SLIP, 3500ms);
                 _instance->SetBossState(DATA_VALITHRIA_DREAMWALKER, DONE);
 
                 if (Creature* trigger = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_VALITHRIA_TRIGGER)))
@@ -404,7 +406,7 @@ public:
                 me->CastSpell(me, SPELL_AWARD_REPUTATION_BOSS_KILL, true);
                 // this display id was found in sniff instead of the one on aura
                 me->SetDisplayId(11686);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 me->DespawnOrUnsummon(4000);
                 if (Creature* lichKing = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_VALITHRIA_LICH_KING)))
                     lichKing->CastSpell(lichKing, SPELL_SPAWN_CHEST, false);
@@ -461,7 +463,7 @@ public:
                         Talk(SAY_VALITHRIA_DREAM_PORTAL);
                     for (uint32 i = 0; i < _portalCount; ++i)
                         me->CastSpell(me, SUMMON_PORTAL, false);
-                    _events.ScheduleEvent(EVENT_DREAM_PORTAL, urand(45000, 48000));
+                    _events.ScheduleEvent(EVENT_DREAM_PORTAL, 45s, 48s);
                     break;
                 case EVENT_DREAM_SLIP:
                     me->CastSpell(me, SPELL_DREAM_SLIP, false);
@@ -518,7 +520,7 @@ public:
             checkTimer = 5000;
         }
 
-        void EnterCombat(Unit* target) override
+        void JustEngagedWith(Unit* target) override
         {
             if (!instance->CheckRequiredBosses(DATA_VALITHRIA_DREAMWALKER, target->ToPlayer()))
             {
@@ -590,7 +592,7 @@ public:
             {
                 checkTimer = 3000;
                 me->SetInCombatWithZone();
-                ThreatContainer::StorageType const& threatList = me->getThreatMgr().getThreatList();
+                ThreatContainer::StorageType const& threatList = me->GetThreatMgr().GetThreatList();
                 if (!threatList.empty())
                     for (ThreatContainer::StorageType::const_iterator itr = threatList.begin(); itr != threatList.end(); ++itr)
                         if (Unit* target = (*itr)->getTarget())
@@ -638,11 +640,11 @@ public:
             {
                 Talk(SAY_LICH_KING_INTRO);
                 _events.Reset();
-                _events.ScheduleEvent(EVENT_GLUTTONOUS_ABOMINATION_SUMMONER, 5000);
-                _events.ScheduleEvent(EVENT_SUPPRESSER_SUMMONER, 10000);
-                _events.ScheduleEvent(EVENT_BLISTERING_ZOMBIE_SUMMONER, 15000);
-                _events.ScheduleEvent(EVENT_RISEN_ARCHMAGE_SUMMONER, 20000);
-                _events.ScheduleEvent(EVENT_BLAZING_SKELETON_SUMMONER, 30000);
+                _events.ScheduleEvent(EVENT_GLUTTONOUS_ABOMINATION_SUMMONER, 5s);
+                _events.ScheduleEvent(EVENT_SUPPRESSER_SUMMONER, 10s);
+                _events.ScheduleEvent(EVENT_BLISTERING_ZOMBIE_SUMMONER, 15s);
+                _events.ScheduleEvent(EVENT_RISEN_ARCHMAGE_SUMMONER, 20s);
+                _events.ScheduleEvent(EVENT_BLAZING_SKELETON_SUMMONER, 30s);
             }
         }
 
@@ -721,12 +723,12 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_FROSTBOLT_VOLLEY, urand(5000, 15000));
-            _events.ScheduleEvent(EVENT_MANA_VOID, urand(15000, 25000));
-            _events.ScheduleEvent(EVENT_COLUMN_OF_FROST, urand(10000, 20000));
+            _events.ScheduleEvent(EVENT_FROSTBOLT_VOLLEY, 5s, 15s);
+            _events.ScheduleEvent(EVENT_MANA_VOID, 15s, 25s);
+            _events.ScheduleEvent(EVENT_COLUMN_OF_FROST, 10s, 20s);
         }
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
             me->FinishSpell(CURRENT_CHANNELED_SPELL, false);
             me->SetInCombatWithZone();
@@ -770,17 +772,17 @@ public:
                 {
                     case EVENT_FROSTBOLT_VOLLEY:
                         me->CastSpell(me, SPELL_FROSTBOLT_VOLLEY, false);
-                        _events.ScheduleEvent(EVENT_FROSTBOLT_VOLLEY, urand(8000, 15000));
+                        _events.ScheduleEvent(EVENT_FROSTBOLT_VOLLEY, 8s, 15s);
                         break;
                     case EVENT_MANA_VOID:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, ManaVoidSelector(me)))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, ManaVoidSelector(me)))
                             me->CastSpell(target, SPELL_MANA_VOID, false);
-                        _events.ScheduleEvent(EVENT_MANA_VOID, urand(20000, 25000));
+                        _events.ScheduleEvent(EVENT_MANA_VOID, 20s, 25s);
                         break;
                     case EVENT_COLUMN_OF_FROST:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, -10.0f, true))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, -10.0f, true))
                             me->CastSpell(target, SPELL_COLUMN_OF_FROST, false);
-                        _events.ScheduleEvent(EVENT_COLUMN_OF_FROST, urand(15000, 25000));
+                        _events.ScheduleEvent(EVENT_COLUMN_OF_FROST, 15s, 25s);
                         break;
                     default:
                         break;
@@ -849,7 +851,7 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_CHECK_PLAYER, 750);
+            _events.ScheduleEvent(EVENT_CHECK_PLAYER, 750ms);
             me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
             me->SetCorpseDelay(0);
             me->LoadCreaturesAddon(true);
@@ -857,7 +859,7 @@ public:
 
         void AttackStart(Unit*) override {}
         void MoveInLineOfSight(Unit*) override {}
-        void EnterEvadeMode() override {}
+        void EnterEvadeMode(EvadeReason /*why*/) override {}
 
         void UpdateAI(uint32 diff) override
         {
@@ -870,9 +872,9 @@ public:
             {
                 case EVENT_CHECK_PLAYER:
                     if (me->SelectNearestPlayer(5.0f)) // also checks phase
-                        _events.ScheduleEvent(EVENT_EXPLODE, 500);
+                        _events.ScheduleEvent(EVENT_EXPLODE, 500ms);
                     else
-                        _events.ScheduleEvent(EVENT_CHECK_PLAYER, 750);
+                        _events.ScheduleEvent(EVENT_CHECK_PLAYER, 750ms);
                     break;
                 case EVENT_EXPLODE:
                     me->StopMoving();
@@ -912,8 +914,8 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_FIREBALL, urand(2000, 4000));
-            _events.ScheduleEvent(EVENT_LEY_WASTE, urand(15000, 20000));
+            _events.ScheduleEvent(EVENT_FIREBALL, 2s, 4s);
+            _events.ScheduleEvent(EVENT_LEY_WASTE, 15s, 20s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -931,11 +933,11 @@ public:
                 case EVENT_FIREBALL:
                     if (!me->IsWithinMeleeRange(me->GetVictim()))
                         me->CastSpell(me->GetVictim(), SPELL_FIREBALL, false);
-                    _events.ScheduleEvent(EVENT_FIREBALL, urand(2000, 4000));
+                    _events.ScheduleEvent(EVENT_FIREBALL, 2s, 4s);
                     break;
                 case EVENT_LEY_WASTE:
                     me->CastSpell(me, SPELL_LEY_WASTE, false);
-                    _events.ScheduleEvent(EVENT_LEY_WASTE, urand(15000, 20000));
+                    _events.ScheduleEvent(EVENT_LEY_WASTE, 15s, 20s);
                     break;
                 default:
                     break;
@@ -975,7 +977,7 @@ public:
                 ScriptedAI::AttackStart(who);
         }
 
-        void IsSummonedBy(Unit* /*summoner*/) override
+        void IsSummonedBy(WorldObject* /*summoner*/) override
         {
             if (Creature* valithria = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_VALITHRIA_DREAMWALKER)))
                 AttackStart(valithria);
@@ -1047,7 +1049,7 @@ public:
                 {
                     timer = 0;
                     me->SetDisplayId(11686);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->DespawnOrUnsummon(2000);
                 }
                 else
@@ -1084,7 +1086,7 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_GUT_SPRAY, urand(10000, 13000));
+            _events.ScheduleEvent(EVENT_GUT_SPRAY, 10s, 13s);
         }
 
         void JustSummoned(Creature* summon) override
@@ -1114,7 +1116,7 @@ public:
             {
                 case EVENT_GUT_SPRAY:
                     me->CastSpell(me, SPELL_GUT_SPRAY, false);
-                    _events.ScheduleEvent(EVENT_GUT_SPRAY, urand(10000, 13000));
+                    _events.ScheduleEvent(EVENT_GUT_SPRAY, 10s, 13s);
                     break;
                 default:
                     break;
@@ -1156,7 +1158,7 @@ public:
             float startAngle = 3 * M_PI / 2;
             float maxAddAngle = ((target->GetMap()->GetSpawnMode() % 2) == 0 ? M_PI : 2 * M_PI);
             float angle = startAngle + rand_norm() * maxAddAngle;
-            target->CastSpell(target->GetPositionX() + cos(angle)*dist, target->GetPositionY() + sin(angle)*dist, target->GetPositionZ(), spellId, true);
+            target->CastSpell(target->GetPositionX() + cos(angle)*dist, target->GetPositionY() + std::sin(angle)*dist, target->GetPositionZ(), spellId, true);
         }
 
         void Register() override

@@ -64,7 +64,7 @@ Modules are essential to AzerothCore's success. Modules allow users to plug them
 We have a lot of modules already made, some of them are very important and will ease your work:
 
 * [Transmogrification](https://github.com/azerothcore/mod-transmog)
-* [Eluna (lua engine) support](https://github.com/azerothcore/mod-eluna-lua-engine/ "Creator of Eluna is part of our core team")
+* [Eluna (lua engine) support](https://github.com/azerothcore/mod-eluna/ "Creator of Eluna is part of our core team")
 * Full list available in the AzerothCore catalogue (link at the end)
 
 ### Configuration files
@@ -169,9 +169,9 @@ This project exists thanks to:
 
 ## Important Links
 
-<!-- Remove if the PR 3210 is accepted
-- [Code of Conduct](https://github.com/azerothcore-wotlk/.github/code_of_conduct.md
--->
+- [Doxygen Documentation](https://www.azerothcore.org/pages/doxygen/index.html)
+
+- [Code of Conduct](https://github.com/azerothcore/azerothcore-wotlk/blob/master/.github/CODE_OF_CONDUCT.md)
 - [Website](http://www.azerothcore.org/)
 - [AzerothCore catalogue](http://www.azerothcore.org/catalogue.html  "Modules, tools, and other stuff for AzerothCore") (modules, tools, etc...)
 - [Module template / Module skeleton](https://github.com/azerothcore/skeleton-module/)

@@ -18,9 +18,7 @@
 #include "WhoListCacheMgr.h"
 #include "GuildMgr.h"
 #include "ObjectAccessor.h"
-#include "Player.h"
 #include "World.h"
-#include "WorldSession.h"
 
 WhoListCacheMgr* WhoListCacheMgr::instance()
 {
@@ -55,7 +53,7 @@ void WhoListCacheMgr::Update()
 
         wstrToLower(wideGuildName);
 
-        _whoListStorage.emplace_back(player->GetGUID(), player->GetTeamId(), player->GetSession()->GetSecurity(), player->getLevel(),
+        _whoListStorage.emplace_back(player->GetGUID(), player->GetTeamId(), player->GetSession()->GetSecurity(), player->GetLevel(),
             player->getClass(), player->getRace(),
             (player->IsSpectator() ? 4395 /*Dalaran*/ : player->GetZoneId()), player->getGender(), player->IsVisible(),
             widePlayerName, wideGuildName, playerName, guildName);

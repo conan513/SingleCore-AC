@@ -27,8 +27,8 @@
 #include "Chat.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
-#include "Map.h"
 #include "MMapFactory.h"
+#include "Map.h"
 #include "ObjectMgr.h"
 #include "PathGenerator.h"
 #include "Player.h"
@@ -61,7 +61,7 @@ public:
         return commandTable;
     }
 
-    static bool HandleMmapPathCommand(ChatHandler* handler, Optional<std::string> para)
+    static bool HandleMmapPathCommand(ChatHandler* handler, Optional<std::string> param)
     {
         if (!MMAP::MMapFactory::createOrGetMMapMgr()->GetNavMesh(handler->GetSession()->GetPlayer()->GetMapId()))
         {
@@ -81,13 +81,19 @@ public:
         }
 
         bool useStraightPath = false;
-        if (StringStartsWith("true", *para))
-            useStraightPath = true;
-
         bool useRaycast = false;
-        if (StringStartsWith("line", *para) || StringStartsWith("ray", *para) || StringStartsWith("raycast", *para))
+        if (param)
         {
-            useRaycast = true;
+            auto paramValue = param.value();
+            if (paramValue.starts_with("true"))
+            {
+                useStraightPath = true;
+            }
+
+            if (paramValue.starts_with("line") || paramValue.starts_with("ray") || paramValue.starts_with("raycast"))
+            {
+                useRaycast = true;
+            }
         }
 
         // unit locations
@@ -103,7 +109,7 @@ public:
         Movement::PointsArray const& pointPath = path.GetPath();
         handler->PSendSysMessage("%s's path to %s:", target->GetName().c_str(), player->GetName().c_str());
         handler->PSendSysMessage("Building: %s", useStraightPath ? "StraightPath" : useRaycast ? "Raycast" : "SmoothPath");
-        handler->PSendSysMessage("Result: %s - Length: " SZFMTD " - Type: %u", (result ? "true" : "false"), pointPath.size(), path.GetPathType());
+        handler->PSendSysMessage(Acore::StringFormatFmt("Result: {} - Length: {} - Type: {}", (result ? "true" : "false"), pointPath.size(), path.GetPathType()).c_str());
 
         G3D::Vector3 const& start = path.GetStartPosition();
         G3D::Vector3 const& end = path.GetEndPosition();
@@ -270,7 +276,7 @@ public:
 
         if (!creatureList.empty())
         {
-            handler->PSendSysMessage("Found " SZFMTD " Creatures.", creatureList.size());
+            handler->PSendSysMessage(Acore::StringFormatFmt("Found {} Creatures.", creatureList.size()).c_str());
 
             uint32 paths = 0;
             uint32 uStartTime = getMSTime();

@@ -15,8 +15,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
 #include "SpellScript.h"
 #include "vault_of_archavon.h"
@@ -96,12 +96,12 @@ class boss_archavon : public CreatureScript
                 ScriptedAI::AttackStart(who);
             }
 
-            void EnterCombat(Unit* /*who*/) override
+            void JustEngagedWith(Unit* /*who*/) override
             {
-                events.ScheduleEvent(EVENT_ROCK_SHARDS, 15000);
-                events.ScheduleEvent(EVENT_CHOKING_CLOUD, 30000);
-                events.ScheduleEvent(EVENT_STOMP, 45000);
-                events.ScheduleEvent(EVENT_BERSERK, 300000);
+                events.ScheduleEvent(EVENT_ROCK_SHARDS, 15s);
+                events.ScheduleEvent(EVENT_CHOKING_CLOUD, 30s);
+                events.ScheduleEvent(EVENT_STOMP, 45s);
+                events.ScheduleEvent(EVENT_BERSERK, 5min);
 
                 if (pInstance)
                 {
@@ -134,31 +134,31 @@ class boss_archavon : public CreatureScript
                 switch (events.ExecuteEvent())
                 {
                     case EVENT_ROCK_SHARDS:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         {
                             DoCast(target, SPELL_ROCK_SHARDS);
                         }
 
-                        events.RepeatEvent(15000);
+                        events.Repeat(15s);
                         break;
                     case EVENT_CHOKING_CLOUD:
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1))
                         {
                             DoCast(target, RAID_MODE(SPELL_CRUSHING_LEAP_10, SPELL_CRUSHING_LEAP_25), true); //10y ~ 80y, ignore range
                         }
 
-                        events.RepeatEvent(30000);
+                        events.Repeat(30s);
                         break;
                     case EVENT_STOMP:
                     {
                         char buffer[100];
-                        sprintf(buffer, "Archavon the Stone Watcher lunges for %s!", me->GetVictim()->GetName().c_str());
+                        snprintf(buffer, sizeof(buffer), "Archavon the Stone Watcher lunges for %s!", me->GetVictim()->GetName().c_str());
                         me->TextEmote(buffer);
 
                         DoCastVictim(RAID_MODE(SPELL_STOMP_10, SPELL_STOMP_25));
 
-                        events.RepeatEvent(45000);
-                        events.ScheduleEvent(EVENT_IMPALE, 3000);
+                        events.Repeat(45s);
+                        events.ScheduleEvent(EVENT_IMPALE, 3s);
                         break;
                     }
                     case EVENT_IMPALE:

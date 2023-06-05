@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "magisters_terrace.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "magisters_terrace.h"
 
 enum Yells
 {
@@ -142,12 +142,12 @@ public:
                 me->loot.clear();
                 me->loot.FillLoot(me->GetCreatureTemplate()->lootid, LootTemplates_Creature, me->GetLootRecipient(), false, false, 1, me);
                 instance->SetData(DATA_DELRISSA_EVENT, DONE);
-                me->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                me->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
             }
             ++HelpersKilled;
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             Talk(SAY_AGGRO);
             summons.DoZoneInCombat();
@@ -194,7 +194,7 @@ public:
                 case EVENT_CHECK_DIST:
                     if (me->GetDistance(me->GetHomePosition()) > 75.0f)
                     {
-                        EnterEvadeMode();
+                        EnterEvadeMode(EVADE_REASON_OTHER);
                         return;
                     }
                     events.ScheduleEvent(EVENT_CHECK_DIST, 5000);
@@ -223,7 +223,7 @@ public:
                         switch (urand(0, 2))
                         {
                             case 0:
-                                target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30, true);
+                                target = SelectTarget(SelectTargetMethod::Random, 0, 30, true);
                                 break;
                             case 1:
                                 target = me;
@@ -248,7 +248,7 @@ public:
                         events.ScheduleEvent(EVENT_SPELL_IMMUNITY, 1000);
                     break;
                 case EVENT_SPELL_SW_PAIN:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f))
                         me->CastSpell(target, DUNGEON_MODE(SPELL_SHADOW_WORD_PAIN_N, SPELL_SHADOW_WORD_PAIN_H), false);
                     events.ScheduleEvent(EVENT_SPELL_SW_PAIN, 10000);
                     break;
@@ -299,16 +299,16 @@ struct boss_priestess_lackey_commonAI : public ScriptedAI
 
     void RecalculateThreat()
     {
-        ThreatContainer::StorageType const& tList = me->getThreatMgr().getThreatList();
+        ThreatContainer::StorageType const& tList = me->GetThreatMgr().GetThreatList();
         for( ThreatContainer::StorageType::const_iterator itr = tList.begin(); itr != tList.end(); ++itr )
         {
             Unit* pUnit = ObjectAccessor::GetUnit(*me, (*itr)->getUnitGuid());
-            if( pUnit && pUnit->GetTypeId() == TYPEID_PLAYER && me->getThreatMgr().getThreat(pUnit) )
+            if( pUnit && pUnit->GetTypeId() == TYPEID_PLAYER && me->GetThreatMgr().GetThreat(pUnit) )
             {
                 float threatMod = GetThreatMod(me->GetDistance2d(pUnit), (float)pUnit->GetArmor(), pUnit->GetHealth(), pUnit->GetMaxHealth(), pUnit);
-                me->getThreatMgr().modifyThreatPercent(pUnit, -100);
-                if (HostileReference* ref = me->getThreatMgr().getOnlineContainer().getReferenceByTarget(pUnit))
-                    ref->addThreat(10000000.0f * threatMod);
+                me->GetThreatMgr().ModifyThreatByPercent(pUnit, -100);
+                if (HostileReference* ref = me->GetThreatMgr().GetOnlineContainer().getReferenceByTarget(pUnit))
+                    ref->AddThreat(10000000.0f * threatMod);
             }
         }
     }
@@ -325,7 +325,7 @@ struct boss_priestess_lackey_commonAI : public ScriptedAI
         summons.Summon(summon);
     }
 
-    void EnterEvadeMode() override
+    void EnterEvadeMode(EvadeReason why) override
     {
         if (Creature* delrissa = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_DELRISSA)))
             if (!delrissa->IsAlive())
@@ -333,13 +333,13 @@ struct boss_priestess_lackey_commonAI : public ScriptedAI
                 delrissa->Respawn();
                 return;
             }
-        ScriptedAI::EnterEvadeMode();
+        ScriptedAI::EnterEvadeMode(why);
     }
 
-    void EnterCombat(Unit* who) override
+    void JustEngagedWith(Unit* who) override
     {
         if (Creature* delrissa = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_DELRISSA)))
-            if (delrissa->IsAlive() && !delrissa->IsInCombat())
+            if (delrissa->IsAlive() && !delrissa->IsEngaged())
                 delrissa->AI()->AttackStart(who);
 
         events.ScheduleEvent(EVENT_SPELL_HELPER_HEALING_POTION, 1000);
@@ -434,9 +434,9 @@ public:
     {
         boss_kagani_nightstrikeAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_MELEE) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_GOUGE, 5500);
             events.ScheduleEvent(EVENT_SPELL_KICK, 9000);
@@ -462,8 +462,8 @@ public:
             {
                 case EVENT_SPELL_VANISH:
                     me->CastSpell(me, SPELL_VANISH, false);
-                    DoResetThreat();
-                    if (Unit* unit = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    DoResetThreatList();
+                    if (Unit* unit = SelectTarget(SelectTargetMethod::Random, 0))
                         me->AddThreat(unit, 1000.0f);
 
                     events.ScheduleEvent(EVENT_SPELL_VANISH, 30000);
@@ -534,10 +534,10 @@ public:
     {
         boss_ellris_duskhallowAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_RANGED) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             me->CastSpell(me, SPELL_SUMMON_IMP, false);
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 3000);
             events.ScheduleEvent(EVENT_SPELL_SHADOW_BOLT, 1000);
@@ -556,7 +556,7 @@ public:
             switch (actualEventId)
             {
                 case EVENT_SPELL_IMMOLATE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f))
                         me->CastSpell(target, DUNGEON_MODE(SPELL_IMMOLATE_N, SPELL_IMMOLATE_H), false);
                     events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 12000);
                     break;
@@ -565,17 +565,17 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_SHADOW_BOLT, 5000);
                     break;
                 case EVENT_SPELL_SEED_OF_CORRUPTION:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f))
                         me->CastSpell(target, SPELL_SEED_OF_CORRUPTION, false);
                     events.ScheduleEvent(EVENT_SPELL_SEED_OF_CORRUPTION, 18000);
                     break;
                 case EVENT_SPELL_CURSE_OF_AGONY:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f))
                         me->CastSpell(target, DUNGEON_MODE(SPELL_CURSE_OF_AGONY_N, SPELL_CURSE_OF_AGONY_H), false);
                     events.ScheduleEvent(EVENT_SPELL_CURSE_OF_AGONY, 13000);
                     break;
                 case EVENT_SPELL_FEAR:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 20.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 20.0f))
                         me->CastSpell(target, SPELL_FEAR, false);
                     events.ScheduleEvent(EVENT_SPELL_FEAR, 15000);
                     break;
@@ -612,9 +612,9 @@ public:
     {
         boss_eramas_brightblazeAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_MELEE) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_KNOCKDOWN, 6000);
             events.ScheduleEvent(EVENT_SPELL_SNAP_KICK, 3000);
@@ -686,9 +686,9 @@ public:
     {
         boss_yazzaiAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_RANGED) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_POLYMORPH, 1000);
             events.ScheduleEvent(EVENT_SPELL_ICE_BLOCK, 1000);
@@ -709,7 +709,7 @@ public:
             switch (actualEventId)
             {
                 case EVENT_SPELL_POLYMORPH:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_POLYMORPH, false);
                     events.ScheduleEvent(EVENT_SPELL_POLYMORPH, 20000);
                     break;
@@ -722,7 +722,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_ICE_BLOCK, 1000);
                     break;
                 case EVENT_SPELL_BLIZZARD:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, DUNGEON_MODE(SPELL_BLIZZARD_N, SPELL_BLIZZARD_H), false);
                     events.ScheduleEvent(EVENT_SPELL_BLIZZARD, 20000);
                     break;
@@ -741,7 +741,7 @@ public:
                 case EVENT_SPELL_BLINK:
                     {
                         bool InMeleeRange = false;
-                        ThreatContainer::StorageType const& t_list = me->getThreatMgr().getThreatList();
+                        ThreatContainer::StorageType const& t_list = me->GetThreatMgr().GetThreatList();
                         for (ThreatContainer::StorageType::const_iterator itr = t_list.begin(); itr != t_list.end(); ++itr)
                             if (Unit* target = ObjectAccessor::GetUnit(*me, (*itr)->getUnitGuid()))
                                 if (target->IsWithinMeleeRange(me))
@@ -794,9 +794,9 @@ public:
     {
         boss_warlord_salarisAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_MELEE) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
             me->CastSpell(me, SPELL_BATTLE_SHOUT, false);
 
             events.ScheduleEvent(EVENT_SPELL_DISARM, 6000);
@@ -886,9 +886,9 @@ public:
             me->SummonCreature(NPC_SLIVER, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
             me->CastSpell(me, SPELL_FREEZING_TRAP, true);
 
             events.ScheduleEvent(EVENT_SPELL_AIMED_SHOT, 8000);
@@ -976,9 +976,9 @@ public:
         uint32 Healing_Wave_Timer;
 //        uint32 Frost_Shock_Timer;
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_TOTEM1, 2000);
             events.ScheduleEvent(EVENT_SPELL_TOTEM2, 4000);
@@ -1015,7 +1015,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_WAR_STOMP, 120000);
                     break;
                 case EVENT_SPELL_PURGE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 30.0f))
                         me->CastSpell(target, SPELL_PURGE, false);
                     events.ScheduleEvent(EVENT_SPELL_PURGE, 15000);
                     break;
@@ -1067,9 +1067,9 @@ public:
     {
         boss_zelfanAI(Creature* creature) : boss_priestess_lackey_commonAI(creature, AI_TYPE_RANGED) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_priestess_lackey_commonAI::EnterCombat(who);
+            boss_priestess_lackey_commonAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_DRAGON_GUN, 20000);
             events.ScheduleEvent(EVENT_SPELL_ROCKET_LAUNCH, 7000);
@@ -1096,7 +1096,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_ROCKET_LAUNCH, 20000);
                     break;
                 case EVENT_SPELL_IRON_BOMB:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 15.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 15.0f))
                         me->CastSpell(target, DUNGEON_MODE(SPELL_FEL_IRON_BOMB_N, SPELL_FEL_IRON_BOMB_H), false);
                     events.ScheduleEvent(EVENT_SPELL_IRON_BOMB, 20000);
                     break;

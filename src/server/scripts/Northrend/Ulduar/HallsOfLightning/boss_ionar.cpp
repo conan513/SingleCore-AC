@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "halls_of_lightning.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "halls_of_lightning.h"
 
 enum IonarSpells
 {
@@ -106,13 +106,13 @@ public:
         {
             events.SetPhase(1);
             if (!spark)
-                events.RescheduleEvent(EVENT_CHECK_HEALTH, 1000, 0, 1);
+                events.RescheduleEvent(EVENT_CHECK_HEALTH, 1s, 0, 1);
 
-            events.RescheduleEvent(EVENT_BALL_LIGHTNING, 10000, 0, 1);
-            events.RescheduleEvent(EVENT_STATIC_OVERLOAD, 5000, 0, 1);
+            events.RescheduleEvent(EVENT_BALL_LIGHTNING, 10s, 0, 1);
+            events.RescheduleEvent(EVENT_STATIC_OVERLOAD, 5s, 0, 1);
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             me->SetInCombatWithZone();
             Talk(SAY_AGGRO);
@@ -141,7 +141,7 @@ public:
             Talk(SAY_SLAY);
         }
 
-        void SpellHit(Unit* /*caster*/, const SpellInfo* spell) override
+        void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
             if (spell->Id == SPELL_DISPERSE)
                 Split();
@@ -159,7 +159,7 @@ public:
                     summons.Summon(spark);
                     spark->CastSpell(spark, me->GetMap()->IsHeroic() ? SPELL_SPARK_VISUAL_TRIGGER_H : SPELL_SPARK_VISUAL_TRIGGER_N, true);
                     spark->CastSpell(spark, SPELL_RANDOM_LIGHTNING, true);
-                    spark->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
+                    spark->SetUnitFlag(UNIT_FLAG_PACIFIED | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                     spark->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0);
 
                     if (Player* tgt = SelectTargetFromPlayerList(100))
@@ -171,7 +171,7 @@ public:
             me->SetControlled(true, UNIT_STATE_STUNNED);
 
             events.SetPhase(2);
-            events.ScheduleEvent(EVENT_CALL_SPARKS, 15000, 0, 2);
+            events.ScheduleEvent(EVENT_CALL_SPARKS, 15s, 0, 2);
         }
 
         void UpdateAI(uint32 diff) override
@@ -187,28 +187,28 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_BALL_LIGHTNING:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random))
                         me->CastSpell(target, me->GetMap()->IsHeroic() ? SPELL_BALL_LIGHTNING_H : SPELL_BALL_LIGHTNING_N, false);
 
-                    events.RepeatEvent(10000 + rand() % 1000);
+                    events.Repeat(10s, 11s);
                     break;
                 case EVENT_STATIC_OVERLOAD:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random))
                         me->CastSpell(target, me->GetMap()->IsHeroic() ? SPELL_STATIC_OVERLOAD_H : SPELL_STATIC_OVERLOAD_N, false);
 
-                    events.RepeatEvent(5000 + rand() % 1000);
+                    events.Repeat(5s, 6s);
                     break;
                 case EVENT_CHECK_HEALTH:
                     if (HealthBelowPct(HealthCheck))
                         me->CastSpell(me, SPELL_DISPERSE, false);
 
-                    events.RepeatEvent(1000);
+                    events.Repeat(1s);
                     return;
                 case EVENT_CALL_SPARKS:
                     {
                         EntryCheckPredicate pred(NPC_SPARK_OF_IONAR);
                         summons.DoAction(ACTION_CALLBACK, pred);
-                        events.ScheduleEvent(EVENT_RESTORE, 2000, 0, 2);
+                        events.ScheduleEvent(EVENT_RESTORE, 2s, 0, 2);
                         return;
                     }
                 case EVENT_RESTORE:
@@ -258,7 +258,7 @@ public:
             if (param == ACTION_CALLBACK)
             {
                 me->SetSpeed(MOVE_RUN, 2.5f);
-                me->DeleteThreatList();
+                me->GetThreatMgr().ClearAllThreat();
                 me->CombatStop(true);
                 me->GetMotionMaster()->MoveTargetedHome();
                 returning = true;

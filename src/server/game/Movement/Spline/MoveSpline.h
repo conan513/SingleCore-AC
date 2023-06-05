@@ -25,9 +25,9 @@ namespace Movement
 {
     struct Location : public Vector3
     {
-        Location()  {}
+        Location()  = default;
         Location(float x, float y, float z, float o) : Vector3(x, y, z), orientation(o) {}
-        Location(const Vector3& v) : Vector3(v), orientation(0) {}
+        Location(const Vector3& v) : Vector3(v) {}
         Location(const Vector3& v, float o) : Vector3(v), orientation(o) {}
 
         float orientation{0};
@@ -71,7 +71,7 @@ namespace Movement
         void init_spline(const MoveSplineInitArgs& args);
 
     protected:
-        [[nodiscard]] const MySpline::ControlArray& getPath(bool visual) const { return spline.getPoints(visual); }
+        [[nodiscard]] const MySpline::ControlArray& getPath() const { return spline.getPoints(); }
         void computeParabolicElevation(float& el) const;
         void computeFallElevation(float& el) const;
 
@@ -117,8 +117,8 @@ namespace Movement
         [[nodiscard]] bool isCyclic() const { return splineflags.cyclic; }
         [[nodiscard]] bool isFalling() const { return splineflags.falling; }
         [[nodiscard]] bool isWalking() const { return splineflags.walkmode; }
-        [[nodiscard]] Vector3 FinalDestination() const { return Initialized() ? spline.getPoint(spline.last(), false) : Vector3(); }
-        [[nodiscard]] Vector3 CurrentDestination() const { return Initialized() ? spline.getPoint(point_Idx + 1, false) : Vector3(); }
+        [[nodiscard]] Vector3 FinalDestination() const { return Initialized() ? spline.getPoint(spline.last()) : Vector3(); }
+        [[nodiscard]] Vector3 CurrentDestination() const { return Initialized() ? spline.getPoint(point_Idx + 1) : Vector3(); }
         [[nodiscard]] int32 currentPathIdx() const;
 
         [[nodiscard]] bool HasAnimation() const { return splineflags.animation; }

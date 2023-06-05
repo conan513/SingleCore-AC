@@ -22,8 +22,8 @@ SDComment:
 SDCategory: Zul'Aman
 EndScriptData */
 
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
 #include "zulaman.h"
@@ -228,7 +228,7 @@ struct boss_hexlord_addAI : public ScriptedAI
 
     void Reset() override { }
 
-    void EnterCombat(Unit* /*who*/) override
+    void JustEngagedWith(Unit* /*who*/) override
     {
         DoZoneInCombat();
     }
@@ -294,7 +294,7 @@ public:
             me->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             instance->SetData(DATA_HEXLORDEVENT, IN_PROGRESS);
 
@@ -428,7 +428,7 @@ public:
 
             if (SiphonSoul_Timer <= diff)
             {
-                Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 70, true);
+                Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 70, true);
                 Unit* trigger = DoSpawnCreature(NPC_TEMP_TRIGGER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
                 if (!target || !trigger)
                 {
@@ -438,7 +438,7 @@ public:
                 else
                 {
                     trigger->SetDisplayId(11686);
-                    trigger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    trigger->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     trigger->CastSpell(target, SPELL_SIPHON_SOUL, true);
                     trigger->GetMotionMaster()->MoveChase(me);
 
@@ -488,7 +488,7 @@ public:
                     break;
                 case ABILITY_TARGET_ENEMY:
                 default:
-                    target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
+                    target = SelectTarget(SelectTargetMethod::Random, 0, 100, true);
                     break;
                 case ABILITY_TARGET_HEAL:
                     target = DoSelectLowestHpFriendly(50, 0);
@@ -624,7 +624,12 @@ public:
                         DoCast(target, SPELL_FLASH_HEAL, false);
                     else
                     {
-                        // bugged
+                        /**
+                         * @bug
+                         * Bugged
+                         * //me->GetMotionMaster()->Clear();
+                         * //me->GetMotionMaster()->MoveChase(target, 20);
+                         */
                         //me->GetMotionMaster()->Clear();
                         //me->GetMotionMaster()->MoveChase(target, 20);
                     }
@@ -634,7 +639,7 @@ public:
                     if (urand(0, 1))
                         target = DoSelectLowestHpFriendly(50, 0);
                     else
-                        target = SelectTarget(SELECT_TARGET_RANDOM, 0);
+                        target = SelectTarget(SelectTargetMethod::Random, 0);
                     if (target)
                         DoCast(target, SPELL_DISPEL_MAGIC, false);
                 }
@@ -651,7 +656,7 @@ public:
                 DoCast(target, SPELL_DISPEL_MAGIC, false);
             }
             else
-                me->CastSpell(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_DISPEL_MAGIC, false);
+                me->CastSpell(SelectUnit(SelectTargetMethod::Random, 0), SPELL_DISPEL_MAGIC, false);
 
             dispelmagic_timer = 12000;
             } else dispelmagic_timer -= diff;*/
@@ -843,7 +848,7 @@ public:
 
             if (venomspit_timer <= diff)
             {
-                if (Unit* victim = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                if (Unit* victim = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                     DoCast(victim, SPELL_VENOM_SPIT, false);
                 venomspit_timer = 2500;
             }
@@ -934,7 +939,7 @@ public:
             }
             if (coldstare_timer <= diff)
             {
-                if (Unit* victim = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                if (Unit* victim = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                     DoCast(victim, SPELL_COLD_STARE, false);
                 coldstare_timer = 12000;
             }

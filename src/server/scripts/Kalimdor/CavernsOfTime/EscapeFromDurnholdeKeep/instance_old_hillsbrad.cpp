@@ -15,17 +15,17 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "EventMap.h"
 #include "InstanceScript.h"
-#include "old_hillsbrad.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "old_hillsbrad.h"
 
-const Position instancePositions[INSTANCE_POSITIONS_COUNT] =
+static Position const instancePositions[INSTANCE_POSITIONS_COUNT] =
 {
-    {2188.18f, 228.90f, 53.025f, 1.77f},    // Orcs Gather Point 1
-    {2103.23f, 93.55f, 53.096f, 3.78f},     // Orcs Gather Point 2
-    {2128.43f, 71.01f, 64.42f, 1.74f}       // Lieutenant Drake Summon Position
+    { 2188.18f, 228.90f, 53.025f, 1.77f },    // Orcs Gather Point 1
+    { 2103.23f, 93.550f, 53.096f, 3.78f },    // Orcs Gather Point 2
+    { 2172.76f, 149.54f, 87.981f, 4.19f }     // Lieutenant Drake Summon Position
 };
 
 const Position thrallPositions[THRALL_POSITIONS_COUNT] =
@@ -53,6 +53,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             _encounterProgress = 0;
             _barrelCount = 0;
             _attemptsCount = 0;
@@ -116,7 +117,7 @@ public:
             {
                 case GO_BARREL:
                     if (_encounterProgress >= ENCOUNTER_PROGRESS_BARRELS)
-                        gameobject->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        gameobject->SetGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     break;
                 case GO_PRISON_DOOR:
                     if (_encounterProgress >= ENCOUNTER_PROGRESS_THRALL_ARMORED)
@@ -162,7 +163,7 @@ public:
                     }
                 case DATA_THRALL_ADD_FLAG:
                     if (Creature* thrall = instance->GetCreature(_thrallGUID))
-                        thrall->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        thrall->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     break;
             }
         }
@@ -222,7 +223,7 @@ public:
                         if (_encounterProgress == ENCOUNTER_PROGRESS_NONE)
                         {
                             Map::PlayerList const& players = instance->GetPlayers();
-                            if (!players.isEmpty())
+                            if (!players.IsEmpty())
                                 for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                                     if (Player* player = itr->GetSource())
                                         player->KilledMonsterCredit(NPC_LODGE_QUEST_TRIGGER);
@@ -247,11 +248,8 @@ public:
                 case EVENT_SUMMON_LIEUTENANT:
                     {
                         instance->LoadGrid(instancePositions[2].GetPositionX(), instancePositions[2].GetPositionY());
-                        if (Creature* drake = instance->SummonCreature(NPC_LIEUTENANT_DRAKE, instancePositions[2]))
-                        {
-                            drake->AI()->Talk(0);
-                        }
-                        [[fallthrough]]; // TODO: Not sure whether the fallthrough was a mistake (forgetting a break) or intended. This should be double-checked.
+                        instance->SummonCreature(NPC_LIEUTENANT_DRAKE, instancePositions[2]);
+                        break;
                     }
                 case EVENT_THRALL_REPOSITION:
                     {
@@ -298,42 +296,15 @@ public:
                 instance->LoadGrid(thrallPositions[i].GetPositionX(), thrallPositions[i].GetPositionY());
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "O H " << _encounterProgress << ' ' << _attemptsCount;
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
+            data >> _encounterProgress;
+            data >> _attemptsCount;
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2;
-            uint32 data0, data1;
-
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> data0 >> data1;
-
-            if (dataHead1 == 'O' && dataHead2 == 'H')
-            {
-                _encounterProgress = data0;
-                _attemptsCount = data1;
-            }
-            else
-                OUT_LOAD_INST_DATA_FAIL;
-
-            OUT_LOAD_INST_DATA_COMPLETE;
+            data << _encounterProgress << ' ' << _attemptsCount;
         }
 
     private:

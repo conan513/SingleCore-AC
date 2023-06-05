@@ -15,13 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "halls_of_stone.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellScript.h"
+#include "halls_of_stone.h"
 
 #define GOSSIP_ITEM_1       "Brann, it would be our honor!"
 #define GOSSIP_ITEM_2       "Let's move Brann, enough of the history lessons!"
@@ -316,7 +316,7 @@ public:
 
             me->SetFaction(FACTION_FRIENDLY);
             me->SetReactState(REACT_PASSIVE);
-            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
 
             if(pInstance)
             {
@@ -338,7 +338,7 @@ public:
                 case ACTION_START_TRIBUNAL:
                     {
                         Map::PlayerList const& PlayerList = me->GetMap()->GetPlayers();
-                        if (!PlayerList.isEmpty())
+                        if (!PlayerList.IsEmpty())
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                             {
                                 me->SetFaction(i->GetSource()->GetFaction());
@@ -347,13 +347,13 @@ public:
 
                         SetEscortPaused(false);
                         InitializeEvent();
-                        me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
                         break;
                     }
                 case ACTION_GO_TO_SJONNIR:
                     SetEscortPaused(false);
                     ResetEvent();
-                    me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
                     break;
                 case ACTION_START_SJONNIR_FIGHT:
                     me->SetFaction(FACTION_FRIENDLY);
@@ -377,7 +377,7 @@ public:
                     Start(false, true, ObjectGuid::Empty, 0, true, false);
                     SetNextWaypoint(20, false);
                     ResetEvent();
-                    me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
                     break;
                 case ACTION_OPEN_DOOR:
                     if (GameObject* door = ObjectAccessor::GetGameObject(*me, pInstance->GetGuidData(GO_SJONNIR_DOOR)))
@@ -424,8 +424,8 @@ public:
                                 kaddrak->CastSpell(plr, DUNGEON_MODE(SPELL_GLARE_OF_THE_TRIBUNAL, SPELL_GLARE_OF_THE_TRIBUNAL_H), true);
                         }
 
-                        events.RescheduleEvent(EVENT_KADDRAK_SWITCH_EYE, 1500);
-                        events.RepeatEvent(2000 + urand(0, 2000));
+                        events.RescheduleEvent(EVENT_KADDRAK_SWITCH_EYE, 1500ms);
+                        events.Repeat(2s, 4s);
                         break;
                     }
                 case EVENT_KADDRAK_SWITCH_EYE:
@@ -456,7 +456,7 @@ public:
                                 }
                             }
                         }
-                        events.RepeatEvent(20000);
+                        events.Repeat(20s);
                         break;
                     }
                 case EVENT_ABEDNEUM_HEAD: // Third
@@ -474,7 +474,7 @@ public:
                                 cr->CastSpell(cr, DUNGEON_MODE(SPELL_SEARING_GAZE, SPELL_SEARING_GAZE_H), true);
                             }
                         }
-                        events.RepeatEvent(30000);
+                        events.Repeat(30s);
                         break;
                     }
                 case EVENT_SUMMON_MONSTERS:
@@ -504,7 +504,7 @@ public:
                             me->CastSpell(me, 59046, true); // credit
                         }
 
-                        me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
 
                         // Spawn Chest and quest credit
                         if (Player* plr = SelectTargetFromPlayerList(200.0f))
@@ -513,13 +513,13 @@ public:
                             {
                                 plr->RemoveGameObject(go, false);
                                 go->SetLootMode(1);
-                                go->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+                                go->ReplaceAllGameObjectFlags((GameObjectFlags)0);
                             }
 
                             plr->GroupEventHappens(QUEST_HALLS_OF_STONE, me);
                         }
 
-                        events.ScheduleEvent(EVENT_GO_TO_SJONNIR, 279000);
+                        events.ScheduleEvent(EVENT_GO_TO_SJONNIR, 279s);
                         break;
                     }
                 case EVENT_GO_TO_SJONNIR:
@@ -528,7 +528,7 @@ public:
                             door->SetGoState(GO_STATE_ACTIVE);
                         SetEscortPaused(false);
                         ResetEvent();
-                        me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
                         break;
                     }
                 case EVENT_END:
@@ -537,7 +537,7 @@ public:
                         if (pInstance)
                             pInstance->SetData(BRANN_BRONZEBEARD, 6);
 
-                        me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
                         me->Yell("I'll use the forge to make batches o' earthen to stand guard... But our greatest challenge still remains: find and stop Loken!", LANG_UNIVERSAL);
                         me->PlayDirectSound(14279);
                         break;
@@ -634,16 +634,16 @@ void brann_bronzebeard::brann_bronzebeardAI::InitializeEvent()
     TalkEvent = true;
 
     events.Reset();
-    events.ScheduleEvent(EVENT_SUMMON_MONSTERS, 21000);
-    events.ScheduleEvent(EVENT_KADDRAK_HEAD, 20000);
-    events.ScheduleEvent(EVENT_MARNAK_HEAD, 105000);
-    events.ScheduleEvent(EVENT_ABEDNEUM_HEAD, 205000);
-    events.ScheduleEvent(EVENT_TRIBUNAL_END, 315000);
+    events.ScheduleEvent(EVENT_SUMMON_MONSTERS, 21s);
+    events.ScheduleEvent(EVENT_KADDRAK_HEAD, 20s);
+    events.ScheduleEvent(EVENT_MARNAK_HEAD, 105s);
+    events.ScheduleEvent(EVENT_ABEDNEUM_HEAD, 205s);
+    events.ScheduleEvent(EVENT_TRIBUNAL_END, 315s);
 
     // Viusals
-    events.ScheduleEvent(EVENT_KADDRAK_VISUAL, 20000);
-    events.ScheduleEvent(EVENT_MARNAK_VISUAL, 105000);
-    events.ScheduleEvent(EVENT_ABEDNEUM_VISUAL, 205000);
+    events.ScheduleEvent(EVENT_KADDRAK_VISUAL, 20s);
+    events.ScheduleEvent(EVENT_MARNAK_VISUAL, 105s);
+    events.ScheduleEvent(EVENT_ABEDNEUM_VISUAL, 205s);
 }
 
 void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
@@ -653,7 +653,7 @@ void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
         // Stop before stairs and ask to start
         case 9:
             SetEscortPaused(true);
-            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
             if (pInstance)
                 pInstance->SetData(BRANN_BRONZEBEARD, 2);
 
@@ -674,9 +674,9 @@ void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
             if(pInstance)
             {
                 pInstance->SetData(BRANN_BRONZEBEARD, 5);
-                me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
                 if (Creature* cr = ObjectAccessor::GetCreature(*me, pInstance->GetGuidData(NPC_SJONNIR)))
-                    cr->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    cr->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 me->SetOrientation(3.132660f);
                 DoCast(me, 58506, false);
             }
@@ -715,10 +715,10 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
-            events.ScheduleEvent(EVENT_DRP_CHARGE, 10000);
-            events.ScheduleEvent(EVENT_DRP_CLEAVE, 7000);
+            events.ScheduleEvent(EVENT_DRP_CHARGE, 10s);
+            events.ScheduleEvent(EVENT_DRP_CLEAVE, 7s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -734,16 +734,16 @@ public:
             {
                 case EVENT_DRP_CHARGE:
                     {
-                        if (Unit* tgt = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                        if (Unit* tgt = SelectTarget(SelectTargetMethod::Random, 0))
                             me->CastSpell(tgt, SPELL_DRP_CHARGE, false);
 
-                        events.RepeatEvent(10000);
+                        events.Repeat(10s);
                         break;
                     }
                 case EVENT_DRP_CLEAVE:
                     {
                         me->CastSpell(me->GetVictim(), SPELL_DRP_CLEAVE, false);
-                        events.RepeatEvent(7000);
+                        events.Repeat(7s);
                         break;
                     }
             }
@@ -773,10 +773,10 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
-            events.ScheduleEvent(EVENT_DRS_LIGHTNING_BOLD, 5000);
-            events.ScheduleEvent(EVENT_DRS_SHADOW_WORD_PAIN, 12000);
+            events.ScheduleEvent(EVENT_DRS_LIGHTNING_BOLD, 5s);
+            events.ScheduleEvent(EVENT_DRS_SHADOW_WORD_PAIN, 12s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -793,13 +793,13 @@ public:
                 case EVENT_DRS_LIGHTNING_BOLD:
                     {
                         me->CastSpell(me->GetVictim(), IsHeroic() ? SPELL_DRS_LIGHTING_BOLT_H : SPELL_DRS_LIGHTING_BOLT, false);
-                        events.RepeatEvent(5000);
+                        events.Repeat(5s);
                         break;
                     }
                 case EVENT_DRS_SHADOW_WORD_PAIN:
                     {
                         me->CastSpell(me->GetVictim(), IsHeroic() ? SPELL_DRS_SHADOW_WORD_PAIN_H : SPELL_DRS_SHADOW_WORD_PAIN, false);
-                        events.RepeatEvent(12000);
+                        events.Repeat(12s);
                         break;
                     }
             }
@@ -828,10 +828,10 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
-            events.ScheduleEvent(EVENT_IGC_CRUSH, 6000);
-            events.ScheduleEvent(EVENT_IGC_GROUND_SMASH, 4000);
+            events.ScheduleEvent(EVENT_IGC_CRUSH, 6s);
+            events.ScheduleEvent(EVENT_IGC_GROUND_SMASH, 4s);
         }
         void UpdateAI(uint32 diff) override
         {
@@ -847,13 +847,13 @@ public:
                 case EVENT_IGC_CRUSH:
                     {
                         me->CastSpell(me->GetVictim(), SPELL_IGC_CRUSH_ARMOR, false);
-                        events.RepeatEvent(6000);
+                        events.Repeat(6s);
                         break;
                     }
                 case EVENT_IGC_GROUND_SMASH:
                     {
                         me->CastSpell(me->GetVictim(), IsHeroic() ? SPELL_IGC_GROUND_SMASH_H : SPELL_IGC_GROUND_SMASH, false);
-                        events.RepeatEvent(5000);
+                        events.Repeat(5s);
                         break;
                     }
             }

@@ -17,9 +17,9 @@
 
 #include "PassiveAI.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
-#include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
 #include "ulduar.h"
@@ -267,29 +267,36 @@ const Position ArenaNPCs[] =
     {2087.46f, -298.71f, 440.5f,  0.59f}
 };
 
-enum ThorimSounds
+enum Texts
 {
-    SOUND_AGGRO1                = 15733,
-    SOUND_AGGRO2                = 15734,
-    SOUND_SPECIAL1              = 15735,
-    SOUND_SPECIAL2              = 15736,
-    SOUND_SPECIAL3              = 15737,
-    SOUND_JUMPDOWN              = 15738,
-    SOUND_SLAY1                 = 15739,
-    SOUND_SLAY2                 = 15740,
-    SOUND_BERSERK               = 15741,
-    SOUND_AWIPE                 = 15742,
-    SOUND_DEFEATED              = 15743,
-    SOUND_NORM1                 = 15744,
-    SOUND_NORM2                 = 15745,
-    SOUND_NORM3                 = 15746,
-    SOUND_HARD1                 = 15747,
-    SOUND_HARD2                 = 15748,
-    SOUND_HARD3                 = 15749,
+    // Thorim
+    SAY_AGGRO_1                 = 0,
+    SAY_AGGRO_2                 = 1,
+    SAY_SPECIAL_1               = 2, // Unused
+    SAY_SPECIAL_2               = 3,
+    SAY_SPECIAL_3               = 4, // Unused
+    SAY_JUMPDOWN                = 5,
+    SAY_SLAY                    = 6,
+    SAY_BERSERK                 = 7,
+    SAY_WIPE                    = 8,
+    SAY_DEATH                   = 9,
+    SAY_END_NORMAL_1            = 10,
+    SAY_END_NORMAL_2            = 11,
+    SAY_END_NORMAL_3            = 12,
+    SAY_END_HARD_1              = 13,
+    SAY_END_HARD_2              = 14,
+    SAY_END_HARD_3              = 15,
 
-    SOUND_SIF_START             = 15668,
-    SOUND_SIF_DESPAWN           = 15669,
-    SOUND_SIF_EVENT             = 15670,
+    // Sif
+    SAY_SIF_AGGRO               = 0,
+    SAY_SIF_HM_MISSED           = 1,
+    SAY_SIF_HM_REACHED          = 2,
+
+    // Ancient Rune Giant
+    SAY_GIANT_RUNIC_MIGHT       = 0,
+
+    // Runic Colossus
+    SAY_COLOSSUS_RUNIC_BARRIER  = 0,
 };
 
 enum Misc
@@ -352,13 +359,13 @@ public:
         {
             if (apply)
             {
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_PACIFIED);
+                me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_PACIFIED);
                 me->DisableRotate(true);
                 me->AddUnitState(UNIT_STATE_ROOT);
             }
             else
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_PACIFIED);
+                me->RemoveUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_PACIFIED);
                 me->DisableRotate(false);
                 me->ClearUnitState(UNIT_STATE_ROOT);
                 me->resetAttackTimer(BASE_ATTACK);
@@ -420,7 +427,7 @@ public:
             GameObject* go;
             if ((go = GetThorimObject(DATA_THORIM_LEVER)))
             {
-                go->SetUInt32Value(GAMEOBJECT_FLAGS, 48);
+                go->ReplaceAllGameObjectFlags((GameObjectFlags)48);
                 go->SetGoState(GO_STATE_READY);
             }
             if ((go = GetThorimObject(DATA_THORIM_FIRST_DOORS)))
@@ -433,10 +440,10 @@ public:
                 go->SetGoState(GO_STATE_ACTIVE);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             DisableThorim(false);
-            CreatureAI::EnterEvadeMode();
+            CreatureAI::EnterEvadeMode(why);
         }
 
         void Reset() override
@@ -485,39 +492,27 @@ public:
                 if (_trashCounter >= 6)
                 {
                     if (GameObject* go = GetThorimObject(DATA_THORIM_LEVER))
-                        go->RemoveFlag(GAMEOBJECT_FLAGS, 48);
+                        go->RemoveGameObjectFlag((GameObjectFlags)48);
 
+                    events.ScheduleEvent(EVENT_THORIM_AGGRO, 0ms);
                     events.SetPhase(EVENT_PHASE_START);
-                    events.ScheduleEvent(EVENT_THORIM_START_PHASE1, 20000);
+                    events.ScheduleEvent(EVENT_THORIM_START_PHASE1, 20s);
                     _trashCounter = 0;
                 }
-                else if (_trashCounter == 5)
-                    events.ScheduleEvent(EVENT_THORIM_AGGRO, 0);
             }
             else if (param == ACTION_ALLOW_HIT)
                 _isHitAllowed = true;
         }
 
-        void KilledUnit(Unit*) override
+        void KilledUnit(Unit* victim) override
         {
-            if (urand(0, 2))
-                return;
-
-            if (urand(0, 1))
-            {
-                me->Yell("Can't you at least put up a fight!?", LANG_UNIVERSAL);
-                me->PlayDirectSound(SOUND_SLAY1);
-            }
-            else
-            {
-                me->Yell("Pathetic!", LANG_UNIVERSAL);
-                me->PlayDirectSound(SOUND_SLAY2);
-            }
+            if (victim->GetTypeId() == TYPEID_PLAYER)
+                Talk(SAY_SLAY);
         }
 
         void JustReachedHome() override { me->setActive(false); }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             if (m_pInstance && !_encounterFinished)
                 m_pInstance->SetData(TYPE_THORIM, IN_PROGRESS);
@@ -535,17 +530,16 @@ public:
                 DisableThorim(false);
 
                 events.SetPhase(EVENT_PHASE_RING);
-                events.ScheduleEvent(EVENT_THORIM_UNBALANCING_STRIKE, 8000, 0, EVENT_PHASE_RING);
-                events.ScheduleEvent(EVENT_THORIM_LIGHTNING_CHARGE, 12500, 0, EVENT_PHASE_RING);
-                events.ScheduleEvent(EVENT_THORIM_CHAIN_LIGHTNING, 13000, 0, EVENT_PHASE_RING);
-                events.ScheduleEvent(EVENT_THORIM_BERSERK, 300000, 0, EVENT_PHASE_RING);
+                events.ScheduleEvent(EVENT_THORIM_UNBALANCING_STRIKE, 8s, 0, EVENT_PHASE_RING);
+                events.ScheduleEvent(EVENT_THORIM_LIGHTNING_CHARGE, 12s + 500ms, 0, EVENT_PHASE_RING);
+                events.ScheduleEvent(EVENT_THORIM_CHAIN_LIGHTNING, 13s, 0, EVENT_PHASE_RING);
+                events.ScheduleEvent(EVENT_THORIM_BERSERK, 5min, 0, EVENT_PHASE_RING);
 
                 me->GetMotionMaster()->MoveChase(me->GetVictim());
                 me->GetMotionMaster()->MoveJump(Middle.GetPositionX(), Middle.GetPositionY(), Middle.GetPositionZ(), 20, 20);
                 me->RemoveAura(SPELL_SHEATH_OF_LIGHTNING);
 
-                me->Yell("Impertinent whelps! You dare challenge me atop my pedestal! I will crush you myself!", LANG_UNIVERSAL);
-                me->PlayDirectSound(SOUND_JUMPDOWN);
+                Talk(SAY_JUMPDOWN);
 
                 // Hard Mode
                 if (!me->HasAura(62565 /*TOUCH OF DOMINION TRIGGER*/))
@@ -558,7 +552,7 @@ public:
                     summons.DoAction(ACTION_SIF_JOIN_FIGHT, pred);
                 }
 
-                DoResetThreat();
+                DoResetThreatList();
                 if (Player* player = GetArenaPlayer())
                     me->AddThreat(player, 1000.0f);
             }
@@ -569,7 +563,7 @@ public:
                 if (!_encounterFinished)
                 {
                     _encounterFinished = true;
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     me->SetFaction(FACTION_FRIENDLY);
                     me->SetHealth(me->GetMaxHealth());
                     me->CombatStop();
@@ -577,11 +571,10 @@ public:
                     events.Reset();
                     DisableThorim(true);
 
-                    me->Yell("Stay your arms! I yield!", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_DEFEATED);
+                    Talk(SAY_DEATH);
 
                     events.SetPhase(EVENT_PHASE_OUTRO);
-                    events.ScheduleEvent(EVENT_THORIM_OUTRO1, 2000, 0, EVENT_PHASE_OUTRO);
+                    events.ScheduleEvent(EVENT_THORIM_OUTRO1, 2s, 0, EVENT_PHASE_OUTRO);
 
                     GameObject* go = nullptr;
                     if ((go = GetThorimObject(DATA_THORIM_FENCE)))
@@ -591,8 +584,11 @@ public:
                     if (_hardMode)
                         chestId += 1; // hard mode offset
 
-                    if ((go = me->SummonGameObject(chestId, 2134.73f, -286.32f, 419.51f, 0.0f, 0, 0, 0, 0, 0)))
-                        go->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+                    if ((go = me->SummonGameObject(chestId, 2134.73f, -286.32f, 419.51f, 4.65f, 0, 0, 0, 0, 0)))
+                    {
+                        go->ReplaceAllGameObjectFlags((GameObjectFlags)0);
+                        go->SetLootRecipient(me->GetMap());
+                    }
 
                     // Defeat credit
                     if (m_pInstance)
@@ -617,48 +613,26 @@ public:
                 if ((cr = me->SummonCreature((_spawnCommoners ? NPC_DARK_RUNE_COMMONER : RollTable[urand(0, 2)]), ArenaNPCs[rnd], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000)))
                     cr->GetMotionMaster()->MoveJump(
                         Middle.GetPositionX() + urand(19, 24) * cos(Middle.GetAngle(cr)),
-                        Middle.GetPositionY() + urand(19, 24) * sin(Middle.GetAngle(cr)),
+                        Middle.GetPositionY() + urand(19, 24) * std::sin(Middle.GetAngle(cr)),
                         Middle.GetPositionZ(), 20, 20);
             }
         }
 
-        void SpellHit(Unit* caster, const SpellInfo* spellInfo) override
+        void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id == SPELL_LIGHTNING_ORB_CHARGER)
             {
                 me->SetOrientation(me->GetAngle(caster));
                 me->CastSpell(caster, SPELL_LIGHTNING_CHARGE_DAMAGE, true);
                 me->CastSpell(me, SPELL_LIGHTNING_CHARGE_BUFF, true);
-                events.RescheduleEvent(EVENT_THORIM_LIGHTNING_CHARGE, 10000, 0, EVENT_PHASE_RING);
+                events.RescheduleEvent(EVENT_THORIM_LIGHTNING_CHARGE, 10s, 0, EVENT_PHASE_RING);
             }
         }
 
-        void SpellHitTarget(Unit* target, const SpellInfo* spellInfo) override
+        void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id == SPELL_LIGHTNING_CHARGE_DAMAGE && target->GetTypeId() == TYPEID_PLAYER)
                 _hitByLightning = true;
-        }
-
-        void PlaySpecial()
-        {
-            if (urand(0, 9))
-                return;
-
-            switch (urand(0, 2))
-            {
-                case 0:
-                    me->Yell("Behold the power of the storms and despair!", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_SPECIAL1);
-                    break;
-                case 1:
-                    me->Yell("Do not hold back! Destroy them!", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_SPECIAL2);
-                    break;
-                case 2:
-                    me->Yell("Have you begun to regret your intrusion? ", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_SPECIAL3);
-                    break;
-            }
         }
 
         Player* GetArenaPlayer()
@@ -683,9 +657,8 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_THORIM_AGGRO:
-                    me->Yell("Interlopers! You mortals who dare to interfere with my sport will pay... Wait--you...", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_AGGRO1);
-                    events.ScheduleEvent(EVENT_THORIM_AGGRO2, 9000);
+                    Talk(SAY_AGGRO_1);
+                    events.ScheduleEvent(EVENT_THORIM_AGGRO2, 9s);
 
                     if (GameObject* go = GetThorimObject(DATA_THORIM_FENCE))
                         go->SetGoState(GO_STATE_READY);
@@ -693,8 +666,7 @@ public:
                     break;
                 case EVENT_THORIM_AGGRO2:
                     {
-                        me->Yell("I remember you... In the mountains... But you... what is this? Where am--", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_AGGRO2);
+                        Talk(SAY_AGGRO_2);
 
                         EntryCheckPredicate pred(NPC_SIF);
                         summons.DoAction(ACTION_SIF_START_TALK, pred);
@@ -702,11 +674,11 @@ public:
                     }
                 case EVENT_THORIM_START_PHASE1:
                     {
-                        events.ScheduleEvent(EVENT_THORIM_STORMHAMMER, 8000, 0, EVENT_PHASE_START);
-                        events.ScheduleEvent(EVENT_THORIM_CHARGE_ORB, 14000, 0, EVENT_PHASE_START);
-                        events.ScheduleEvent(EVENT_THORIM_FILL_ARENA, 0, 0, EVENT_PHASE_START);
-                        events.ScheduleEvent(EVENT_THORIM_LIGHTNING_ORB, 5000, 0, EVENT_PHASE_START); // checked every 5 secs if there are players on arena
-                        events.ScheduleEvent(EVENT_THORIM_NOT_REACH_IN_TIME, 300000, 0, EVENT_PHASE_START);
+                        events.ScheduleEvent(EVENT_THORIM_STORMHAMMER, 8s, 0, EVENT_PHASE_START);
+                        events.ScheduleEvent(EVENT_THORIM_CHARGE_ORB, 14s, 0, EVENT_PHASE_START);
+                        events.ScheduleEvent(EVENT_THORIM_FILL_ARENA, 0ms, 0, EVENT_PHASE_START);
+                        events.ScheduleEvent(EVENT_THORIM_LIGHTNING_ORB, 5s, 0, EVENT_PHASE_START); // checked every 5 secs if there are players on arena
+                        events.ScheduleEvent(EVENT_THORIM_NOT_REACH_IN_TIME, 5min, 0, EVENT_PHASE_START);
 
                         EntryCheckPredicate pred(NPC_SIF);
                         summons.DoAction(ACTION_SIF_START_DOMINION, pred);
@@ -714,26 +686,23 @@ public:
                     }
                 case EVENT_THORIM_STORMHAMMER:
                     me->CastCustomSpell(SPELL_STORMHAMMER, SPELLVALUE_MAX_TARGETS, 1, me->GetVictim(), false);
-                    events.RepeatEvent(16000);
-                    PlaySpecial();
+                    events.Repeat(16s);
                     break;
                 case EVENT_THORIM_CHARGE_ORB:
                     me->CastCustomSpell(SPELL_CHARGE_ORB, SPELLVALUE_MAX_TARGETS, 1, me, false);
-                    events.RepeatEvent(16000);
-                    PlaySpecial();
+                    events.Repeat(16s);
                     break;
                 case EVENT_THORIM_LIGHTNING_ORB:
                     {
                         if (GetArenaPlayer())
                         {
                             // Player found, repeat and return
-                            events.RepeatEvent(5000);
+                            events.Repeat(5s);
                             return;
                         }
 
                         // No players found
-                        me->Yell("Failures! Weaklings!", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_AWIPE);
+                        Talk(SAY_WIPE);
                         me->SummonCreature(NPC_LIGHTNING_ORB, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
 
                         _isArenaEmpty = true;
@@ -748,66 +717,58 @@ public:
                     break;
                 case EVENT_THORIM_FILL_ARENA:
                     SpawnArenaNPCs();
-                    events.RepeatEvent(10000);
-                    PlaySpecial();
+                    events.Repeat(10s);
                     break;
                 case EVENT_THORIM_UNBALANCING_STRIKE:
                     me->CastSpell(me->GetVictim(), SPELL_UNBALANCING_STRIKE, false);
-                    events.RepeatEvent(20000);
+                    events.Repeat(20s);
                     break;
                 case EVENT_THORIM_LIGHTNING_CHARGE:
                     me->CastSpell(me, SPELL_LIGHTNING_PILLAR_P2, true);
                     break;
                 case EVENT_THORIM_CHAIN_LIGHTNING:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_CHAIN_LIGHTNING, false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     break;
                 case EVENT_THORIM_BERSERK:
                     me->CastSpell(me, SPELL_BERSERK, true);
-                    me->Yell("My patience has reached its limit!", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_BERSERK);
+                    Talk(SAY_BERSERK);
                     break;
                 case EVENT_THORIM_OUTRO1:
                     if (_hardMode)
                     {
-                        me->Yell("You! Fiend! You are not my beloved! Be gone!", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_HARD1);
-                        events.ScheduleEvent(EVENT_THORIM_OUTRO2, 5000, 0, 3);
+                        Talk(SAY_END_HARD_1);
+                        events.ScheduleEvent(EVENT_THORIM_OUTRO2, 5s, 0, 3);
                         EntryCheckPredicate pred(NPC_SIF);
                         summons.DoAction(ACTION_SIF_TRANSFORM, pred);
                     }
                     else
                     {
-                        me->Yell("I feel as though I am awakening from a nightmare, but the shadows in this place yet linger.", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_NORM1);
-                        events.ScheduleEvent(EVENT_THORIM_OUTRO2, 9000, 0, 3);
+                        Talk(SAY_END_NORMAL_1);
+                        events.ScheduleEvent(EVENT_THORIM_OUTRO2, 9s, 0, 3);
                     }
                     break;
                 case EVENT_THORIM_OUTRO2:
                     if (_hardMode)
                     {
-                        me->Yell("Behold the hand behind all the evil that has befallen Ulduar! Left my kingdom in ruins, corrupted my brother and slain my wife!", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_HARD2);
-                        events.ScheduleEvent(EVENT_THORIM_OUTRO3, 12000, 0, 3);
+                        Talk(SAY_END_HARD_2);
+                        events.ScheduleEvent(EVENT_THORIM_OUTRO3, 12s, 0, 3);
                     }
                     else
                     {
-                        me->Yell("Sif... was Sif here? Impossible--she died by my brother's hand. A dark nightmare indeed....", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_NORM2);
-                        events.ScheduleEvent(EVENT_THORIM_OUTRO3, 10000, 0, 3);
+                        Talk(SAY_END_NORMAL_2);
+                        events.ScheduleEvent(EVENT_THORIM_OUTRO3, 10s, 0, 3);
                     }
                     break;
                 case EVENT_THORIM_OUTRO3:
                     if (_hardMode)
                     {
-                        me->Yell("And now it falls to you, champions, to avenge us all! The task before you is great, but I will lend you my aid as I am able. You must prevail!", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_HARD3);
+                        Talk(SAY_END_HARD_3);
                     }
                     else
                     {
-                        me->Yell("I need time to reflect.... I will aid your cause if you should require it. I owe you at least that much. Farewell.", LANG_UNIVERSAL);
-                        me->PlayDirectSound(SOUND_NORM3);
+                        Talk(SAY_END_NORMAL_3);
                     }
 
                     // Defeat credit
@@ -854,19 +815,19 @@ public:
         void DoAction(int32 param) override
         {
             if (param == ACTION_SIF_START_TALK)
-                events.ScheduleEvent(EVENT_SIF_START_TALK, 9000);
+                events.ScheduleEvent(EVENT_SIF_START_TALK, 9s);
             else if (param == ACTION_SIF_START_DOMINION)
             {
                 if (me->GetInstanceScript())
                     if (Creature* cr = ObjectAccessor::GetCreature(*me, me->GetInstanceScript()->GetGuidData(TYPE_THORIM)))
                         me->CastSpell(cr, SPELL_TOUCH_OF_DOMINION, false);
 
-                events.ScheduleEvent(EVENT_SIF_FINISH_DOMINION, 150000);
+                events.ScheduleEvent(EVENT_SIF_FINISH_DOMINION, 150s);
             }
             else if (param == ACTION_SIF_JOIN_FIGHT)
             {
                 me->InterruptNonMeleeSpells(false);
-                events.ScheduleEvent(EVENT_SIF_JOIN_TALK, 9000);
+                events.ScheduleEvent(EVENT_SIF_JOIN_TALK, 9s);
                 events.CancelEvent(EVENT_SIF_START_TALK);
                 events.CancelEvent(EVENT_SIF_FINISH_DOMINION);
             }
@@ -888,34 +849,31 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_SIF_FINISH_DOMINION:
-                    me->PlayDirectSound(SOUND_SIF_DESPAWN);
-                    me->Yell("This pathetic morons are harmless. Relive my station, dispose of them!", LANG_UNIVERSAL);
+                    Talk(SAY_SIF_HM_MISSED);
                     me->DespawnOrUnsummon(5000);
                     break;
                 case EVENT_SIF_START_TALK:
-                    me->Yell("Thorim, my lord, why else would these invaders have come into your sanctum but to slay you? They must be stopped!", LANG_UNIVERSAL);
-                    me->PlayDirectSound(SOUND_SIF_START);
+                    Talk(SAY_SIF_AGGRO);
                     break;
                 case EVENT_SIF_JOIN_TALK:
-                    me->PlayDirectSound(SOUND_SIF_EVENT);
-                    me->Yell("Impossible! Lord Thorim, I will bring your foes a frigid death!", LANG_UNIVERSAL);
-                    events.ScheduleEvent(EVENT_SIF_FROST_NOVA_START, 1000);
-                    events.ScheduleEvent(EVENT_SIF_FROSTBOLT_VALLEY, 11000);
-                    events.ScheduleEvent(EVENT_SIF_BLIZZARD, 15000);
+                    Talk(SAY_SIF_HM_REACHED);
+                    events.ScheduleEvent(EVENT_SIF_FROST_NOVA_START, 1s);
+                    events.ScheduleEvent(EVENT_SIF_FROSTBOLT_VALLEY, 11s);
+                    events.ScheduleEvent(EVENT_SIF_BLIZZARD, 15s);
                     break;
                 case EVENT_SIF_FROSTBOLT_VALLEY:
                     me->CastSpell(me, SPELL_FROSTBOLT_VALLEY, false);
-                    events.RepeatEvent(13000);
+                    events.Repeat(13s);
                     return;
                 case EVENT_SIF_BLIZZARD:
                     me->SummonCreature(NPC_SIF_BLIZZARD, 2108.7f, -280.04f, 419.42f, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
-                    events.RepeatEvent(30000);
+                    events.Repeat(30s);
                     return;
                 case EVENT_SIF_FROST_NOVA_START:
                     me->NearTeleportTo(2108 + urand(0, 42), -238 - irand(0, 46), 420.02f, me->GetAngle(&Middle));
-                    events.RepeatEvent(20000);
-                    events.DelayEvents(5001);
-                    events.ScheduleEvent(EVENT_SIF_FROST_NOVA_CAST, 2500);
+                    events.Repeat(20s);
+                    events.DelayEvents(5s);
+                    events.ScheduleEvent(EVENT_SIF_FROST_NOVA_CAST, 2500ms);
                     _allowCast = false;
                     return;
                 case EVENT_SIF_FROST_NOVA_CAST:
@@ -956,7 +914,7 @@ public:
 
         uint32 Timer;
 
-        void EnterEvadeMode() override {}
+        void EnterEvadeMode(EvadeReason /*why*/) override {}
         void MoveInLineOfSight(Unit*) override {}
         void AttackStart(Unit*) override {}
 
@@ -1042,7 +1000,7 @@ public:
         }
 
         void MoveInLineOfSight(Unit* /*who*/) override {}
-        void EnterCombat(Unit* /*who*/) override {}
+        void JustEngagedWith(Unit* /*who*/) override {}
         void AttackStart(Unit* /*who*/) override {}
 
         void InitWaypoint()
@@ -1093,7 +1051,7 @@ public:
             me->SetDisableGravity(true);
         }
 
-        void SpellHit(Unit*, const SpellInfo* spellInfo) override
+        void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id == SPELL_CHARGE_ORB)
                 me->CastSpell(me, SPELL_LIGHTNING_PILLAR_P1, true);
@@ -1155,7 +1113,7 @@ public:
                         }
                     }
                 _playerAttack = true;
-                me->getThreatMgr().resetAllAggro();
+                me->GetThreatMgr().ResetAllThreat();
                 me->CallForHelp(40.0f);
                 AttackStart(who);
             }
@@ -1171,29 +1129,29 @@ public:
                     thorim->AI()->DoAction(ACTION_START_TRASH_DIED);
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             if (me->GetEntry() == NPC_DARK_RUNE_ACOLYTE_I)
             {
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_GH, 10000);
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_HS, 5000);
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_R, 7000);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_GH, 10s);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_HS, 5s);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_R, 7s);
             }
             else if (me->GetEntry() == NPC_CAPTURED_MERCENARY_SOLDIER_ALLY || me->GetEntry() == NPC_CAPTURED_MERCENARY_SOLDIER_HORDE)
             {
-                events.ScheduleEvent(EVENT_CM_SOLDIER_BS, 9000);
-                events.ScheduleEvent(EVENT_CM_SOLDIER_WC, 5000);
-                events.ScheduleEvent(EVENT_CM_SOLDIER_S, 0);
+                events.ScheduleEvent(EVENT_CM_SOLDIER_BS, 9s);
+                events.ScheduleEvent(EVENT_CM_SOLDIER_WC, 5s);
+                events.ScheduleEvent(EVENT_CM_SOLDIER_S, 0ms);
             }
             else if (me->GetEntry() == NPC_CAPTURED_MERCENARY_CAPTAIN_ALLY || me->GetEntry() == NPC_CAPTURED_MERCENARY_CAPTAIN_HORDE)
             {
-                events.ScheduleEvent(EVENT_CM_CAPTAIN_D, 9000);
-                events.ScheduleEvent(EVENT_CM_CAPTAIN_HC, 5000);
+                events.ScheduleEvent(EVENT_CM_CAPTAIN_D, 9s);
+                events.ScheduleEvent(EVENT_CM_CAPTAIN_HC, 5s);
             }
             else if (me->GetEntry() == NPC_JORMUNGAR_BEHEMOT)
             {
-                events.ScheduleEvent(EVENT_JB_ACID_BREATH, 12000);
-                events.ScheduleEvent(EVENT_JB_SWEEP, 5000);
+                events.ScheduleEvent(EVENT_JB_ACID_BREATH, 12s);
+                events.ScheduleEvent(EVENT_JB_SWEEP, 5s);
             }
 
             me->CallForHelp(10);
@@ -1215,49 +1173,49 @@ public:
                         me->CastSpell(me, SPELL_GREATER_HEAL, false);
                     else if (Unit* target = DoSelectLowestHpFriendly(60.0f, 20))
                         me->CastSpell(target, SPELL_GREATER_HEAL, false);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
                 case EVENT_DR_ACOLYTE_HS:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_HOLY_SMITE, false);
-                    events.RepeatEvent(1600);
+                    events.Repeat(1600ms);
                     break;
                 case EVENT_DR_ACOLYTE_R:
                     if (HealthBelowPct(75) && !me->HasAura(SPELL_RENEW))
                         me->CastSpell(me, SPELL_GREATER_HEAL, false);
                     else if (Unit* target = DoSelectLowestHpFriendly(60.0f, 10))
                         me->CastSpell(target, SPELL_RENEW, false);
-                    events.RepeatEvent(7000);
+                    events.Repeat(7s);
                     break;
                 case EVENT_CM_SOLDIER_BS:
                     me->CastSpell(me->GetVictim(), SPELL_BARBED_SHOT, false);
-                    events.RepeatEvent(9000);
+                    events.Repeat(9s);
                     break;
                 case EVENT_CM_SOLDIER_WC:
                     me->CastSpell(me->GetVictim(), SPELL_WING_CLIP, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
                 case EVENT_CM_SOLDIER_S:
                     if (me->GetDistance(me->GetVictim()) > 8)
                         me->CastSpell(me->GetVictim(), SPELL_SHOOT, false);
 
-                    events.RepeatEvent(1500);
+                    events.Repeat(1500ms);
                     break;
                 case EVENT_CM_CAPTAIN_D:
                     me->CastSpell(me->GetVictim(), SPELL_DEVASTATE, false);
-                    events.RepeatEvent(9000);
+                    events.Repeat(9s);
                     break;
                 case EVENT_CM_CAPTAIN_HC:
                     me->CastSpell(me->GetVictim(), SPELL_HEROIC_STRIKE, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
                 case EVENT_JB_ACID_BREATH:
                     me->CastSpell(me->GetVictim(), SPELL_ACID_BREATH, false);
-                    events.RepeatEvent(12000);
+                    events.Repeat(12s);
                     break;
                 case EVENT_JB_SWEEP:
                     me->CastSpell(me->GetVictim(), SPELL_SWEEP, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
             }
 
@@ -1290,24 +1248,24 @@ public:
             _isCaster = (me->GetEntry() == NPC_DARK_RUNE_ACOLYTE_G);
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             if (me->GetEntry() == NPC_IRON_RING_GUARD)
             {
-                events.ScheduleEvent(EVENT_IR_GUARD_IMPALE, 12000);
-                events.ScheduleEvent(EVENT_IR_GUARD_WHIRL, 5000);
+                events.ScheduleEvent(EVENT_IR_GUARD_IMPALE, 12s);
+                events.ScheduleEvent(EVENT_IR_GUARD_WHIRL, 5s);
             }
             else if (me->GetEntry() == NPC_DARK_RUNE_ACOLYTE_I)
             {
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_GH, 10000);
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_HS, 5000);
-                events.ScheduleEvent(EVENT_DR_ACOLYTE_R, 7000);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_GH, 10s);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_HS, 5s);
+                events.ScheduleEvent(EVENT_DR_ACOLYTE_R, 7s);
             }
             else if (me->GetEntry() == NPC_IRON_HONOR_GUARD)
             {
-                events.ScheduleEvent(EVENT_IH_GUARD_CLEAVE, 6000);
-                events.ScheduleEvent(EVENT_IH_GUARD_HAMSTRING, 9000);
-                events.ScheduleEvent(EVENT_IH_GUARD_SHIELD_SMASH, 15000);
+                events.ScheduleEvent(EVENT_IH_GUARD_CLEAVE, 6s);
+                events.ScheduleEvent(EVENT_IH_GUARD_HAMSTRING, 9s);
+                events.ScheduleEvent(EVENT_IH_GUARD_SHIELD_SMASH, 15s);
 
                 if (Creature* runeGiant = me->FindNearestCreature(NPC_ANCIENT_RUNE_GIANT, 200.0f))
                     runeGiant->AI()->DoAction(ACTION_IRON_HONOR_DIED);
@@ -1329,42 +1287,42 @@ public:
             {
                 case EVENT_IR_GUARD_IMPALE:
                     me->CastSpell(me->GetVictim(), SPELL_IMPALE, false);
-                    events.RepeatEvent(12000);
+                    events.Repeat(12s);
                     break;
                 case EVENT_IR_GUARD_WHIRL:
                     me->CastSpell(me->GetVictim(), SPELL_WHIRLING_TRIP, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
                 case EVENT_DR_ACOLYTE_GH:
                     if (HealthBelowPct(60))
                         me->CastSpell(me, SPELL_GREATER_HEAL, false);
                     else if (Unit* target = DoSelectLowestHpFriendly(60.0f, 20))
                         me->CastSpell(target, SPELL_GREATER_HEAL, false);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
                 case EVENT_DR_ACOLYTE_HS:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_HOLY_SMITE, false);
-                    events.RepeatEvent(1600);
+                    events.Repeat(1600ms);
                     break;
                 case EVENT_DR_ACOLYTE_R:
                     if (HealthBelowPct(75) && !me->HasAura(SPELL_RENEW))
                         me->CastSpell(me, SPELL_GREATER_HEAL, false);
                     else if (Unit* target = DoSelectLowestHpFriendly(60.0f, 10))
                         me->CastSpell(target, SPELL_RENEW, false);
-                    events.RepeatEvent(7000);
+                    events.Repeat(7s);
                     break;
                 case EVENT_IH_GUARD_CLEAVE:
                     me->CastSpell(me->GetVictim(), SPELL_CLEAVE, false);
-                    events.RepeatEvent(6000);
+                    events.Repeat(6s);
                     break;
                 case EVENT_IH_GUARD_HAMSTRING:
                     me->CastSpell(me->GetVictim(), SPELL_HAMSTRING, false);
-                    events.RepeatEvent(9000);
+                    events.Repeat(9s);
                     break;
                 case EVENT_IH_GUARD_SHIELD_SMASH:
                     me->CastSpell(me->GetVictim(), SPELL_SHIELD_SMASH, false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     break;
             }
 
@@ -1400,7 +1358,7 @@ public:
             _leftHand = false;
             _checkTarget = false;
             events.Reset();
-            events.ScheduleEvent(EVENT_RC_RUNIC_SMASH, 0);
+            events.ScheduleEvent(EVENT_RC_RUNIC_SMASH, 0ms);
             Creature* c;
 
             if ((c = me->SummonCreature(33140, 2221, -385, me->GetPositionZ())))
@@ -1417,27 +1375,32 @@ public:
         void JustDied(Unit*) override
         {
             if (me->GetInstanceScript())
+            {
                 if (GameObject* go = ObjectAccessor::GetGameObject(*me, me->GetInstanceScript()->GetGuidData(DATA_THORIM_FIRST_DOORS)))
                     go->SetGoState(GO_STATE_ACTIVE);
+
+                if (Creature* cr = ObjectAccessor::GetCreature(*me, me->GetInstanceScript()->GetGuidData(TYPE_THORIM)))
+                    cr->AI()->Talk(SAY_SPECIAL_2);
+            }
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             events.CancelEvent(EVENT_RC_RUNIC_SMASH);
-            events.ScheduleEvent(EVENT_RC_RUNIC_BARRIER, 10000);
-            events.ScheduleEvent(EVENT_RC_SMASH, 18000);
-            events.ScheduleEvent(EVENT_RC_CHARGE, 15000);
+            events.ScheduleEvent(EVENT_RC_RUNIC_BARRIER, 10s);
+            events.ScheduleEvent(EVENT_RC_SMASH, 18s);
+            events.ScheduleEvent(EVENT_RC_CHARGE, 15s);
 
             me->InterruptNonMeleeSpells(false);
             _checkTarget = true;
         }
 
-        void SpellHit(Unit*, const SpellInfo* spellInfo) override
+        void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id == SPELL_RUNIC_SMASH_LEFT || spellInfo->Id == SPELL_RUNIC_SMASH_RIGHT)
             {
                 _leftHand = spellInfo->Id == SPELL_RUNIC_SMASH_LEFT;
-                events.RescheduleEvent(EVENT_RC_RUNIC_SMASH_TRIGGER, 1000);
+                events.RescheduleEvent(EVENT_RC_RUNIC_SMASH_TRIGGER, 1s);
             }
         }
 
@@ -1474,7 +1437,7 @@ public:
                     _nextTriggerPos += 16.0f;
                     if (_nextTriggerPos <= -260.0f)
                     {
-                        events.RescheduleEvent(EVENT_RC_RUNIC_SMASH_TRIGGER, 500);
+                        events.RescheduleEvent(EVENT_RC_RUNIC_SMASH_TRIGGER, 500ms);
                     }
 
                     RunRunicSmash(true);
@@ -1487,21 +1450,21 @@ public:
 
                     _nextTriggerPos = -385.0f;
                     RunRunicSmash(false);
-                    events.RepeatEvent(11000);
+                    events.Repeat(11s);
                     break;
                 case EVENT_RC_RUNIC_BARRIER:
                     me->CastSpell(me, SPELL_RUNIC_BARRIER, false);
-                    me->TextEmote("Runic Colossus surrounds itself with a crackling Runic Barrier!", nullptr, true);
-                    events.RepeatEvent(20000);
+                    Talk(SAY_COLOSSUS_RUNIC_BARRIER);
+                    events.Repeat(20s);
                     break;
                 case EVENT_RC_SMASH:
                     me->CastSpell(me->GetVictim(), SPELL_SMASH, false);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
                 case EVENT_RC_CHARGE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_CHARGE, false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     break;
             }
 
@@ -1533,15 +1496,15 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             _isInCombat = true;
             events.CancelEvent(EVENT_ARG_SPAWN);
-            events.ScheduleEvent(EVENT_ARG_RD, 12000);
-            events.ScheduleEvent(EVENT_ARG_STOMP, 8000);
+            events.ScheduleEvent(EVENT_ARG_RD, 12s);
+            events.ScheduleEvent(EVENT_ARG_STOMP, 8s);
 
             me->CastSpell(me, SPELL_RUNIC_FORTIFICATION, false);
-            me->TextEmote("Ancient Rune Giant fortifies nearby allies with runic might", nullptr, true);
+            Talk(SAY_GIANT_RUNIC_MIGHT);
         }
 
         void JustDied(Unit*) override
@@ -1559,7 +1522,7 @@ public:
         void DoAction(int32 param) override
         {
             if (param == ACTION_IRON_HONOR_DIED)
-                events.RescheduleEvent(EVENT_ARG_SPAWN, 20000);
+                events.RescheduleEvent(EVENT_ARG_SPAWN, 20s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -1574,19 +1537,19 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_ARG_RD:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_RUNE_DETONATION, false);
-                    events.RepeatEvent(12000);
+                    events.Repeat(12s);
                     break;
                 case EVENT_ARG_STOMP:
                     me->CastSpell(me->GetVictim(), SPELL_STOMP, false);
-                    events.RepeatEvent(8000);
+                    events.Repeat(8s);
                     break;
                 case EVENT_ARG_SPAWN:
                     if (Creature* cr = me->SummonCreature(NPC_IRON_HONOR_GUARD, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000))
                         if (Unit* target = SelectTargetFromPlayerList(150.0f))
                             cr->AI()->AttackStart(target);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
             }
 
@@ -1620,32 +1583,32 @@ public:
                 me->CastSpell(me, SPELL_AURA_OF_CELERITY, true);
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             if (me->GetEntry() == NPC_DARK_RUNE_WARBRINGER)
             {
-                events.ScheduleEvent(EVENT_DR_WARBRINGER_RS, 8000);
+                events.ScheduleEvent(EVENT_DR_WARBRINGER_RS, 8s);
             }
             else if (me->GetEntry() == NPC_DARK_RUNE_EVOKER)
             {
-                events.ScheduleEvent(EVENT_DR_EVOKER_RL, 2500);
-                events.ScheduleEvent(EVENT_DR_EVOKER_RM, 4000);
-                events.ScheduleEvent(EVENT_DR_EVOKER_RS, 10000);
+                events.ScheduleEvent(EVENT_DR_EVOKER_RL, 2500ms);
+                events.ScheduleEvent(EVENT_DR_EVOKER_RM, 4s);
+                events.ScheduleEvent(EVENT_DR_EVOKER_RS, 10s);
             }
             else if (me->GetEntry() == NPC_DARK_RUNE_CHAMPION)
             {
-                events.ScheduleEvent(EVENT_DR_CHAMPION_WH, 6000);
-                events.ScheduleEvent(EVENT_DR_CHAMPION_CH, 12000);
-                events.ScheduleEvent(EVENT_DR_CHAMPION_MS, 8000);
+                events.ScheduleEvent(EVENT_DR_CHAMPION_WH, 6s);
+                events.ScheduleEvent(EVENT_DR_CHAMPION_CH, 12s);
+                events.ScheduleEvent(EVENT_DR_CHAMPION_MS, 8s);
             }
             else if (me->GetEntry() == NPC_DARK_RUNE_COMMONER)
             {
-                events.ScheduleEvent(EVENT_DR_COMMONER_LB, 5000);
-                events.ScheduleEvent(EVENT_DR_COMMONER_PM, 6000);
+                events.ScheduleEvent(EVENT_DR_COMMONER_LB, 5s);
+                events.ScheduleEvent(EVENT_DR_COMMONER_PM, 6s);
             }
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return target->GetPositionX() < 2180 && target->GetPositionZ() < 425;
         }
@@ -1693,45 +1656,45 @@ public:
             {
                 case EVENT_DR_WARBRINGER_RS:
                     me->CastSpell(me->GetVictim(), SPELL_RUNIC_STRIKE, false);
-                    events.RepeatEvent(8000);
+                    events.Repeat(8s);
                     break;
                 case EVENT_DR_EVOKER_RL:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_RUNIC_LIGHTNING, false);
-                    events.RepeatEvent(2500);
+                    events.Repeat(2500ms);
                     break;
                 case EVENT_DR_EVOKER_RM:
                     if (Unit* target = DoSelectLowestHpFriendly(40.0f, 15))
                         me->CastSpell(target, SPELL_RUNIC_MENDING, false);
                     else
                         me->CastSpell(me, SPELL_RUNIC_MENDING, false);
-                    events.RepeatEvent(4000);
+                    events.Repeat(4s);
                     break;
                 case EVENT_DR_EVOKER_RS:
                     me->CastSpell(me, SPELL_RUNIC_SHIELD, false);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
                 case EVENT_DR_CHAMPION_CH:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_CHARGE, false);
-                    events.RepeatEvent(12000);
+                    events.Repeat(12s);
                     break;
                 case EVENT_DR_CHAMPION_WH:
-                    if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED))
+                    if (!me->HasUnitFlag(UNIT_FLAG_DISARMED))
                         me->CastSpell(me, SPELL_WHIRLWIND, false);
-                    events.RepeatEvent(6000);
+                    events.Repeat(6s);
                     break;
                 case EVENT_DR_CHAMPION_MS:
                     me->CastSpell(me->GetVictim(), SPELL_MORTAL_STRIKE, false);
-                    events.RepeatEvent(8000);
+                    events.Repeat(8s);
                     break;
                 case EVENT_DR_COMMONER_LB:
                     me->CastSpell(me->GetVictim(), SPELL_LOW_BLOW, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
                 case EVENT_DR_COMMONER_PM:
                     me->CastSpell(me->GetVictim(), SPELL_PUMMEL, false);
-                    events.RepeatEvent(6000);
+                    events.Repeat(6s);
                     break;
             }
 

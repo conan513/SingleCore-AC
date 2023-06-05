@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nexus.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "nexus.h"
 
 enum Spells
 {
@@ -109,17 +109,17 @@ public:
             return 0;
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             Talk(SAY_AGGRO);
 
-            events.ScheduleEvent(EVENT_MAGUS_ICE_NOVA, 10000);
-            events.ScheduleEvent(EVENT_MAGUS_FIREBOMB, 0);
-            events.ScheduleEvent(EVENT_MAGUS_GRAVITY_WELL, 20000);
-            events.ScheduleEvent(EVENT_MAGUS_HEALTH1, 1000);
+            events.ScheduleEvent(EVENT_MAGUS_ICE_NOVA, 10s);
+            events.ScheduleEvent(EVENT_MAGUS_FIREBOMB, 0ms);
+            events.ScheduleEvent(EVENT_MAGUS_GRAVITY_WELL, 20s);
+            events.ScheduleEvent(EVENT_MAGUS_HEALTH1, 1s);
             if (IsHeroic())
-                events.ScheduleEvent(EVENT_MAGUS_HEALTH2, 1000);
+                events.ScheduleEvent(EVENT_MAGUS_HEALTH2, 1s);
         }
 
         void AttackStart(Unit* who) override
@@ -139,7 +139,7 @@ public:
             if (events.GetNextEventTime(EVENT_KILL_TALK) == 0)
             {
                 Talk(SAY_KILL);
-                events.ScheduleEvent(EVENT_KILL_TALK, 6000);
+                events.ScheduleEvent(EVENT_KILL_TALK, 6s);
             }
         }
 
@@ -149,18 +149,18 @@ public:
             summon->SetInCombatWithZone();
         }
 
-        void SpellHit(Unit* caster, const SpellInfo* spellInfo) override
+        void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
             if (spellInfo->Id >= SPELL_FIRE_MAGUS_DEATH && spellInfo->Id <= SPELL_ARCANE_MAGUS_DEATH && caster->ToCreature())
             {
-                events.ScheduleEvent(EVENT_MAGUS_FAIL_ACHIEVEMENT, 5000);
+                events.ScheduleEvent(EVENT_MAGUS_FAIL_ACHIEVEMENT, 5s);
                 caster->ToCreature()->DespawnOrUnsummon(1000);
 
                 if (++copiesDied >= 3)
                 {
                     copiesDied = 0;
                     events.CancelEvent(EVENT_MAGUS_FAIL_ACHIEVEMENT);
-                    events.ScheduleEvent(EVENT_MAGUS_MERGED, 5000);
+                    events.ScheduleEvent(EVENT_MAGUS_MERGED, 5s);
                     me->CastSpell(me, SPELL_BURNING_WINDS, true);
                 }
             }
@@ -181,34 +181,34 @@ public:
                     if (me->HealthBelowPct(51))
                     {
                         me->CastSpell(me, SPELL_START_SUMMON_CLONES, false);
-                        events.ScheduleEvent(EVENT_MAGUS_RELOCATE, 3500);
+                        events.ScheduleEvent(EVENT_MAGUS_RELOCATE, 3500ms);
                         Talk(SAY_SPLIT);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_MAGUS_HEALTH1, 1000);
+                    events.ScheduleEvent(EVENT_MAGUS_HEALTH1, 1s);
                     break;
                 case EVENT_MAGUS_HEALTH2:
                     if (me->HealthBelowPct(11))
                     {
                         me->CastSpell(me, SPELL_START_SUMMON_CLONES, false);
-                        events.ScheduleEvent(EVENT_MAGUS_RELOCATE, 3500);
+                        events.ScheduleEvent(EVENT_MAGUS_RELOCATE, 3500ms);
                         Talk(SAY_SPLIT);
                         break;
                     }
-                    events.ScheduleEvent(EVENT_MAGUS_HEALTH2, 1000);
+                    events.ScheduleEvent(EVENT_MAGUS_HEALTH2, 1s);
                     break;
                 case EVENT_MAGUS_FIREBOMB:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                         me->CastSpell(target, SPELL_FIREBOMB, false);
-                    events.ScheduleEvent(EVENT_MAGUS_FIREBOMB, 3000);
+                    events.ScheduleEvent(EVENT_MAGUS_FIREBOMB, 3s);
                     break;
                 case EVENT_MAGUS_ICE_NOVA:
                     me->CastSpell(me, SPELL_ICE_NOVA, false);
-                    events.ScheduleEvent(EVENT_MAGUS_ICE_NOVA, 15000);
+                    events.ScheduleEvent(EVENT_MAGUS_ICE_NOVA, 15s);
                     break;
                 case EVENT_MAGUS_GRAVITY_WELL:
                     me->CastSpell(me, SPELL_GRAVITY_WELL, false);
-                    events.ScheduleEvent(EVENT_MAGUS_GRAVITY_WELL, 15000);
+                    events.ScheduleEvent(EVENT_MAGUS_GRAVITY_WELL, 15s);
                     break;
                 case EVENT_MAGUS_FAIL_ACHIEVEMENT:
                     achievement = false;
@@ -248,14 +248,14 @@ public:
             GetUnitOwner()->CastSpell(GetUnitOwner(), SPELL_FROST_MAGUS_SUMMON, true);
             GetUnitOwner()->CastSpell(GetUnitOwner(), SPELL_ARCANE_MAGUS_SUMMON, true);
 
-            GetUnitOwner()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            GetUnitOwner()->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             GetUnitOwner()->SetControlled(true, UNIT_STATE_STUNNED);
             GetUnitOwner()->ToCreature()->LoadEquipment(0, true);
         }
 
         void HandleRemove(AuraEffect const*  /*aurEff*/, AuraEffectHandleModes /*mode*/)
         {
-            GetUnitOwner()->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            GetUnitOwner()->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             GetUnitOwner()->SetControlled(false, UNIT_STATE_STUNNED);
             GetUnitOwner()->ToCreature()->LoadEquipment(1, true);
         }

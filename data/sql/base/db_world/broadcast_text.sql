@@ -1,41 +1,42 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.broadcast_text
+-- Dumping structure for table acore_world.broadcast_text
 DROP TABLE IF EXISTS `broadcast_text`;
 CREATE TABLE IF NOT EXISTS `broadcast_text` (
-  `ID` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `Language` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `MaleText` longtext DEFAULT NULL,
-  `FemaleText` longtext DEFAULT NULL,
-  `EmoteID0` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `EmoteID1` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `EmoteID2` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `EmoteDelay0` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `EmoteDelay1` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `EmoteDelay2` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `SoundId` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `Unk1` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `Unk2` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `VerifiedBuild` SMALLINT DEFAULT 0,
+  `ID` int unsigned NOT NULL DEFAULT '0',
+  `LanguageID` int DEFAULT NULL,
+  `MaleText` longtext COLLATE utf8mb4_unicode_ci,
+  `FemaleText` longtext COLLATE utf8mb4_unicode_ci,
+  `EmoteID1` int DEFAULT NULL,
+  `EmoteID2` int DEFAULT NULL,
+  `EmoteID3` int DEFAULT NULL,
+  `EmoteDelay1` int DEFAULT NULL,
+  `EmoteDelay2` int DEFAULT NULL,
+  `EmoteDelay3` int DEFAULT NULL,
+  `SoundEntriesId` int DEFAULT NULL,
+  `EmotesID` int DEFAULT NULL,
+  `Flags` int DEFAULT NULL,
+  `VerifiedBuild` smallint DEFAULT '0',
   PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Дамп данных таблицы _acore_world.broadcast_text: 73 054 rows
+-- Dumping data for table acore_world.broadcast_text: ~72,874 rows (approximately)
 DELETE FROM `broadcast_text`;
-/*!40000 ALTER TABLE `broadcast_text` DISABLE KEYS */;
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(1, 0, 'Help help!  I\'m being repressed!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
 	(3, 0, 'Company.. HALT!  ... Fall IN!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(4, 0, 'Forward.. MARCH!!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -96,7 +97,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(68, 7, 'The Council of Duskwood must take action.  Evil lingers in the air.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(69, 7, 'The people of Darkshire expect more from the Council.  We cannot let them suffer from this unholy wrath which plagues us.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(70, 7, 'Constant bickering will get us nowhere.  We need to take action.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(71, 7, 'The news from Stormwind does not bode well....', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(71, 7, 'The news from Stormwind does not bode well. . . .', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(72, 7, 'Our cause falls on deaf ears beyond the thick, stone walls of Stormwind.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(73, 7, '', 'I sense evil brewing. . . .', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(74, 7, '', 'The stars speak to me.  They whisper of the horrors waiting in the night.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -588,10 +589,12 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(596, 1, 'Search this rubble.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(597, 1, 'Find me something good, you dogs!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(598, 1, 'Over here! Inside the room. Did you find the key to my chains? The human Borhuin has them.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(602, 0, 'I returned from the grave to take my revenge!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
-	(601, 0, 'Southshore shall pay in blood!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
-	(600, 0, 'I have risen!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
-	(599, 0, 'Revenge shall be mine at last!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
+	(599, 0, 'I returned from the grave to take my revenge!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(600, 0, 'Die in the name of the Dark Lady, $n.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(601, 0, 'The undead shall feast on your soul, $n.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(602, 0, 'I have risen!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(603, 0, 'Revenge shall be mine at last!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(604, 0, 'Southshore shall pay in blood!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(605, 7, 'Mmm... I love my delicious Southshore stout.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(606, 7, 'Southshore stout, how do I love thee? Let me count the ways...', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(608, 7, 'Protect Foreman Bonds at all costs!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -1355,7 +1358,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(1398, 7, 'Spirits of the forest come forth and heed nature\'s call!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(1399, 7, '', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(1400, 7, 'Spirits of the forest, you are needed! Make haste to the Charred Vale!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(1401, 0, '%s is not impressed.', '%s is not impressed.', 11, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(1401, 0, '%s is not impressed.', '%s is not impressed.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(1402, 0, 'You\'re pushing it, $n.', 'You\'re pushing it, $n.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(1403, 0, 'Don\'t make me go medieval on you.', 'Don\'t make me go medieval on you.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(1404, 0, 'Keep it up, $n, and I\'ll beat some manners into you.', 'Keep it up, $n, and I\'ll beat some manners into you.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -3816,7 +3819,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(5137, 0, 'Durtham Greldon over in The Forlorn Cavern can teach ye the in\'s and out\'s of lockpicking.  Just don\'t be practicing any of those in\'s or out\'s here in Ironforge, if ye understand my meaning.', 'Durtham Greldon over in The Forlorn Cavern can teach ye the in\'s and out\'s of lockpicking.  Just don\'t be practicing any of those in\'s or out\'s here in Ironforge, if ye understand my meaning.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(5138, 0, 'Mining', 'Mining', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(5139, 0, 'Do we have Mining trainers here?  Where do ye think ye are!?  \nWhy you\'ll find one o\' the best miners in all Dun Morogh at Deepmountain Mining and Jewelcrafting on the northern side of The Great Forge.  There, Geofram Bouldertoe will show ye the true art of mining.', 'Do we have Mining trainers here?  Where do ye think ye are!?  \nWhy you\'ll find one o\' the best miners in all Dun Morogh at Deepmountain Mining and Jewelcrafting on the northern side of The Great Forge.  There, Geofram Bouldertoe will show ye the true art of mining.', 5, 1, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(603, 0, 'The undead shall feast on your soul, $n.', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
+	(5140, 0, 'Skinning', 'Skinning', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(5141, 0, 'Balthus Stoneflayer is the one to see about Skinning.  If it can be skinned, he can teach ye how.  Just walk yerself over to Finespindle\'s Leather Goods on the northern side of The Great Forge.', 'Balthus Stoneflayer is the one to see about Skinning.  If it can be skinned, he can teach ye how.  Just walk yerself over to Finespindle\'s Leather Goods on the northern side of The Great Forge.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(5142, 0, 'Survival', 'Survival', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(5143, 0, 'Tresa Farmountain has seen her share of bad weather, but with her knowledge of Survival skills she\'s come through with her spirits high.  \nShe\'s over in The Military Ward south of the gates of Ironforge if you wish to speak with her.', 'Tresa Farmountain has seen her share of bad weather, but with her knowledge of Survival skills she\'s come through with her spirits high.  \nShe\'s over in The Military Ward south of the gates of Ironforge if you wish to speak with her.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -5778,9 +5781,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(7156, 7, 'I trust the Light is with you, $n. Is there something that I can I help you with?', 'I trust the Light is with you, $n. Is there something that I can I help you with?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(7157, 0, 'I seek more training in the priestly ways.', 'I seek more training in the priestly ways.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(7158, 7, 'The Light protect you, $c.', 'The Light protect you, $c.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(7159, 7, 'I hope the Light is with you, $n. Is there anything I can do for you today?', 'I hope the Light is with you, $n. Is there anything I can do for you today?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(7160, 0, 'I seek more training in the priestly ways.', 'I seek more training in the priestly ways.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+	(7159, 7, 'I hope the Light is with you, $n. Is there anything I can do for you today?', 'I hope the Light is with you, $n. Is there anything I can do for you today?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
+	(7160, 0, 'I seek more training in the priestly ways.', 'I seek more training in the priestly ways.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(7161, 1, 'You be watchin\' yerself, $c. Respect our ways, or a curse be on you and yours.', 'You be watchin\' yerself, $c. Respect our ways, or a curse be on you and yours.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(7162, 1, 'I do what me can to train you in the priestly ways, if that what you be here for.', 'I do what me can to train you in the priestly ways, if that what you be here for.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(7163, 1, 'Yes, $c?', 'Yes, $c?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -10821,7 +10824,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(12291, 0, 'What staff?', 'What staff?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(12292, 0, 'Atiesh, Greatstaff of the Guardian. The staff handed down through the ages to each of the Guardians of Tirisfal. The staff corrupted by Sargeras. The staff of the last Guardian. The staff of Medivh.\n', '', 1, 1, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(12293, 0, 'You said you would have it back. What does that mean?', 'You said you would have it back. What does that mean?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(12294, 0, '<Tarsis\'s eyes light up.>$B$BI held it once... I held it despite the warnings of the Kirin Tor. I held it, mortal... Power unending. Power to do what I desired, as I desired. And just as quickly, it was taken from me. But I had tasted... And that taste was all that it took.  ', '', 1, 1, 273, 0, 0, 0, 0, 0, 1, 18019),
 	(12295, 0, '%s gets to one knee.', '%s gets to one knee.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(12296, 0, '%s sits down.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -17236,7 +17239,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(18954, 0, 'I\'m through asking nicely, fish-man.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(18955, 0, 'Where is the Cipher of Damnation? I know a third of it is in this village.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(18956, 0, 'Whhaaat... are you sssspeaking of, ssssoft-sskin?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(18957, 0, 'The naga do nottt... have thissss... cipherrr...', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(18958, 0, 'No... Of course not. What was I thinking? Why would you have a third of the Cipher of Damnation?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(18959, 0, 'I feel so stupid. Maybe I should unchain you and set you free?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -23205,7 +23208,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(24990, 7, 'I feel funny. I don\'t think you reintegrated me right....', 'I feel funny. I don\'t think you reintegrated me right....', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(24991, 7, 'The commander needs to be told: Mechazod\'s planning an attack! We\'re doomed!', 'The commander needs to be told: Mechazod\'s planning an attack! We\'re doomed!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(24992, 1, '', 'How positively awful! You were totally incapacitated? Weak? Hot flashes?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(24993, 0, 'Madrigosa deserved a far better fate. You did what had to be done, but this battle is far from over!', '', 0, 0, 0, 0, 0, 0, 12439, 0, 1, 18019),
+	(24993, 0, 'There is no time to waste!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(24994, 0, 'And remember, $n, the bloodspore powder can be used to weaken all magnataur in Gammoth.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(24995, 0, '', 'I thank you, friend of Dalaran.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(24996, 0, '', 'We mustn\'t tarry here... stay close - I\'ll take us somewhere safe.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -23472,7 +23475,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(25258, 0, '5,000 Gold', '5,000 Gold', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25259, 0, 'I can stable your pets and maximize their loyalty.', 'I can stable your pets and maximize their loyalty.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25260, 0, 'Pet Loyalty', 'Pet Loyalty', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(25261, 0, '%s takes a deep breath...', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(25261, 0, 'Madrigosa deserved a far better fate. You did what had to be done, but this battle is far from over!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25262, 0, 'Stable', 'Stable', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25263, 0, 'I am forever in your debt. Once we have triumphed over Kil\'jaeden, this entire world will be in your debt as well.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25264, 0, '', 'Arthas was once a human prince.  The army he led into Northrend suffered a horrible fate.$B$BMy brother, Thassarian, was a part of that army.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -23803,9 +23806,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(25592, 7, 'And not a very good one! Remember what you did to my tabard?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25593, 1, '', 'I am your tauren sister, taunka. Our blood is the same, and because of this no harm will come to you now. You are safe.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25594, 1, '', 'Garrosh will soon be sending his most capable soldiers. It is they who will guide you into the open and waiting arms of the Horde.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(25595, 1, '', 'You will soon be behind the impenetrable walls of Agmar\'s Hammer, taunka.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(25596, 1, '', 'Salvation comes to those whose cause is righteous and true. Join us and you will be saved.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+	(25595, 1, '', 'You will soon be behind the impenetrable walls of Agmar\'s Hammer, taunka.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
+	(25596, 1, '', 'Salvation comes to those whose cause is righteous and true. Join us and you will be saved.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25597, 7, 'That was entirely your own fault, Molsen. Maybe you\'ll know to separate your colors from now on...', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25598, 7, 'The tabard was pink when I got it back, Buckets. Pink! Think about that...', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(25599, 7, 'The whole squad laughed at me for a week! Don\'t let it happen again!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -25139,7 +25142,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(26947, 1, 'S.T.O.U.T. is more than just a target for throwing steins, it\'s a valuable training asset.  If you can hit S.T.O.U.T. you can probably hit anything!$b$bJust try not to hit me.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(26948, 0, 'I want to fly on the wings of the green flight.', 'I want to fly on the wings of the green flight.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(26949, 0, '', 'Belgaristrasz speaks the truth; the situation is grave indeed.  \nI can grant you the power to call upon a drake from the green flight.  Speak to Belgaristrasz or Eternos if you prefer to draw on the power of the red or the bronze.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(26950, 0, 'Varos Cloudstrider and his ring guardians protect the second ring.  Your drakes are more than a match for the ring guardians, but Varos stands behind an impenetrable shield created from the energy of the Oculus itself.  Ten centrifuge constructs power the shield from the ring and platforms above.  Destroy them and Varos will be vulnerable.$B$BI can grant you the power to call upon a drake from the red flight.  Speak to Eternos or Verdisa if you prefer to draw on the power of the bronze or the green.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(26950, 0, 'Varos Cloudstrider and his ring guardians protect the second ring.  Your drakes are more than a match for the ring guardians, but Varos stands behind an impenetrable shield created from the energy of the Oculus itself.  Ten centrifuge constructs power the shield from the ring and platforms above.  Destroy them and Varos will be vulnerable.\nI can grant you the power to call upon a drake from the red flight.  Speak to Eternos or Verdisa if you prefer to draw on the power of the bronze or the green.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(26951, 0, 'I want to fly on the wings of the red flight.', 'I want to fly on the wings of the red flight.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(26952, 0, 'Belgaristrasz speaks the truth; time is running out!\nI can grant you the power to call upon a drake from the bronze flight.  Speak to Belgaristrasz or Verdisa if you prefer to draw on the power of the red or the green.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(26953, 0, 'I want to fly on the wings of the bronze flight.', 'I want to fly on the wings of the bronze flight.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -29949,7 +29952,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(31840, 0, '', 'Please, it\'s not my fault! If... if I give you a refund, maybe you can speak to a healer? I don\'t know what you expect me to do!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(31841, 0, 'Simpletons! You cannot comprehend the forces you have set in motion. The ley line conduit will not be disrupted! Your defeat shall be absolute!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(31842, 0, 'That... no, keep your filthy money! It won\'t help my family!', 'That... no, keep your filthy money! It won\'t help my family!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(31843, 0, '$n prepares a Great Feast!', '$n prepares a Great Feast!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(31843, 0, '%s prepares a Great Feast!', '%s prepares a Great Feast!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(31844, 0, '$n prepares a Fish Feast!', '$n prepares a Fish Feast!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(31845, 0, '$n prepares a Small Feast!', '$n prepares a Small Feast!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(31846, 0, '$n prepares a Gigantic Feast!', '$n prepares a Gigantic Feast!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -30747,9 +30750,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(32650, 0, 'You\'ll find what you are looking for at One More Glass in northern Dalaran.', 'You\'ll find what you are looking for at One More Glass in northern Dalaran.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(32651, 0, 'The Militant Mystic in southern Dalaran should have what you desire.', 'The Militant Mystic in southern Dalaran should have what you desire.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(32652, 0, 'The Hunter\'s Reach in eastern Dalaran sells guns, bows, ammunition and the like.', 'The Hunter\'s Reach in eastern Dalaran sells guns, bows, ammunition and the like.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(32653, 0, 'The Arsenal Absolute in southeast Dalaran carries all manner of melee weapons.', 'The Arsenal Absolute in southeast Dalaran carries all manner of melee weapons.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(32654, 0, 'If I am ever freed of these chains, I will return one day and slay you myself.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+	(32653, 0, 'The Arsenal Absolute in southeast Dalaran carries all manner of melee weapons.', 'The Arsenal Absolute in southeast Dalaran carries all manner of melee weapons.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
+	(32654, 0, 'If I am ever freed of these chains, I will return one day and slay you myself.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(32655, 0, 'This will be nothing when compared to the satisfaction I will feel when I crush your skull beneath my heel.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(32656, 0, 'Jepetto Joybuzz\'s Wonderworks in western Dalaran carries such items.', 'Jepetto Joybuzz\' Wonderworks in western Dalaran carries such items.', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(32657, 8, 'I\'d sooner serve the Dark Lord Alexander than be your pitiful pet.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -32337,23 +32340,23 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(34265, 0, 'This tournament is helping to form a strong, concerted force, though it may not appear obvious. When we\'re ready, the eyes of the Crusade and all its champions will turn toward Icecrown.', 'This tournament is helping to form a strong, concerted force, though it may not appear obvious. When we\'re ready, the eyes of the Crusade and all its champions will turn toward Icecrown.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34266, 0, 'We will bring the might of all races to the Lich King, and he will be defeated.', 'We will bring the might of all races to the Lich King, and he will be defeated.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34267, 0, 'I know this does not seem like the obvious path to you, but it will bring you closer to the Light. Fight well, brother.', 'I know this does not seem like the obvious path to you, but it will bring you closer to the Light. Fight well, brother.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34268, 0, 'Self-destruct sequence initiated.', 'Self-destruct sequence initiated.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34268, 0, '', 'Self-destruct sequence initiated.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34269, 0, 'This isn\'t honorable combat. I long to face my opponents in battle with my axe in hand!', 'This isn\'t honorable combat. I long to face my opponents in battle with my axe in hand!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34270, 0, 'These are my enemies. YOU would be my enemy in battle! Your king has declared war on my kind!', 'These are my enemies. YOU would be my enemy in battle! Your king has declared war on my kind!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34271, 0, 'But instead of fighting as my people would, as my people should, I find myself with a long, unwieldy pole, attempting to coax my wolf into charging my opponent without attacking.', 'But instead of fighting as my people would, as my people should, I find myself with a long, unwieldy pole, attempting to coax my wolf into charging my opponent without attacking.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34272, 0, 'This is not how orcs fight! My duty to the Warchief wars with my personal honor. I hold no faith in your Light, but as you seem an advisor, I would hear your words.', 'This is not how orcs fight! My duty to the Warchief wars with my personal honor. I hold no faith in your Light, but as you seem an advisor, I would hear your words.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34273, 0, 'This area will self-destruct in six minutes.', 'This area will self-destruct in six minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34274, 0, 'This area will self-destruct in five minutes.', 'This area will self-destruct in five minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34275, 0, 'This area will self-destruct in four minutes.', 'This area will self-destruct in four minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34276, 0, 'This area will self-destruct in three minutes.', 'This area will self-destruct in three minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34277, 0, 'This area will self-destruct in two minutes.', 'This area will self-destruct in two minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34278, 0, 'This area will self-destruct in one minute.', 'This area will self-destruct in one minute.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34279, 0, 'Self-destruct sequence finalized. Have a nice day!', 'Self-destruct sequence finalized. Have a nice day!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34280, 0, 'This area will self-destruct in seven minutes.', 'This area will self-destruct in seven minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34281, 0, 'This area will self-destruct in eight minutes.', 'This area will self-destruct in eight minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34282, 0, 'This area will self-destruct in nine minutes.', 'This area will self-destruct in nine minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34283, 0, 'This area will self-destruct in ten minutes.', 'This area will self-destruct in ten minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(34284, 0, 'Self-destruct sequence terminated. Override code A-9-0-5.', 'Self-destruct sequence terminated. Override code A-9-0-5.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34273, 0, '', 'This area will self-destruct in six minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34274, 0, '', 'This area will self-destruct in five minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34275, 0, '', 'This area will self-destruct in four minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34276, 0, '', 'This area will self-destruct in three minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34277, 0, '', 'This area will self-destruct in two minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34278, 0, '', 'This area will self-destruct in one minute.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34279, 0, '', 'Self-destruct sequence finalized. Have a nice day!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34280, 0, '', 'This area will self-destruct in seven minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34281, 0, '', 'This area will self-destruct in eight minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34282, 0, '', 'This area will self-destruct in nine minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34283, 0, '', 'This area will self-destruct in ten minutes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(34284, 0, '', 'Self-destruct sequence terminated. Override code A-9-0-5.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34285, 0, 'I understand your frustration. Your people are ferocious in battle, and this isn\'t what you\'re used to.', 'I understand your frustration. Your people are ferocious in battle, and this isn\'t what you\'re used to.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34286, 0, 'But this is a different sort of honorable combat. Difficult to adapt to, perhaps, but with your prowess I\'m sure you\'ll show everyone the strength in your people.', 'But this is a different sort of honorable combat. Difficult to adapt to, perhaps, but with your prowess I\'m sure you\'ll show everyone the strength in your people.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(34287, 0, 'Besides... while an axe can be a valuable tool in war, lances have their uses as well.', 'Besides... while an axe can be a valuable tool in war, lances have their uses as well.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -34761,7 +34764,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(36818, 0, 'To your health, windbag.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36819, 0, 'And to yours, brat.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36820, 0, '', 'Pirates are NOT in my contract!', 5, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(36821, 0, '', 'He is too powerful, we must leave this place at once! My magic will hold him in place for only a short time! Come quickly, heroes!', 0, 0, 0, 0, 0, 0, 16644, 1, 1, 18019),
+	(36821, 0, '', 'He is too powerful. We must leave this place at once! My magic can hold him in place for only a short time. Come quickly, heroes!', 0, 0, 0, 0, 0, 0, 16644, 1, 1, 18019),
 	(36822, 0, 'What is your business here, $c?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36823, 0, 'At last, you\'re here. We have to get this tome to Icecrown as quickly as we can.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36824, 0, 'I\'m ready to deliver the tome, Magister Hathorel.', 'I\'m ready to deliver the tome, Magister Hathorel.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -34862,7 +34865,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(36920, 0, 'My companions are all accounted for, Muradin. Let\'s go!', 'My companions are all accounted for, Muradin. Let\'s go!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36921, 0, 'Master, I have failed...', '', 1, 0, 0, 3, 0, 0, 16922, 0, 1, 18019),
 	(36922, 0, 'Found!', 'Found!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(36923, 0, 'This is our final stand. What happens here will echo through the ages. Regardless of outcome, they will know that we fought with honor. That we fought for the freedom and safety of our people!', '', 1, 1, 5, 0, 0, 0, 0, 0, 1, 18019),
+	(36923, 0, 'This is our final stand. What happens here will echo through the ages. Regardless of outcome, they will know that we fought with honor. That we fought for the freedom and safety of our people.$B$BRemember, hero, fear is your greatest enemy in these befouled halls. Steel your heart and your soul will shine brighter than a thousand suns. The enemy will falter at the sight of you. They will fall as the light of righteousness envelops them!', '', 1, 1, 5, 0, 0, 0, 0, 0, 1, 18019),
 	(36924, 0, '$G Sir.:Ma\'am.;', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36925, 0, 'Dismissed!', 'Dismissed!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(36926, 0, '<Make a series of complicated hand gestures.>', '<Make a series of complicated hand gestures.>', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -35102,11 +35105,11 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(37165, 0, 'Champions! I cannot hold her back any longer.', '', 0, 0, 0, 0, 0, 0, 16827, 0, 1, 18019),
 	(37166, 0, 'I would like to receive training.', 'I would like to receive training.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(37167, 0, 'I shall kill you myself!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(37168, 0, '', 'He\'s... too powerful. Heroes, quickly... come to me! We must leave this place at once! I will do what I can do hold him in place while we flee.', 0, 0, 0, 0, 0, 0, 17028, 0, 1, 18019),
+	(37168, 0, '', 'He\'s... too powerful. Heroes, quickly... come to me! We must leave this place at once! I will do what I can to hold him in place while we flee.', 0, 0, 0, 0, 0, 0, 17028, 0, 1, 18019),
 	(37169, 0, '', 'I cannot hold him for long, we must leave at once!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(37170, 0, '', 'BLASTED DEAD END! So this is how it ends. Prepare yourselves, heroes, for today we make our final stand!', 1, 0, 0, 0, 0, 0, 17061, 5, 1, 18019),
 	(37171, 0, '', 'We are safe... for now. His strength has increased tenfold since our last battle. It will take a mighty army to destroy the Lich King. An army greater than even the Horde can rouse.', 1, 0, 0, 0, 0, 0, 17062, 1, 1, 18019),
-	(37172, 0, 'Your allies have arrived Jaina, just as you promised. You will all become powerful agents of the Scourge.', '', 1, 0, 0, 0, 0, 0, 17212, 0, 1, 18019),
+	(37172, 0, 'Your allies have arrived, Jaina, just as you promised. You will all become powerful agents of the Scourge.', '', 1, 0, 0, 0, 0, 0, 17212, 0, 1, 18019),
 	(37173, 0, 'I will not make the same mistake again, Sylvanas. This time there will be no escape. You will all serve me in death!', '', 1, 0, 0, 0, 0, 0, 17213, 0, 1, 18019),
 	(37174, 0, 'Death\'s cold embrace awaits.', '', 1, 0, 0, 0, 0, 0, 17221, 0, 1, 18019),
 	(37175, 0, 'Succumb to the chill of the grave.', '', 1, 0, 0, 0, 0, 0, 17218, 0, 1, 18019),
@@ -37375,9 +37378,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(39475, 0, '', 'Be brave, heroes.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(39476, 0, 'Tiragarde belongs to Northwatch now!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(39477, 0, '$n, you have to hunt down the Trade Prince!', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(39478, 0, 'If Fizz hadn\'t been so clumsy, we never would have been caught!', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
-	(39479, 0, 'If Evol hadn\'t been so clumsy, we never would have been caught!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(39478, 0, 'If Fizz hadn\'t been so clumsy, we never would have been caught!', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(39479, 0, 'If Evol hadn\'t been so clumsy, we never would have been caught!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(39480, 0, '', 'The Twilight\'s Hammer is a major power to be reckoned with.  Thanks to us, Deathwing is free.  Thanks to us, Old Gods have risen from the bowels of the earth.  Thanks to us... Hyjal burns.$B$BWhat do you think you have to offer us?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(39481, 0, 'The path before us has been revealed. Let us return.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(39482, 0, 'You\'re the one, $n. You must defeat the Trade Prince or all is lost.', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -44372,7 +44375,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(46709, 0, 'Mining\'s all you dwarves are good for!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(46710, 0, 'A Son of Kor has arrived to assist you, but watch out for his boulders!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(46711, 0, '|TInterface\\Icons\\spell_fire_twilightflamebreath.blp:20|t%s begins to cast |cFFFF0000|Hspell:86840|h[Devouring Flames]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(46712, 0, '|TInterface\\Icons\\spell_fire_twilightfire.blp:20|t%s takes a |cFFFF0000|Hspell:86059|h[Deep Breath]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(46713, 0, '|TInterface\\Icons\\spell_holy_consumemagic.blp:20|t%s begins to cast |cFF00EEFF|Hspell:86622|h[Engulfing Magic]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(46714, 0, '|TInterface\\Icons\\spell_fire_twilightpyroblast.blp:20|t%s begins to cast |cFF00EEFF|Hspell:86408|h[Dazzling Destruction]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -51210,7 +51213,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(53777, 0, 'Keep telling your story, Sully.', 'Keep telling your story, Sully.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(53783, 0, 'The features of this jade statue are incredibly lifelike.  The expression on the face is one locked in horror.$b$BIt does not resemble Shin however.', 'The features of this jade statue are incredibly lifelike.  The expression on the face is one locked in horror.$b$BIt does not resemble Shin however.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(53784, 0, 'Examine the statue', 'Examine the statue', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(53786, 0, '', 'Stop!  You will NOT turn my friends into stupid statues!', 0, 0, 0, 0, 0, 0, 0, 22, 1, 18019),
 	(53787, 0, '|TInterface\\Icons\\ability_shaman_cleansespirit.blp:16|tThrall casts |cFF00FFFF|Hspell:103550|h[Cleanse Spirit]|h|r on you!', '', 396, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(53788, 0, 'I\'m glad that these "SI:7" people decided to take me with.$b$bWe do not leave the comforts of our lake very often at all. This was the farthest I\'ve ever been from home.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -57530,7 +57533,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(60337, 0, 'We will save him, Suna. I promise.', '', 0, 0, 0, 0, 0, 0, 30596, 0, 1, 18019),
 	(60338, 0, 'And the greatest losses.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(60339, 0, 'You throw caution to the wind.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(60340, 0, 'What happened to Lin� it was no one�s fault.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(60340, 0, 'What happened to Linï¿½ it was no oneï¿½s fault.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(60341, 0, 'He is gone. We must all move on.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(60342, 0, 'I\'m heading to the wound. Try to keep these beasts off of me.', 'I\'m heading to the wound. Try to keep these beasts off of me.', 0, 0, 0, 0, 0, 0, 0, 396, 1, 18019),
 	(60343, 0, 'You\'re a life-saver. I\'ll do everything I can to heal the wound.', 'You\'re a life-saver. I\'ll do everything I can to heal the wound.', 0, 0, 0, 0, 0, 0, 0, 396, 1, 18019),
@@ -58686,7 +58689,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(61500, 0, '', 'Crush these invaders, and hurl them from the wall!', 0, 0, 0, 0, 0, 0, 31307, 0, 1, 18019),
 	(61501, 0, '', 'We could use a $c. Glad to see my husband sent you along.\nI\'m a scout, not much for face-to-face combat. And Lao-chen here... well, normally he\'s a fighter, but he\'s still exhausted from the last battle.\nAnd, he\'s too busy cooking up some scheme.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(61502, 0, 'Alright, I\'m ready to get back to the front.', 'Alright, I\'m ready to get back to the front.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(61503, 0, 'Two parts oil to one part brew... no, it will need more oil...', '', 0, 0, 0, 0, 0, 0, 29779, 0, 1, 18019),
 	(61504, 0, '', 'You ready?', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(61505, 0, 'The temple will fall! You cannot stop my forces!', '', 0, 0, 0, 0, 0, 0, 30277, 0, 1, 18019),
@@ -62675,7 +62678,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(65537, 0, '|TInterface\\Icons\\inv_elemental_primal_air.blp:20|tMing the Cunning summons a |cFFFF0000|Hspell:119981|h[Whirling Dervish]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 15, 1, 18019),
 	(65538, 0, '|TInterface\\Icons\\spell_druid_ursolsvortex.blp:20|tMing the Cunning creates a |cFFFF0000|Hspell:120099|h[Magnetic Field]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 15, 1, 18019),
 	(65539, 0, '|TInterface\\Icons\\ability_warrior_savageblow.blp:20|tHaiyan the Unstoppable strikes |cFFFF0000$n|r with a |cFFFF0000|Hspell:123655|h[Traumatic Blow]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 15, 1, 18019),
-	(65540, 0, 'We are all here. This is a historic moment, $n. My dying wife envisioned a city of light beyond these gates� What do you think we will find?', '', 6, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(65540, 0, 'We are all here. This is a historic moment, $n. My dying wife envisioned a city of light beyond these gatesï¿½ What do you think we will find?', '', 6, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65541, 0, 'Haiyan the Unstoppable struck you with a |cFFFF0000|Hspell:123655|h[Traumatic Blow]|h|r! Healing abilities used on you will be less efficient while the effect persists!', '', 0, 0, 0, 0, 0, 0, 0, 15, 1, 18019),
 	(65542, 0, 'There\'s only one way to find out...', 'There\'s only one way to find out...', 5, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65543, 0, '|TInterface\\Icons\\spell_fire_meteorstorm.blp:20|tHaiyan the Unstoppable targets |cFFFF0000$n|r with a |cFFFF0000|Hspell:120195|h[Meteor]|h|r!', '', 0, 0, 0, 0, 0, 0, 0, 15, 1, 18019),
@@ -62937,7 +62940,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(65800, 0, '', 'That\'s NOT going to happen.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65801, 0, '', 'Destroy them!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65802, 0, '', 'They are falling! Don\'t stop now!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(65803, 0, '', 'Good work! You�re quite a fighter.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
+	(65803, 0, '', 'Good work! Youï¿½re quite a fighter.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65804, 0, '', 'I love the feeling after a good fight.', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65805, 0, '', 'Let\'s celebrate!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(65806, 0, 'Keep them back!  They will not delve into our secrets!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
@@ -65861,7 +65864,7 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(68777, 0, '', 'Come, try again!', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(68779, 0, '<The blade hovers in the air in front of you.>', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(68780, 0, 'You a hunter? I can fix up your beast-beasts quick!', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(68781, 0, 'You have pets that need watching? I promise I will consider not eat them.', '', 1, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(68783, 0, 'Yo boss, how\'s it goin\'?', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(68784, 0, 'Dis only just begun... we ain\'t gonna jes... roll over and die...', '', 0, 0, 0, 0, 0, 0, 31486, 0, 1, 18019),
@@ -73065,9 +73068,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(77349, 0, 'Thank you, hero. You and your companions were the tip of the Alliance spear: Your work exploring Pandaria, securing the Vale, and ultimately assaulting Garrosh\'s stronghold is what made this victory possible.$b$bOur triumph here will put a stop to the fighting in Kalimdor, but even in peace, there\'s much to be done - here, back home, and elsewhere.', '', 1, 274, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77350, 0, 'What\'s next for the Alliance?', 'What\'s next for the Alliance?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77351, 0, 'Why not keep fighting?', 'Why not keep fighting?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 18019),
-	(77352, 0, 'We are unified like never before. We\'ve bought our people security in Kalimdor, an end to the blockade, and an end to the total war that\'s spilt so much blood on either side of the great sea.$b$bNow, to the work of winning the peace. I would like to station a garrison near Theramore. We need to investigate cleansing the plague from Gilnean lands so they can rebuild. We must contain Sylvanas.$b$bFrom here on forward, the Alliance will be proactive. Never again can there be another the likes of Hellscream.', '', 1, 25, 0, 0, 0, 0, 0, 0, 0, 18019),
-	(77353, 0, 'I understand your desire to inflict more suffering on the Horde. But when do we stop? How many more Alliance will number among the dead if we invaded Thunder Bluff, Azshara, and the Echo Isles? And how would we govern the conquered people?$b$bThe Pandaren always question why we fight. Today, we\'ve won justice, and have given the Horde an opportunity to atone by supporting their rebellion. Further bloodshed would be for vengeance alone - and it would reap vengeance in return.', '', 1, 274, 0, 0, 0, 0, 0, 0, 0, 18019);
-INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `EmoteID0`, `EmoteID1`, `EmoteID2`, `EmoteDelay0`, `EmoteDelay1`, `EmoteDelay2`, `SoundId`, `Unk1`, `Unk2`, `VerifiedBuild`) VALUES
+	(77352, 0, 'We are unified like never before. We\'ve bought our people security in Kalimdor, an end to the blockade, and an end to the total war that\'s spilt so much blood on either side of the great sea.$b$bNow, to the work of winning the peace. I would like to station a garrison near Theramore. We need to investigate cleansing the plague from Gilnean lands so they can rebuild. We must contain Sylvanas.$b$bFrom here on forward, the Alliance will be proactive. Never again can there be another the likes of Hellscream.', '', 1, 25, 0, 0, 0, 0, 0, 0, 0, 18019);
+INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
+	(77353, 0, 'I understand your desire to inflict more suffering on the Horde. But when do we stop? How many more Alliance will number among the dead if we invaded Thunder Bluff, Azshara, and the Echo Isles? And how would we govern the conquered people?$b$bThe Pandaren always question why we fight. Today, we\'ve won justice, and have given the Horde an opportunity to atone by supporting their rebellion. Further bloodshed would be for vengeance alone - and it would reap vengeance in return.', '', 1, 274, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77354, 0, '', 'King Wrynn will rue the day he allowed the Horde to name another Warchief.$b$bWe should\'ve kept fighting. Who\'s to say this new Warchief won\'t get any ideas in his troll head a few years from now?', 1, 274, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77355, 0, 'I think my father did the right thing. If we tried to occupy Orgrimmar, the fighting would never stop. And what about the rest of the Horde? Would we resort to internment camps? We\'ve been down that road before - it doesn\'t work!$b$bWe deposed of a warmonger and replaced him with a leader we can work with. It\'s our only chance for peace in the future.', '', 1, 5, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77356, 0, 'Victory for the Alliance! Before we clear out of here, my people will grab as much of this crazy goblin technology as we can get our hands on.', '', 1, 5, 0, 0, 0, 0, 0, 0, 0, 18019),
@@ -73083,26 +73086,9 @@ INSERT INTO `broadcast_text` (`ID`, `Language`, `MaleText`, `FemaleText`, `Emote
 	(77366, 0, 'Vol\'jin\'s one tough nut. Stabbed in the neck, still he comes back to collect what\'s due. I like this guy!$b$bMy people need security and profit. Under Hellscream, we got a whole lot of neither.', '', 273, 0, 0, 0, 0, 0, 0, 0, 0, 18019),
 	(77369, 0, '|TInterface\\Icons\\inv_misc_bomb_05:20|tYou have |cFFFF0000|Hspell:145996|h[Set to Blow]|h|r! Use |cFFFF0000|Hspell:146364|h[Throw Bomb]|h|r to throw them!', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
 	(77371, 0, 'Dat\'s de end of Hellscream.$b$b<Vol\'jin eyes you warily.>$b$bWhat next, $r?', '', 274, 0, 0, 0, 0, 0, 0, 0, 0, 18019),
-	(77865, 0, '|TInterface\\Icons\\achievement_arena_2v2_5:20|t$n has agreed to begin the encounter. Additional players required to begin: $8589w.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(91243, 0, 'makes some strange gestures.', 'makes some strange gestures.', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-	(94157, 0, 'We all live in the world of Azeroth.', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-	(100000, 0, 'Teach me the art of smelting dark iron', 'Teach me the art of smelting dark iron', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-	(100001, 0, 'I want to pay tribute', 'I want to pay tribute', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-	(100002, 0, 'Get Thorium Brotherhood Contract', 'Get Thorium Brotherhood Contract', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-	(100003, 0, 'Ah...the heroes. You are persistent, aren\'t you? Your ally here attempted to match his power against mine - and paid the price. Now he shall serve me...by slaughtering you. Get up little Red Wyrm, and destroy them!', 'Ah...the heroes. You are persistent, aren\'t you? Your ally here attempted to match his power against mine - and paid the price. Now he shall serve me...by slaughtering you. Get up little Red Wyrm, and destroy them!', 0, 0, 0, 0, 0, 0, 8279, 0, 0, 0),
-	(100004, 0, 'Moooooooooo!', '', 5, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(100005, 0, 'Thank you for bringing back my Bessy, $N. I couldn\'t live without her!', '', 5, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(604, 0, 'Die in the name of the Dark Lady, $n.', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),
-	(80000, 0, 'The guild master', 'The guild master', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80001, 0, 'The mailbox', 'The mailbox', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80002, 0, 'The auction house', 'The auction house', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80003, 0, 'The zeppelin master', 'The zeppelin master', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80004, 0, 'The weapon master', 'The weapon master', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80005, 0, 'The officer\'s lounge', 'The officer\'s lounge', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80006, 0, 'The battlemaster', 'The battlemaster', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019),
-	(80007, 0, 'The Champions\' Hall', 'The Champions\' Hall', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
-/*!40000 ALTER TABLE `broadcast_text` ENABLE KEYS */;
+	(77865, 0, '|TInterface\\Icons\\achievement_arena_2v2_5:20|t$n has agreed to begin the encounter. Additional players required to begin: $8589w.', '', 0, 0, 0, 0, 0, 0, 0, 0, 1, 18019);
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

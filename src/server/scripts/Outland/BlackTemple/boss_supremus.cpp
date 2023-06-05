@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "black_temple.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "black_temple.h"
 
 enum Supremus
 {
@@ -67,9 +67,9 @@ public:
             BossAI::Reset();
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
 
             SchedulePhase(false);
             events.ScheduleEvent(EVENT_SPELL_BERSERK, 900000);
@@ -80,7 +80,7 @@ public:
         {
             events.CancelEventGroup(EVENT_GROUP_ABILITIES);
             events.ScheduleEvent(EVENT_SWITCH_PHASE, 60000);
-            DoResetThreat();
+            DoResetThreatList();
 
             if (!run)
             {
@@ -111,7 +111,7 @@ public:
             if (summon->GetEntry() == NPC_SUPREMUS_PUNCH_STALKER)
             {
                 summon->ToTempSummon()->InitStats(20000);
-                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f, true))
                     summon->GetMotionMaster()->MoveFollow(target, 0.0f, 0.0f, MOTION_SLOT_CONTROLLED);
             }
             else
@@ -126,7 +126,7 @@ public:
         Unit* FindHatefulStrikeTarget()
         {
             Unit* target = nullptr;
-            ThreatContainer::StorageType const& threatlist = me->getThreatMgr().getThreatList();
+            ThreatContainer::StorageType const& threatlist = me->GetThreatMgr().GetThreatList();
             for (ThreatContainer::StorageType::const_iterator i = threatlist.begin(); i != threatlist.end(); ++i)
             {
                 Unit* unit = ObjectAccessor::GetUnit(*me, (*i)->getUnitGuid());
@@ -165,9 +165,9 @@ public:
                     SchedulePhase(!me->HasAura(SPELL_SNARE_SELF));
                     break;
                 case EVENT_SWITCH_TARGET:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                     {
-                        DoResetThreat();
+                        DoResetThreatList();
                         me->AddThreat(target, 5000000.0f);
                         Talk(EMOTE_NEW_TARGET);
                     }
@@ -184,7 +184,7 @@ public:
                     events.ScheduleEvent(EVENT_CHECK_DIST, 1, EVENT_GROUP_ABILITIES);
                     break;
                 case EVENT_SPELL_VOLCANIC_ERUPTION:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                     {
                         me->CastSpell(target, SPELL_VOLCANIC_ERUPTION, true);
                         Talk(EMOTE_GROUND_CRACK);
@@ -194,7 +194,6 @@ public:
             }
 
             DoMeleeAttackIfReady();
-            EnterEvadeIfOutOfCombatArea();
         }
 
         bool CheckEvadeIfOutOfCombatArea() const override

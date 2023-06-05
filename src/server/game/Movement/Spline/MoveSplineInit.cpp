@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "MovementPacketBuilder.h"
-#include "MoveSpline.h"
 #include "MoveSplineInit.h"
+#include "MoveSpline.h"
+#include "MovementPacketBuilder.h"
 #include "Opcodes.h"
 #include "Transport.h"
 #include "Unit.h"
@@ -135,11 +135,6 @@ namespace Movement
             data << int8(unit->GetTransSeat());
         }
 
-        Movement::SplineBase::ControlArray* visualPoints = const_cast<Movement::SplineBase::ControlArray*>(move_spline._Spline().allocateVisualPoints());
-        visualPoints->resize(move_spline._Spline().getPointCount());
-        // Xinef: Apply hover in creature movement packet
-        std::copy(move_spline._Spline().getPoints(false).begin(), move_spline._Spline().getPoints(false).end(), visualPoints->begin());
-
         PacketBuilder::WriteMonsterMove(move_spline, data);
         unit->SendMessageToSet(&data, true);
 
@@ -199,7 +194,7 @@ namespace Movement
         args.flags.flying = unit->m_movementInfo.HasMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_DISABLE_GRAVITY));
     }
 
-    void MoveSplineInit::SetFacing(const Unit* target)
+    void MoveSplineInit::SetFacing(Unit const* target)
     {
         args.flags.EnableFacingTarget();
         args.facing.target = target->GetGUID().GetRawValue();

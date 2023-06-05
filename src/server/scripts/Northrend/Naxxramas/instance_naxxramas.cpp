@@ -18,10 +18,10 @@
 #include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
-#include "naxxramas.h"
 #include "PassiveAI.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "naxxramas.h"
 
 const float HeiganPos[2] = {2796, -3707};
 const float HeiganEruptionSlope[3] =
@@ -64,6 +64,7 @@ public:
     {
         explicit instance_naxxramas_InstanceMapScript(Map* pMap) : InstanceScript(pMap)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             for (auto& i : HeiganEruption)
                 i.clear();
@@ -403,7 +404,7 @@ public:
                     if (GetBossState(BOSS_LOATHEB) == DONE)
                     {
                         pGo->SetGoState(GO_STATE_ACTIVE);
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case GO_THADDIUS_PORTAL:
@@ -411,7 +412,7 @@ public:
                     if (GetBossState(BOSS_THADDIUS) == DONE)
                     {
                         pGo->SetGoState(GO_STATE_ACTIVE);
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case GO_MAEXXNA_PORTAL:
@@ -419,7 +420,7 @@ public:
                     if (GetBossState(BOSS_MAEXXNA) == DONE)
                     {
                         pGo->SetGoState(GO_STATE_ACTIVE);
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case GO_HORSEMAN_PORTAL:
@@ -427,7 +428,7 @@ public:
                     if (GetBossState(BOSS_HORSEMAN) == DONE)
                     {
                         pGo->SetGoState(GO_STATE_ACTIVE);
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        pGo->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
 
@@ -844,7 +845,7 @@ public:
                         if (GameObject* go = instance->GetGameObject(_loathebPortalGUID))
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            go->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                         }
                         if (GameObject* go = instance->GetGameObject(_plagueEyePortalGUID))
                         {
@@ -854,7 +855,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_ANUB:
                         if (GameObject* go = instance->GetGameObject(_anubGateGUID))
@@ -884,7 +885,7 @@ public:
                         if (GameObject* go = instance->GetGameObject(_maexxnaPortalGUID))
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            go->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                         }
                         if (GameObject* go = instance->GetGameObject(_spiderEyePortalGUID))
                         {
@@ -894,7 +895,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_GOTHIK:
                         if (GameObject* go = instance->GetGameObject(_gothikEnterGateGUID))
@@ -911,13 +912,13 @@ public:
                         }
                         break;
                     case BOSS_SAPPHIRON:
-                        events.ScheduleEvent(EVENT_FROSTWYRM_WATERFALL_DOOR, 5000);
+                        events.ScheduleEvent(EVENT_FROSTWYRM_WATERFALL_DOOR, 5s);
                         break;
                     case BOSS_THADDIUS:
                         if (GameObject* go = instance->GetGameObject(_thaddiusPortalGUID))
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            go->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                         }
                         if (GameObject* go = instance->GetGameObject(_abomEyePortalGUID))
                         {
@@ -927,13 +928,13 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_HORSEMAN:
                         if (GameObject* go = instance->GetGameObject(_horsemanPortalGUID))
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            go->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                         }
                         if (GameObject* go = instance->GetGameObject(_deathknightEyePortalGUID))
                         {
@@ -943,7 +944,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     default:
                         break;
@@ -1098,55 +1099,14 @@ public:
             return ObjectGuid::Empty;
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "N X X " << GetBossSaveData() << ' ' << immortalAchievement;
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
+            data >> immortalAchievement;
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2, dataHead3;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> dataHead3;
-
-            if (dataHead1 == 'N' && dataHead2 == 'X' && dataHead3 == 'X')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS)
-                    {
-                        tmpState = NOT_STARTED;
-                    }
-                    if (i == BOSS_HORSEMAN && tmpState == DONE)
-                    {
-                        _horsemanLoadDoneState = true;
-                    }
-                    SetBossState(i, EncounterState(tmpState));
-                }
-                loadStream >> immortalAchievement;
-
-                OUT_LOAD_INST_DATA_COMPLETE;
-            }
-            else
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-            }
+            data << immortalAchievement;
         }
     };
 };
@@ -1169,7 +1129,7 @@ public:
 
         uint32 timer;
 
-        void JustDied(Unit* ) override
+        void JustDied(Unit* /*killer*/) override
         {
             if (me->GetEntry() == NPC_MR_BIGGLESWORTH && me->GetInstanceScript())
             {
@@ -1221,8 +1181,33 @@ public:
     };
 };
 
+const Position sapphironEntryTP = { 3498.300049f, -5349.490234f, 144.968002f, 1.3698910f };
+
+class at_naxxramas_hub_portal : public AreaTriggerScript
+{
+public:
+    at_naxxramas_hub_portal() : AreaTriggerScript("at_naxxramas_hub_portal") { }
+
+    bool OnTrigger(Player* player, AreaTrigger const* /*trigger*/) override
+    {
+        if (player->IsAlive() && !player->IsInCombat())
+        {
+            if (InstanceScript *instance = player->GetInstanceScript())
+            {
+                if (instance->CheckRequiredBosses(BOSS_SAPPHIRON))
+                {
+                    player->TeleportTo(533, sapphironEntryTP.m_positionX, sapphironEntryTP.m_positionY, sapphironEntryTP.m_positionZ, sapphironEntryTP.m_orientation);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+};
+
 void AddSC_instance_naxxramas()
 {
     new instance_naxxramas();
     new boss_naxxramas_misc();
+    new at_naxxramas_hub_portal();
 }

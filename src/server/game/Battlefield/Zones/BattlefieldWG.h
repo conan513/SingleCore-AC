@@ -19,8 +19,8 @@
 #define BATTLEFIELD_WG_
 
 #include "Battlefield.h"
-#include "ObjectAccessor.h"
 #include "Log.h"
+#include "ObjectAccessor.h"
 #include "World.h"
 #include "WorldPacket.h"
 
@@ -218,6 +218,8 @@ enum WintergraspNpcs
     NPC_QUEST_SOUTHERN_TOWER_KILL                   = 35074,
     NPC_QUEST_VEHICLE_PROTECTED                     = 31284,
     NPC_QUEST_PVP_KILL_VEHICLE                      = 31093,
+    NPC_QUEST_PVP_KILL_HORDE                        = 39019,
+    NPC_QUEST_PVP_KILL_ALLIANCE                     = 31086,
 };
 
 struct BfWGCoordGY
@@ -523,10 +525,14 @@ enum WintergraspWorldstates
     WORLDSTATE_WORKSHOP_SE = 3703,
     WORLDSTATE_WORKSHOP_SW = 3702,
     WORLDSTATE_WORKSHOP_K_W = 3698,
-    WORLDSTATE_WORKSHOP_K_E = 3699
+    WORLDSTATE_WORKSHOP_K_E = 3699,
+    WORLDSTATE_HORDE_KEEP_CAPTURED = 4022,
+    WORLDSTATE_HORDE_KEEP_DEFENDED = 4024,
+    WORLDSTATE_ALLIANCE_KEEP_CAPTURED = 4023,
+    WORLDSTATE_ALLIANCE_KEEP_DEFENDED = 4025,
 };
 
-// TODO: Handle this with creature_text ?
+/// @todo: Handle this with creature_text ?
 enum eWGText
 {
     BATTLEFIELD_WG_TEXT_START                    = 28,
@@ -1170,7 +1176,7 @@ struct BfWGGameObjectBuilding
 
         // Send warning message
         if (m_damagedText)                                       // tower damage + name
-            m_WG->SendWarningToAllInZone(m_damagedText);
+            m_WG->SendWarning(m_damagedText);
 
         for (GuidUnorderedSet::const_iterator itr = m_CreatureTopList[m_WG->GetAttackerTeam()].begin(); itr != m_CreatureTopList[m_WG->GetAttackerTeam()].end(); ++itr)
             if (Creature* creature = m_WG->GetCreature(*itr))
@@ -1193,7 +1199,7 @@ struct BfWGGameObjectBuilding
 
         // Warn players
         if (m_destroyedText)
-            m_WG->SendWarningToAllInZone(m_destroyedText);
+            m_WG->SendWarning(m_destroyedText);
 
         switch (m_Type)
         {
@@ -1204,7 +1210,7 @@ struct BfWGGameObjectBuilding
             case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
                 m_WG->SetRelicInteractible(true);
                 if (GameObject* go = m_WG->GetRelic())
-                    go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                    go->RemoveGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
                 else
                     LOG_ERROR("bg.battlefield", "BattlefieldWG: Relic not found.");
                 break;
@@ -1467,7 +1473,18 @@ struct WGWorkshop
                 {
                     // Send warning message to all player to inform a faction attack to a workshop
                     // alliance / horde attacking a workshop
-                    bf->SendWarningToAllInZone(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
+                    bf->SendWarning(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
+
+                    // Updating worldstate, update icon to neutral
+                    state = BATTLEFIELD_WG_OBJECTSTATE_NEUTRAL_INTACT;
+                    bf->SendUpdateWorldState(WorkshopsData[workshopId].worldstate, state);
+
+                    // Found associate graveyard and update it
+                    if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
+                        if (bf->GetGraveyardById(workshopId))
+                            bf->GetGraveyardById(workshopId)->GiveControlTo(team);
+
+                    teamControl = team;
                     break;
                 }
             case TEAM_ALLIANCE:
@@ -1479,7 +1496,7 @@ struct WGWorkshop
 
                     // Warning message
                     if (!init)                              // workshop taken - alliance
-                        bf->SendWarningToAllInZone(team == TEAM_ALLIANCE ? WorkshopsData[workshopId].takenText : (WorkshopsData[workshopId].takenText + 2));
+                        bf->SendWarning(team == TEAM_ALLIANCE ? WorkshopsData[workshopId].takenText : (WorkshopsData[workshopId].takenText + 2));
 
                     // Found associate graveyard and update it
                     if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)

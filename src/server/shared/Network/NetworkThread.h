@@ -18,14 +18,14 @@
 #ifndef NetworkThread_h__
 #define NetworkThread_h__
 
-#include "Define.h"
 #include "DeadlineTimer.h"
+#include "Define.h"
 #include "Errors.h"
 #include "IoContext.h"
 #include "Log.h"
 #include "Timer.h"
-#include <boost/asio/ip/tcp.hpp>
 #include <atomic>
+#include <boost/asio/ip/tcp.hpp>
 #include <chrono>
 #include <memory>
 #include <mutex>
@@ -121,8 +121,8 @@ protected:
     {
         LOG_DEBUG("misc", "Network Thread Starting");
 
-        _updateTimer.expires_from_now(boost::posix_time::milliseconds(10));
-        _updateTimer.async_wait(std::bind(&NetworkThread<SocketType>::Update, this));
+        _updateTimer.expires_from_now(boost::posix_time::milliseconds(1));
+        _updateTimer.async_wait([this](boost::system::error_code const&) { Update(); });
         _ioContext.run();
 
         LOG_DEBUG("misc", "Network Thread exits");
@@ -135,8 +135,8 @@ protected:
         if (_stopped)
             return;
 
-        _updateTimer.expires_from_now(boost::posix_time::milliseconds(10));
-        _updateTimer.async_wait(std::bind(&NetworkThread<SocketType>::Update, this));
+        _updateTimer.expires_from_now(boost::posix_time::milliseconds(1));
+        _updateTimer.async_wait([this](boost::system::error_code const&) { Update(); });
 
         AddNewSockets();
 

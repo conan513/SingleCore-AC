@@ -15,13 +15,14 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "npc_stave_of_ancients.h"
 #include "CreatureGroups.h"
+#include "GameTime.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
 #include "Spell.h"
-#include "npc_stave_of_ancients.h"
 
 uint32 NPCStaveQuestAI::GetFormEntry(std::string type)
 {
@@ -110,7 +111,7 @@ bool NPCStaveQuestAI::IsFairFight()
     {
         Unit* unit = ObjectAccessor::GetUnit(*me, (*itr)->getUnitGuid());
 
-        if (!(*itr)->getThreat())
+        if (!(*itr)->GetThreat())
         {
             // if target threat is 0 its fair, this prevents despawn in the case when
             // there is a bystander since UpdateVictim adds nearby enemies to the threatlist
@@ -155,8 +156,8 @@ void NPCStaveQuestAI::PrepareForEncounter()
     me->GetMotionMaster()->Clear();
     SetHomePosition();
 
-    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+    me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 }
 
 void NPCStaveQuestAI::ClearLootIfUnfair(Unit* killer)
@@ -232,7 +233,7 @@ void NPCStaveQuestAI::ResetState(uint32 aura = 0)
     if (InNormalForm())
     {
         me->m_Events.KillAllEvents(true);
-        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+        me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
     }
 
     me->RemoveAura(aura);
@@ -290,19 +291,19 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit* victim) override
+        void JustEngagedWith(Unit* who) override
         {
             RevealForm();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 
             if (InNormalForm())
             {
                 return;
             }
 
-            if (victim && (UnitIsUnfair(victim) || !QuestIncomplete(victim, ARTORIUS_HEAD)))
+            if (who && (UnitIsUnfair(who) || !QuestIncomplete(who, ARTORIUS_HEAD)))
             {
-                me->CastSpell(victim, SPELL_FOOLS_PLIGHT, true);
+                me->CastSpell(who, SPELL_FOOLS_PLIGHT, true);
             }
 
             events.ScheduleEvent(EVENT_FOOLS_PLIGHT, urand(2000, 3000));
@@ -323,7 +324,7 @@ public:
                 case EVENT_ENCOUNTER_START:
                     me->Say(ARTORIUS_SAY);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     events.ScheduleEvent(EVENT_REVEAL, 5000);
                     break;
                 case EVENT_REVEAL:
@@ -357,7 +358,7 @@ public:
                     events.RepeatEvent(urand(3000, 6000));
                     break;
                 case EVENT_RANGE_CHECK:
-                    if (!me->GetVictim()->IsWithinDist2d(me, 60.0f))
+                    if (!me->GetVictim() || !me->GetVictim()->IsWithinDist2d(me, 60.0f))
                     {
                         EnterEvadeMode();
                     }
@@ -370,7 +371,8 @@ public:
                     if (!ValidThreatlist())
                     {
                         SetHomePosition();
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                        me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1);
+                        me->SetImmuneToAll(true);
                         me->DespawnOrUnsummon(5000);
                         break;
                     }
@@ -392,7 +394,15 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void SpellHit(Unit* /*Caster*/, const SpellInfo* Spell) override
+        void DamageTaken(Unit* attacker, uint32& damage, DamageEffectType, SpellSchoolMask) override
+        {
+            if (attacker == me)
+            {
+                me->LowerPlayerDamageReq(damage);
+            }
+        }
+
+        void SpellHit(Unit* /*Caster*/, SpellInfo const* Spell) override
         {
             uint32 serpentStings[12] = { 1978, 13549, 13550, 13551, 13552, 13553, 13554, 13555, 25295, 27016, 49000, 49001 };
 
@@ -476,10 +486,10 @@ public:
             ResetState();
         }
 
-        void EnterCombat(Unit* /*victim*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             RevealForm();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
         }
 
         void UpdateAI(uint32 /*diff*/) override
@@ -602,7 +612,7 @@ public:
             if (Precious()->isDead())
             {
                 // Make it so that Precious respawns after Simone
-                uint32 respawnTime = me->GetRespawnTime() - time(nullptr);
+                uint32 respawnTime = me->GetRespawnTime() - GameTime::GetGameTime().count();
                 Precious()->SetRespawnTime(respawnTime);
                 return;
             }
@@ -642,16 +652,16 @@ public:
             events.ScheduleEvent(SIMONE_EVENT_CHECK_PET_STATE, 2000);
         }
 
-        void EnterCombat(Unit* victim) override
+        void JustEngagedWith(Unit* who) override
         {
             RevealForm();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 
             if (!InNormalForm())
             {
-                if (victim && (UnitIsUnfair(victim) || !QuestIncomplete(victim, SIMONE_HEAD)))
+                if (who && (UnitIsUnfair(who) || !QuestIncomplete(who, SIMONE_HEAD)))
                 {
-                    me->CastSpell(victim, SPELL_FOOLS_PLIGHT, true);
+                    me->CastSpell(who, SPELL_FOOLS_PLIGHT, true);
                 }
 
                 events.ScheduleEvent(EVENT_RANGE_CHECK, 1000);
@@ -680,10 +690,10 @@ public:
                 case SIMONE_EVENT_TALK:
                     me->Say(SIMONE_SAY, GetGossipPlayer());
                     me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     if (Precious())
                     {
-                        Precious()->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        Precious()->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     }
                     events.ScheduleEvent(EVENT_REVEAL, 5000);
                     break;
@@ -750,8 +760,10 @@ public:
                         SetHomePosition();
                         PreciousAI()->SetHomePosition();
 
-                        Precious()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                        Precious()->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1);
+                        Precious()->SetImmuneToAll(true);
+                        me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1);
+                        me->SetImmuneToAll(true);
 
                         Precious()->DespawnOrUnsummon(5000);
 
@@ -773,7 +785,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void SpellHit(Unit* /*Caster*/, const SpellInfo* Spell) override
+        void SpellHit(Unit* /*Caster*/, SpellInfo const* Spell) override
         {
             if (!InNormalForm())
             {
@@ -874,10 +886,10 @@ public:
             me->RemoveAllMinionsByEntry(CREEPING_DOOM_ENTRY);
         }
 
-        void EnterCombat(Unit* victim) override
+        void JustEngagedWith(Unit* who) override
         {
             RevealForm();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 
             if (InNormalForm())
             {
@@ -889,9 +901,9 @@ public:
                 me->CastSpell(me, NELSON_SPELL_SOUL_FLAME, true);
             }
 
-            if (victim && (UnitIsUnfair(victim) || !QuestIncomplete(victim, NELSON_HEAD)))
+            if (who && (UnitIsUnfair(who) || !QuestIncomplete(who, NELSON_HEAD)))
             {
-                me->CastSpell(victim, SPELL_FOOLS_PLIGHT, true);
+                me->CastSpell(who, SPELL_FOOLS_PLIGHT, true);
             }
 
             events.ScheduleEvent(EVENT_FOOLS_PLIGHT, urand(2000, 3000));
@@ -912,7 +924,7 @@ public:
                 case EVENT_ENCOUNTER_START:
                     me->Say(NELSON_SAY);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     events.ScheduleEvent(EVENT_REVEAL, 5000);
                     break;
                 case EVENT_REVEAL:
@@ -961,7 +973,8 @@ public:
                     {
                         SetHomePosition();
                         me->RemoveAllMinionsByEntry(CREEPING_DOOM_ENTRY);
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                        me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1);
+                        me->SetImmuneToAll(true);
                         me->CombatStop(true);
                         me->Say(NELSON_DESPAWN_SAY);
                         me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
@@ -983,7 +996,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void SpellHit(Unit* /*Caster*/, const SpellInfo* Spell) override
+        void SpellHit(Unit* /*Caster*/, SpellInfo const* Spell) override
         {
             if (InNormalForm())
             {
@@ -1056,16 +1069,16 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit* victim) override
+        void JustEngagedWith(Unit* who) override
         {
             RevealForm();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
 
             if (!InNormalForm())
             {
-                if (victim && (UnitIsUnfair(victim) || !QuestIncomplete(victim, FRANKLIN_HEAD)))
+                if (who && (UnitIsUnfair(who) || !QuestIncomplete(who, FRANKLIN_HEAD)))
                 {
-                    me->CastSpell(victim, SPELL_FOOLS_PLIGHT, true);
+                    me->CastSpell(who, SPELL_FOOLS_PLIGHT, true);
                 }
 
                 events.ScheduleEvent(FRANKLIN_EVENT_DEMONIC_ENRAGE, urand(9000, 13000));
@@ -1087,7 +1100,7 @@ public:
                 case EVENT_ENCOUNTER_START:
                     me->Say(FRANKLIN_SAY, GetGossipPlayer());
                     me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     events.ScheduleEvent(EVENT_REVEAL, 5000);
                     break;
                 case EVENT_REVEAL:
@@ -1135,7 +1148,8 @@ public:
                     if (!ValidThreatlist())
                     {
                         SetHomePosition();
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1 | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                        me->SetUnitFlag(UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_ATTACKABLE_1);
+                        me->SetImmuneToAll(true);
                         me->CombatStop(true);
                         me->Say(FRANKLIN_DESPAWN_SAY);
                         me->HandleEmoteCommand(EMOTE_ONESHOT_TALK);
@@ -1154,7 +1168,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void SpellHit(Unit* /*Caster*/, const SpellInfo* Spell) override
+        void SpellHit(Unit* /*Caster*/, SpellInfo const* Spell) override
         {
             if (InNormalForm())
             {
@@ -1164,6 +1178,14 @@ public:
             if (Spell->Id == FRANKLIN_WEAKNESS_SCORPID_STING)
             {
                 me->CastSpell(me, FRANKLIN_SPELL_ENTROPIC_STING, false);
+            }
+        }
+
+        void DamageTaken(Unit* attacker, uint32& damage, DamageEffectType, SpellSchoolMask) override
+        {
+            if (attacker == me)
+            {
+                me->LowerPlayerDamageReq(damage);
             }
         }
 

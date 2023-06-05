@@ -17,9 +17,9 @@
 
 #include "forge_of_souls.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
 #include "SpellScript.h"
 
 enum Yells
@@ -69,11 +69,11 @@ public:
         void DoAction(int32 a) override
         {
             if (a == 1)
-                if (me->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+                if (me->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
                 {
-                    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     events.Reset();
-                    events.ScheduleEvent(1, 1000);
+                    events.ScheduleEvent(1, 1s);
                 }
         }
 
@@ -89,12 +89,12 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_1);
-                        events.ScheduleEvent(2, 8000);
+                        events.ScheduleEvent(2, 8s);
                     }
                     else
                     {
                         Talk(SAY_SYLVANAS_INTRO_1);
-                        events.ScheduleEvent(2, 11500);
+                        events.ScheduleEvent(2, 11s + 500ms);
                     }
                     break;
                 case 2:
@@ -102,12 +102,12 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_2);
-                        events.ScheduleEvent(3, 9000);
+                        events.ScheduleEvent(3, 9s);
                     }
                     else
                     {
                         Talk(SAY_SYLVANAS_INTRO_2);
-                        events.ScheduleEvent(3, 10500);
+                        events.ScheduleEvent(3, 10s + 500ms);
                     }
                     break;
                 case 3:
@@ -115,12 +115,12 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_3);
-                        events.ScheduleEvent(4, 8000);
+                        events.ScheduleEvent(4, 8s);
                     }
                     else
                     {
                         Talk(SAY_SYLVANAS_INTRO_3);
-                        events.ScheduleEvent(4, 10500);
+                        events.ScheduleEvent(4, 10s + 500ms);
                     }
                     break;
                 case 4:
@@ -128,12 +128,12 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_4);
-                        events.ScheduleEvent(5, 10000);
+                        events.ScheduleEvent(5, 10s);
                     }
                     else
                     {
                         Talk(SAY_SYLVANAS_INTRO_4);
-                        events.ScheduleEvent(5, 11000);
+                        events.ScheduleEvent(5, 11s);
                     }
                     break;
                 case 5:
@@ -141,12 +141,12 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_5);
-                        events.ScheduleEvent(6, 8000);
+                        events.ScheduleEvent(6, 8s);
                     }
                     else
                     {
                         Talk(SAY_SYLVANAS_INTRO_5);
-                        events.ScheduleEvent(6, 9500);
+                        events.ScheduleEvent(6, 9500ms);
                     }
                     break;
                 case 6:
@@ -154,7 +154,7 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_6);
-                        events.ScheduleEvent(7, 12000);
+                        events.ScheduleEvent(7, 12s);
                     }
                     else
                     {
@@ -166,7 +166,7 @@ public:
                     if (me->GetEntry() == NPC_JAINA_PART1)
                     {
                         Talk(SAY_JAINA_INTRO_7);
-                        events.ScheduleEvent(8, 8000);
+                        events.ScheduleEvent(8, 8s);
                     }
                     break;
                 case 8:
@@ -190,7 +190,7 @@ public:
         if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
-        if (creature->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+        if (creature->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
         {
             if (creature->GetEntry() == NPC_JAINA_PART1)
                 AddGossipItemFor(player, GOSSIP_JAINA_INTRO, 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
@@ -232,14 +232,14 @@ public:
     {
         npc_fos_leader_secondAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
         }
 
         void MovementInform(uint32 type, uint32 id) override
         {
             if (type == POINT_MOTION_TYPE && id == 1)
             {
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                 if (me->GetEntry() == NPC_JAINA_PART1)
                     Talk(SAY_JAINA_OUTRO);
                 else

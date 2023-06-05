@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "halls_of_lightning.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "halls_of_lightning.h"
 
 enum LokenSpells
 {
@@ -103,23 +103,23 @@ public:
             if (!isActive)
             {
                 me->SetControlled(true, UNIT_STATE_STUNNED);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             }
             else
             {
                 me->SetControlled(false, UNIT_STATE_STUNNED);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             }
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             me->SetInCombatWithZone();
             Talk(SAY_AGGRO);
 
-            events.ScheduleEvent(EVENT_ARC_LIGHTNING, 10000);
-            events.ScheduleEvent(EVENT_SHOCKWAVE, 3000);
-            events.ScheduleEvent(EVENT_LIGHTNING_NOVA, 15000);
+            events.ScheduleEvent(EVENT_ARC_LIGHTNING, 10s);
+            events.ScheduleEvent(EVENT_SHOCKWAVE, 3s);
+            events.ScheduleEvent(EVENT_LIGHTNING_NOVA, 15s);
 
             if (m_pInstance)
             {
@@ -195,7 +195,7 @@ public:
                         m_pInstance->SetData(TYPE_LOKEN_INTRO, 1);
 
                     me->SetControlled(false, UNIT_STATE_STUNNED);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
 
                     if (Player* target = SelectTargetFromPlayerList(80))
                         AttackStart(target);
@@ -222,15 +222,15 @@ public:
                         HealthCheck -= 25;
                     }
 
-                    events.RepeatEvent(1000);
+                    events.Repeat(1s);
                     break;
                 case EVENT_LIGHTNING_NOVA:
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     me->CastSpell(me, SPELL_LIGHTNING_NOVA_VISUAL, true);
                     me->CastSpell(me, SPELL_LIGHTNING_NOVA_THUNDERS, true);
 
-                    events.DelayEvents(5001);
-                    events.ScheduleEvent(EVENT_AURA_REMOVE, me->GetMap()->IsHeroic() ? 4000 : 5000);
+                    events.DelayEvents(5s);
+                    events.ScheduleEvent(EVENT_AURA_REMOVE, me->GetMap()->IsHeroic() ? 4s : 5s);
 
                     me->CastSpell(me, me->GetMap()->IsHeroic() ? SPELL_LIGHTNING_NOVA_H : SPELL_LIGHTNING_NOVA_N, false);
                     break;
@@ -241,7 +241,7 @@ public:
                     if (Unit* target = SelectTargetFromPlayerList(100, SPELL_ARC_LIGHTNING))
                         me->CastSpell(target, SPELL_ARC_LIGHTNING, false);
 
-                    events.RepeatEvent(12000);
+                    events.Repeat(12s);
                     break;
                 case EVENT_AURA_REMOVE:
                     me->RemoveAura(SPELL_LIGHTNING_NOVA_THUNDERS);

@@ -15,11 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "IdleMovementGenerator.h"
 #include "Creature.h"
 #include "CreatureAI.h"
-#include "IdleMovementGenerator.h"
-
-IdleMovementGenerator si_idleMovement;
 
 // StopMoving is needed to make unit stop if its last movement generator expires
 // But it should not be sent otherwise there are many redundent packets

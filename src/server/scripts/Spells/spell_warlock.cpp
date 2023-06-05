@@ -21,10 +21,12 @@
  * Scriptnames of files in this file should be prefixed with "spell_warl_".
  */
 
+#include "Pet.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellInfo.h"
+#include "SpellMgr.h"
 #include "SpellScript.h"
 #include "TemporarySummon.h"
 
@@ -60,7 +62,8 @@ enum WarlockSpells
     SPELL_WARLOCK_SIPHON_LIFE_HEAL                  = 63106,
     SPELL_WARLOCK_UNSTABLE_AFFLICTION_DISPEL        = 31117,
     SPELL_WARLOCK_IMPROVED_DRAIN_SOUL_R1            = 18213,
-    SPELL_WARLOCK_IMPROVED_DRAIN_SOUL_PROC          = 18371
+    SPELL_WARLOCK_IMPROVED_DRAIN_SOUL_PROC          = 18371,
+    SPELL_WARLOCK_EYE_OF_KILROGG_FLY                = 58083
 };
 
 enum WarlockSpellIcons
@@ -82,16 +85,15 @@ class spell_warl_eye_of_kilrogg : public AuraScript
 
             // Glyph of Kilrogg
             if (player->HasAura(58081))
+            {
                 if (Unit* charm = player->GetCharm())
                 {
-                    charm->SetSpeed(MOVE_RUN, 2.14f, true);
                     if (charm->GetMapId() == 530 || charm->GetMapId() == 571)
                     {
-                        charm->SetCanFly(true);
-                        charm->SetSpeed(MOVE_FLIGHT, 2.14f, true);
-                        charm->SendMovementFlagUpdate();
+                        charm->CastSpell(charm, SPELL_WARLOCK_EYE_OF_KILROGG_FLY, true);
                     }
                 }
+            }
         }
     }
 
@@ -584,7 +586,7 @@ class spell_warl_create_healthstone : public SpellScript
                         rank = 2;
                         break;
                     default:
-                        LOG_ERROR("spells", "Unknown rank of Improved Healthstone id: %d", aurEff->GetId());
+                        LOG_ERROR("spells", "Unknown rank of Improved Healthstone id: {}", aurEff->GetId());
                         break;
                 }
             }
@@ -624,7 +626,7 @@ class spell_warl_everlasting_affliction : public SpellScript
             // Refresh corruption on target
             if (AuraEffect* aur = unitTarget->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_WARLOCK, 0x2, 0, 0, GetCaster()->GetGUID()))
             {
-                aur->GetBase()->RefreshTimers();
+                aur->GetBase()->RefreshTimersWithMods();
                 aur->ChangeAmount(aur->CalculateAmount(aur->GetCaster()), false);
             }
     }
@@ -659,8 +661,21 @@ class spell_warl_seed_of_corruption : public SpellScript
 
     void FilterTargets(std::list<WorldObject*>& targets)
     {
-        if (GetExplTargetUnit())
-            targets.remove(GetExplTargetUnit());
+        targets.remove_if([&](WorldObject const* target)
+        {
+            if (Unit const* unitTarget = target->ToUnit())
+            {
+                if (WorldLocation const* dest = GetExplTargetDest())
+                {
+                    if (!unitTarget->IsWithinLOS(dest->GetPositionX(), dest->GetPositionY(), dest->GetPositionZ()))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        });
     }
 
     void Register() override
@@ -684,7 +699,7 @@ class spell_warl_soulshatter : public SpellScript
         Unit* caster = GetCaster();
         if (Unit* target = GetHitUnit())
         {
-            if (target->CanHaveThreatList() && target->getThreatMgr().getThreat(caster) > 0.0f)
+            if (target->CanHaveThreatList() && target->GetThreatMgr().GetThreat(caster) > 0.0f)
                 caster->CastSpell(target, SPELL_WARLOCK_SOULSHATTER, true);
         }
     }
@@ -738,7 +753,6 @@ class spell_warl_siphon_life : public AuraScript
 };
 
 // -1454 - Life Tap
-#define LIFE_TAP_COEFFICIENT 0.9F
 class spell_warl_life_tap : public SpellScript
 {
     PrepareSpellScript(spell_warl_life_tap);
@@ -758,12 +772,11 @@ class spell_warl_life_tap : public SpellScript
         Player* caster = GetCaster()->ToPlayer();
         if (Unit* target = GetHitUnit())
         {
-            int32 damage = GetEffectValue() + LIFE_TAP_COEFFICIENT;
-            int32 damage2Mana = GetEffectValue();
-            int32 mana = int32(damage2Mana + (caster->GetInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + static_cast<uint8>(SPELL_SCHOOL_SHADOW)) * 0.5f));
+            int32 spellEffect = GetEffectValue();
+            int32 mana = int32(spellEffect + (caster->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_SHADOW) * 0.5f));
 
             // Shouldn't Appear in Combat Log
-            target->ModifyHealth(-damage);
+            target->ModifyHealth(-spellEffect);
 
             // Improved Life Tap mod
             if (AuraEffect const* aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_WARLOCK, WARLOCK_ICON_ID_IMPROVED_LIFE_TAP, 0))
@@ -786,7 +799,7 @@ class spell_warl_life_tap : public SpellScript
 
     SpellCastResult CheckCast()
     {
-        if ((int32(GetCaster()->GetHealth()) > int32(GetSpellInfo()->Effects[EFFECT_0].CalcValue() + (3.1 * GetSpellInfo()->BaseLevel) + LIFE_TAP_COEFFICIENT )))
+        if ((int32(GetCaster()->GetHealth()) > int32(GetSpellInfo()->Effects[EFFECT_0].CalcValue())))
             return SPELL_CAST_OK;
         return SPELL_FAILED_FIZZLE;
     }
@@ -1122,6 +1135,16 @@ class spell_warl_drain_soul : public AuraScript
         });
     }
 
+    void RemoveEffect(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetTarget();
+        if (!(GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && caster && target && caster->IsPlayer() && caster->ToPlayer()->isHonorOrXPTarget(target)))
+        {
+            PreventDefaultAction();
+        }
+    }
+
     bool CheckProc(ProcEventInfo& eventInfo)
     {
         // Drain Soul's proc tries to happen each time the warlock lands a killing blow on a unit while channeling.
@@ -1177,9 +1200,70 @@ class spell_warl_drain_soul : public AuraScript
 
     void Register() override
     {
+        OnEffectRemove += AuraEffectRemoveFn(spell_warl_drain_soul::RemoveEffect, EFFECT_0, SPELL_AURA_CHANNEL_DEATH_ITEM, AURA_EFFECT_HANDLE_REAL);
         DoCheckProc += AuraCheckProcFn(spell_warl_drain_soul::CheckProc);
         OnEffectPeriodic += AuraEffectPeriodicFn(spell_warl_drain_soul::HandleTick, EFFECT_1, SPELL_AURA_PERIODIC_DAMAGE);
         OnEffectProc += AuraEffectProcFn(spell_warl_drain_soul::HandleProc, EFFECT_2, SPELL_AURA_PROC_TRIGGER_SPELL);
+    }
+};
+
+// 29341 - Shadowburn
+class spell_warl_shadowburn : public AuraScript
+{
+    PrepareAuraScript(spell_warl_shadowburn);
+
+    void RemoveEffect(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        Unit* caster = GetCaster();
+        Unit* target = GetTarget();
+        if (!(GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_DEATH && caster && target && caster->IsPlayer() && caster->ToPlayer()->isHonorOrXPTarget(target)))
+        {
+            PreventDefaultAction();
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectRemove += AuraEffectRemoveFn(spell_warl_shadowburn::RemoveEffect, EFFECT_0, SPELL_AURA_CHANNEL_DEATH_ITEM, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+class spell_warl_glyph_of_felguard : public AuraScript
+{
+    PrepareAuraScript(spell_warl_glyph_of_felguard);
+
+    void HandleApply(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+    {
+        if (Player* player = GetCaster()->ToPlayer())
+        {
+            if (Pet* pet = player->GetPet())
+            {
+                if (pet->GetEntry() == NPC_FELGUARD)
+                {
+                    pet->HandleStatModifier(UNIT_MOD_ATTACK_POWER, TOTAL_PCT, aurEff->GetAmount(), true);
+                }
+            }
+        }
+    }
+
+    void HandleRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+    {
+        if (Player* player = GetCaster()->ToPlayer())
+        {
+            if (Pet* pet = player->GetPet())
+            {
+                if (pet->GetEntry() == NPC_FELGUARD)
+                {
+                    pet->HandleStatModifier(UNIT_MOD_ATTACK_POWER, TOTAL_PCT, aurEff->GetAmount(), false);
+                }
+            }
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectApply += AuraEffectApplyFn(spell_warl_glyph_of_felguard::HandleApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+        OnEffectRemove += AuraEffectRemoveFn(spell_warl_glyph_of_felguard::HandleRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
     }
 };
 
@@ -1213,4 +1297,6 @@ void AddSC_warlock_spell_scripts()
     RegisterSpellScript(spell_warl_soulshatter);
     RegisterSpellScript(spell_warl_unstable_affliction);
     RegisterSpellScript(spell_warl_drain_soul);
+    RegisterSpellScript(spell_warl_shadowburn);
+    RegisterSpellScript(spell_warl_glyph_of_felguard);
 }

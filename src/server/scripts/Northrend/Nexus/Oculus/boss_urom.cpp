@@ -15,10 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "oculus.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "oculus.h"
 
 enum Spells
 {
@@ -126,9 +126,9 @@ public:
             {
                 pInstance->SetData(DATA_UROM, NOT_STARTED);
                 if( pInstance->GetData(DATA_VAROS) != DONE )
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 else
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             }
 
             me->CastSpell(me, SPELL_EVOCATION, true);
@@ -141,7 +141,7 @@ public:
             me->ApplySpellImmune(0, IMMUNITY_ID, 49838, true);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             if( lock )
                 return;
@@ -159,9 +159,9 @@ public:
                 if( me->FindCurrentSpellBySpellId(SPELL_EVOCATION) )
                     me->InterruptNonMeleeSpells(false);
 
-                events.RescheduleEvent(EVENT_FROSTBOMB, urand(7000, 11000));
-                events.RescheduleEvent(EVENT_TELEPORT_TO_CENTER, urand(30000, 35000));
-                events.RescheduleEvent(EVENT_TIME_BOMB, urand(20000, 25000));
+                events.RescheduleEvent(EVENT_FROSTBOMB, 7s, 11s);
+                events.RescheduleEvent(EVENT_TELEPORT_TO_CENTER, 30s, 35s);
+                events.RescheduleEvent(EVENT_TIME_BOMB, 20s, 25s);
             }
             else
             {
@@ -208,7 +208,7 @@ public:
         void LeaveCombat()
         {
             me->RemoveAllAuras();
-            me->DeleteThreatList();
+            me->GetThreatMgr().ClearAllThreat();
             me->CombatStop(true);
             me->LoadCreaturesAddon(true);
             me->SetLootRecipient(nullptr);
@@ -232,7 +232,7 @@ public:
             Talk(SAY_PLAYER_KILL);
         }
 
-        void SpellHit(Unit* /*caster*/, const SpellInfo* spell) override
+        void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
             switch( spell->Id )
             {
@@ -277,7 +277,7 @@ public:
                     me->GetMotionMaster()->MoveIdle();
                     me->StopMoving();
                     me->SetControlled(true, UNIT_STATE_ROOT);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     me->SetCanFly(true);
                     me->SetDisableGravity(true);
                     me->NearTeleportTo(1103.69f, 1048.76f, 512.279f, 1.16f);
@@ -332,20 +332,20 @@ public:
                 case EVENT_FROSTBOMB:
                     if( Unit* v = me->GetVictim() )
                         me->CastSpell(v, SPELL_FROSTBOMB, false);
-                    events.RepeatEvent(urand(7000, 11000));
+                    events.Repeat(7s, 11s);
                     break;
                 case EVENT_TIME_BOMB:
-                    if( Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true) )
+                    if( Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f, true) )
                         DoCast(target, DUNGEON_MODE(SPELL_TIME_BOMB_N, SPELL_TIME_BOMB_H));
-                    events.RepeatEvent(urand(20000, 25000));
+                    events.Repeat(20s, 25s);
                     break;
                 case EVENT_TELEPORT_TO_CENTER:
                     x = me->GetPositionX();
                     y = me->GetPositionY();
                     z = me->GetPositionZ();
                     me->CastSpell(me, SPELL_TELEPORT, false);
-                    events.RepeatEvent(urand(25000, 30000));
-                    events.DelayEvents(10000);
+                    events.Repeat(25s, 30s);
+                    events.DelayEvents(10s);
                     break;
                 case EVENT_TELE_BACK:
                     me->GetMotionMaster()->MoveIdle();
@@ -354,18 +354,18 @@ public:
                     me->SetDisableGravity(false);
                     me->NearTeleportTo(x, y, z, 0.0f);
                     me->SetControlled(false, UNIT_STATE_ROOT);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     me->GetMotionMaster()->MoveChase(me->GetVictim());
                     break;
             }
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             me->SetCanFly(false);
             me->SetDisableGravity(false);
             me->SetControlled(false, UNIT_STATE_ROOT);
-            ScriptedAI::EnterEvadeMode();
+            ScriptedAI::EnterEvadeMode(why);
         }
     };
 };

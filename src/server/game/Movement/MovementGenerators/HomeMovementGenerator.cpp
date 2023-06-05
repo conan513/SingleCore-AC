@@ -39,7 +39,7 @@ void HomeMovementGenerator<Creature>::DoFinalize(Creature* owner)
     }
 
     if (!owner->HasSwimmingFlagOutOfCombat())
-        owner->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SWIMMING);
+        owner->RemoveUnitFlag(UNIT_FLAG_SWIMMING);
 }
 
 void HomeMovementGenerator<Creature>::DoReset(Creature*)
@@ -65,7 +65,7 @@ void HomeMovementGenerator<Creature>::_setTargetLocation(Creature* owner)
 
     owner->UpdateAllowedPositionZ(x, y, z);
     init.MoveTo(x, y, z, DisableMgr::IsPathfindingEnabled(owner->FindMap()), true);
-    init.SetWalk(false);
+    init.SetWalk(_walk);
     init.Launch();
 
     arrived = false;

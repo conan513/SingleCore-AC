@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "black_temple.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "black_temple.h"
 
 enum Says
 {
@@ -99,15 +99,18 @@ enum Misc
     EVENT_KILL_TALK                     = 100
 };
 
-struct HammerOfJusticeSelector : public Acore::unary_function<Unit*, bool>
+struct HammerOfJusticeSelector
 {
-    Unit const* _me;
+public:
     HammerOfJusticeSelector(Unit* me) : _me(me) { }
 
     bool operator()(Unit const* target) const
     {
         return target && target->GetTypeId() == TYPEID_PLAYER && _me->IsInRange(target, 10.0f, 40.0f, true);
     }
+
+private:
+    Unit const* _me;
 };
 
 class VerasEnvenom : public BasicEvent
@@ -202,7 +205,7 @@ public:
                     if ((member = ObjectAccessor::GetCreature(*me, councilGUIDs[i])))
                         if (member->IsAlive())
                             Unit::Kill(me, member);
-                Unit::Kill(me, me);
+                me->KillSelf();
             }
         }
 
@@ -226,6 +229,7 @@ struct boss_illidari_council_memberAI : public ScriptedAI
     boss_illidari_council_memberAI(Creature* creature) : ScriptedAI(creature)
     {
         instance = creature->GetInstanceScript();
+        SetBoundary(instance->GetBossBoundary(DATA_ILLIDARI_COUNCIL));
     }
 
     InstanceScript* instance;
@@ -236,10 +240,10 @@ struct boss_illidari_council_memberAI : public ScriptedAI
         events.Reset();
     }
 
-    void EnterEvadeMode() override
+    void EnterEvadeMode(EvadeReason why) override
     {
         me->SetOwnerGUID(ObjectGuid::Empty);
-        ScriptedAI::EnterEvadeMode();
+        ScriptedAI::EnterEvadeMode(why);
     }
 
     void DoAction(int32 param) override
@@ -267,7 +271,7 @@ struct boss_illidari_council_memberAI : public ScriptedAI
             council->GetAI()->DoAction(ACTION_END_ENCOUNTER);
     }
 
-    void EnterCombat(Unit*  /*who*/) override
+    void JustEngagedWith(Unit*  /*who*/) override
     {
         if (Creature* council = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_ILLIDARI_COUNCIL)))
             council->GetAI()->DoAction(ACTION_START_ENCOUNTER);
@@ -301,9 +305,9 @@ public:
             return ObjectAccessor::GetCreature(*me, instance->GetGuidData(RAND(NPC_GATHIOS_THE_SHATTERER, NPC_HIGH_NETHERMANCER_ZEREVOR)));
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_illidari_council_memberAI::EnterCombat(who);
+            boss_illidari_council_memberAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_SPELL_BLESSING, 10000);
             events.ScheduleEvent(EVENT_SPELL_AURA, 0);
             events.ScheduleEvent(EVENT_SPELL_SEAL, 2000);
@@ -339,7 +343,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_AURA, 30000);
                     break;
                 case EVENT_SPELL_HAMMER_OF_JUSTICE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, HammerOfJusticeSelector(me)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, HammerOfJusticeSelector(me)))
                     {
                         me->CastSpell(target, SPELL_HAMMER_OF_JUSTICE, false);
                         events.ScheduleEvent(EVENT_SPELL_HAMMER_OF_JUSTICE, 20000);
@@ -382,9 +386,9 @@ public:
                 me->GetMotionMaster()->MoveChase(who, 20.0f);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_illidari_council_memberAI::EnterCombat(who);
+            boss_illidari_council_memberAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_SPELL_FLAMESTRIKE, 25000);
             events.ScheduleEvent(EVENT_SPELL_BLIZZARD, 5000);
             events.ScheduleEvent(EVENT_SPELL_ARCANE_BOLT, 15000);
@@ -414,17 +418,17 @@ public:
                 case EVENT_SPELL_FLAMESTRIKE:
                     if (roll_chance_i(50))
                         Talk(SAY_COUNCIL_SPECIAL);
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f))
                         me->CastSpell(target, SPELL_FLAMESTRIKE, false);
                     events.ScheduleEvent(EVENT_SPELL_FLAMESTRIKE, 40000);
                     break;
                 case EVENT_SPELL_BLIZZARD:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f))
                         me->CastSpell(target, SPELL_BLIZZARD, false);
                     events.ScheduleEvent(EVENT_SPELL_BLIZZARD, 40000);
                     break;
                 case EVENT_SPELL_ARCANE_EXPLOSION:
-                    if (SelectTarget(SELECT_TARGET_RANDOM, 0, 10.0f))
+                    if (SelectTarget(SelectTargetMethod::Random, 0, 10.0f))
                         me->CastSpell(me, SPELL_ARCANE_EXPLOSION, false);
                     events.ScheduleEvent(EVENT_SPELL_ARCANE_EXPLOSION, 10000);
                     break;
@@ -455,9 +459,9 @@ public:
                 me->GetMotionMaster()->MoveChase(who, 20.0f);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            boss_illidari_council_memberAI::EnterCombat(who);
+            boss_illidari_council_memberAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_SPELL_REFLECTIVE_SHIELD, 10000);
             events.ScheduleEvent(EVENT_SPELL_CIRCLE_OF_HEALING, 20000);
             events.ScheduleEvent(EVENT_SPELL_DIVINE_WRATH, 5000);
@@ -486,7 +490,7 @@ public:
                     events.ScheduleEvent(EVENT_SPELL_REFLECTIVE_SHIELD, 40000);
                     break;
                 case EVENT_SPELL_DIVINE_WRATH:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f))
                         me->CastSpell(target, SPELL_DIVINE_WRATH, false);
                     events.ScheduleEvent(EVENT_SPELL_DIVINE_WRATH, 20000);
                     break;
@@ -513,10 +517,10 @@ public:
     {
         boss_veras_darkshadowAI(Creature* creature) : boss_illidari_council_memberAI(creature) { }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             me->SetCanDualWield(true);
-            boss_illidari_council_memberAI::EnterCombat(who);
+            boss_illidari_council_memberAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_SPELL_VANISH, 10000);
             events.ScheduleEvent(EVENT_SPELL_ENRAGE, 900000);
         }
@@ -549,7 +553,7 @@ public:
                     me->CastSpell(me, SPELL_VANISH_OUT, false);
                     break;
                 case EVENT_SPELL_ENRAGE:
-                    DoResetThreat();
+                    DoResetThreatList();
                     if (Creature* council = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_ILLIDARI_COUNCIL)))
                         council->GetAI()->DoAction(ACTION_ENRAGE);
                     break;
@@ -730,7 +734,7 @@ public:
         void Update(AuraEffect const* effect)
         {
             PreventDefaultAction();
-            if (Unit* target = GetUnitOwner()->GetAI()->SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+            if (Unit* target = GetUnitOwner()->GetAI()->SelectTarget(SelectTargetMethod::Random, 0, 100.0f, true))
             {
                 GetUnitOwner()->CastSpell(target, GetSpellInfo()->Effects[effect->GetEffIndex()].TriggerSpell, true);
                 GetUnitOwner()->m_Events.AddEvent(new VerasEnvenom(*GetUnitOwner(), target->GetGUID()), GetUnitOwner()->m_Events.CalculateTime(urand(1500, 3500)));

@@ -18,8 +18,10 @@
 #ifndef DEF_NAXXRAMAS_H
 #define DEF_NAXXRAMAS_H
 
-#include "SpellScript.h"
 #include "CreatureAIImpl.h"
+#include "SpellScript.h"
+
+#define DataHeader "NAX"
 
 #define NaxxramasScriptName "instance_naxxramas"
 

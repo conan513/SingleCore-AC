@@ -15,21 +15,20 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pit_of_saron.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "Vehicle.h"
+#include "pit_of_saron.h"
 
 enum Texts
 {
-    SAY_AGGRO                           = 53,
-    SAY_SLAY_1                          = 54,
-    SAY_SLAY_2                          = 55,
-    SAY_DEATH                           = 56,
-    SAY_MARK                            = 57,
-    SAY_SMASH                           = 58,
-    EMOTE_RIMEFANG_ICEBOLT              = 59,
-    EMOTE_SMASH                         = 60,
+    SAY_AGGRO                           = 2,
+    SAY_SLAY                            = 3,
+    SAY_DEATH                           = 4,
+    SAY_MARK                            = 5,
+    EMOTE_MARK                          = 6,
+    SAY_DARK_MIGHT                      = 7,
+    EMOTE_DARK_MIGHT                    = 8,
 };
 
 enum Spells
@@ -75,7 +74,7 @@ public:
 
         void Reset() override
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             events.Reset();
             if (me->HasReactState(REACT_AGGRESSIVE)) // Reset() called by EnterEvadeMode()
             {
@@ -117,15 +116,15 @@ public:
 
                 // start real fight
                 me->RemoveAllAuras();
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 DoZoneInCombat();
                 me->CastSpell(me, 43979, true);
                 Talk(SAY_AGGRO);
                 events.Reset();
-                events.RescheduleEvent(EVENT_SPELL_FORCEFUL_SMASH, urand(14000, 16000));
-                events.RescheduleEvent(EVENT_SPELL_OVERLORDS_BRAND, urand(4000, 6000));
-                events.RescheduleEvent(EVENT_RIMEFANG_SPELL_ICY_BLAST, 5000);
-                events.RescheduleEvent(EVENT_SPELL_MARK_OF_RIMEFANG, 25000);
+                events.RescheduleEvent(EVENT_SPELL_FORCEFUL_SMASH, 14s, 16s);
+                events.RescheduleEvent(EVENT_SPELL_OVERLORDS_BRAND, 4s, 6s);
+                events.RescheduleEvent(EVENT_RIMEFANG_SPELL_ICY_BLAST, 5s);
+                events.RescheduleEvent(EVENT_SPELL_MARK_OF_RIMEFANG, 25s);
             }
         }
 
@@ -160,39 +159,39 @@ public:
                     {
                         me->CastSpell(me->GetVictim(), SPELL_FORCEFUL_SMASH, false);
 
-                        events.RescheduleEvent(EVENT_SPELL_UNHOLY_POWER, 1000);
+                        events.RescheduleEvent(EVENT_SPELL_UNHOLY_POWER, 1s);
                         break;
                     }
                     events.RepeatEvent(3000);
                     break;
                 case EVENT_SPELL_UNHOLY_POWER:
-                    Talk(SAY_SMASH);
-                    Talk(EMOTE_SMASH);
+                    Talk(SAY_DARK_MIGHT);
+                    Talk(EMOTE_DARK_MIGHT);
                     me->CastSpell(me, SPELL_UNHOLY_POWER, false);
 
-                    events.ScheduleEvent(EVENT_SPELL_FORCEFUL_SMASH, urand(40000, 48000));
+                    events.ScheduleEvent(EVENT_SPELL_FORCEFUL_SMASH, 40s, 48s);
                     break;
                 case EVENT_SPELL_OVERLORDS_BRAND:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 95.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 95.0f, true))
                         me->CastSpell(target, SPELL_OVERLORDS_BRAND, false);
-                    events.RepeatEvent(urand(11000, 12000));
+                    events.Repeat(11s, 12s);
                     break;
                 case EVENT_RIMEFANG_SPELL_ICY_BLAST:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 190.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 190.0f, true))
                         if (Creature* c = pInstance->instance->GetCreature(pInstance->GetGuidData(DATA_RIMEFANG_GUID)))
                             c->CastSpell(target, RIMEFANG_SPELL_ICY_BLAST, false);
-                    events.RepeatEvent(5000);
+                    events.Repeat(5s);
                     break;
                 case EVENT_SPELL_MARK_OF_RIMEFANG:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 190.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 190.0f, true))
                         if (Creature* c = pInstance->instance->GetCreature(pInstance->GetGuidData(DATA_RIMEFANG_GUID)))
                         {
                             Talk(SAY_MARK);
-                            c->AI()->Talk(EMOTE_RIMEFANG_ICEBOLT, target);
+                            Talk(EMOTE_MARK, target);
                             c->CastSpell(target, RIMEFANG_SPELL_HOARFROST, false);
                         }
-                    events.RepeatEvent(25000);
-                    events.RescheduleEvent(EVENT_RIMEFANG_SPELL_ICY_BLAST, 10000);
+                    events.Repeat(25s);
+                    events.RescheduleEvent(EVENT_RIMEFANG_SPELL_ICY_BLAST, 10s);
                     break;
             }
 
@@ -211,10 +210,10 @@ public:
         void KilledUnit(Unit* who) override
         {
             if (who->GetTypeId() == TYPEID_PLAYER)
-                Talk(RAND(SAY_SLAY_1, SAY_SLAY_2));
+                Talk(SAY_SLAY);
         }
 
-        bool CanAIAttack(const Unit* who) const override
+        bool CanAIAttack(Unit const* who) const override
         {
             switch (who->GetEntry())
             {

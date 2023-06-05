@@ -147,10 +147,10 @@ namespace lfg
         ~Lfg5Guids() { delete roles; }
         void addRoles(LfgRolesMap const& r) { roles = new LfgRolesMap(r); }
         void clear() { guids.fill(ObjectGuid::Empty); }
-        bool empty() const { return guids[0] == ObjectGuid::Empty; }
-        ObjectGuid front() const { return guids[0]; }
+        [[nodiscard]] bool empty() const { return guids[0] == ObjectGuid::Empty; }
+        [[nodiscard]] ObjectGuid front() const { return guids[0]; }
 
-        uint8 size() const
+        [[nodiscard]] uint8 size() const
         {
             if (guids[2])
             {
@@ -422,7 +422,7 @@ namespace lfg
             }
         }
 
-        bool hasGuid(const ObjectGuid& g) const
+        [[nodiscard]] bool hasGuid(const ObjectGuid& g) const
         {
             return g && (guids[0] == g || guids[1] == g || guids[2] == g || guids[3] == g || guids[4] == g);
         }
@@ -481,10 +481,10 @@ namespace lfg
             roles = x.roles ? (new LfgRolesMap(*(x.roles))) : nullptr;
         }
 
-        std::string toString() const // for debugging
+        [[nodiscard]] std::string toString() const // for debugging
         {
             std::ostringstream o;
-            o << guids[0].ToString().c_str() << "," << guids[1].ToString().c_str() << "," << guids[2].ToString().c_str() << "," << guids[3].ToString().c_str() << "," << guids[4].ToString().c_str() << ":" << (roles ? 1 : 0);
+            o << guids[0].ToString() << "," << guids[1].ToString() << "," << guids[2].ToString() << "," << guids[3].ToString() << "," << guids[4].ToString() << ":" << (roles ? 1 : 0);
             return o.str();
         }
     };

@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackrock_spire.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "blackrock_spire.h"
 
 enum Spells
 {
@@ -68,13 +68,13 @@ public:
             Summoned = false;
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
-            _EnterCombat();
-            events.ScheduleEvent(EVENT_BLAST_WAVE, 20 * IN_MILLISECONDS);
-            events.ScheduleEvent(EVENT_SHOUT,       2 * IN_MILLISECONDS);
-            events.ScheduleEvent(EVENT_CLEAVE,      6 * IN_MILLISECONDS);
-            events.ScheduleEvent(EVENT_KNOCK_AWAY, 12 * IN_MILLISECONDS);
+            _JustEngagedWith();
+            events.ScheduleEvent(EVENT_BLAST_WAVE, 20s);
+            events.ScheduleEvent(EVENT_SHOUT, 2s);
+            events.ScheduleEvent(EVENT_CLEAVE, 6s);
+            events.ScheduleEvent(EVENT_KNOCK_AWAY, 12s);
         }
 
         void JustDied(Unit* /*killer*/) override
@@ -90,7 +90,7 @@ public:
             if (!Summoned && HealthBelowPct(51))
             {
                 Talk(CALL_HELP);
-                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                 {
                     if (Creature* warlord = me->SummonCreature(NPC_SPIRESTONE_WARLORD, SummonLocation1, TEMPSUMMON_TIMED_DESPAWN, 300 * IN_MILLISECONDS))
                         warlord->AI()->AttackStart(target);
@@ -111,19 +111,19 @@ public:
                 {
                     case EVENT_BLAST_WAVE:
                         DoCastVictim(SPELL_BLASTWAVE);
-                        events.ScheduleEvent(EVENT_BLAST_WAVE, 20 * IN_MILLISECONDS);
+                        events.ScheduleEvent(EVENT_BLAST_WAVE, 20s);
                         break;
                     case EVENT_SHOUT:
                         DoCastVictim(SPELL_SHOUT);
-                        events.ScheduleEvent(EVENT_SHOUT, 10 * IN_MILLISECONDS);
+                        events.ScheduleEvent(EVENT_SHOUT, 10s);
                         break;
                     case EVENT_CLEAVE:
                         DoCastVictim(SPELL_CLEAVE);
-                        events.ScheduleEvent(EVENT_CLEAVE, 7 * IN_MILLISECONDS);
+                        events.ScheduleEvent(EVENT_CLEAVE, 7s);
                         break;
                     case EVENT_KNOCK_AWAY:
                         DoCastVictim(SPELL_KNOCKAWAY);
-                        events.ScheduleEvent(EVENT_KNOCK_AWAY, 14 * IN_MILLISECONDS);
+                        events.ScheduleEvent(EVENT_KNOCK_AWAY, 14s);
                         break;
                 }
             }

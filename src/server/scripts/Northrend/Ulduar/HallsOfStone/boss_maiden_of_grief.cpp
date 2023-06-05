@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "halls_of_stone.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "halls_of_stone.h"
 
 enum spells
 {
@@ -78,12 +78,12 @@ public:
             }
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
-            events.ScheduleEvent(EVENT_STORM, 5000);
-            events.ScheduleEvent(EVENT_SHOCK, 26000 + rand() % 6000);
-            events.ScheduleEvent(EVENT_PILLAR, 12000 + rand() % 8000);
-            events.ScheduleEvent(EVENT_PARTING, 8000);
+            events.ScheduleEvent(EVENT_STORM, 5s);
+            events.ScheduleEvent(EVENT_SHOCK, 26s, 32s);
+            events.ScheduleEvent(EVENT_PILLAR, 12s, 20s);
+            events.ScheduleEvent(EVENT_PARTING, 8s);
 
             Talk(SAY_AGGRO);
             if (pInstance)
@@ -108,7 +108,7 @@ public:
                 case EVENT_STORM:
                     {
                         me->CastSpell(me->GetVictim(), DUNGEON_MODE(STORM_OF_GRIEF, STORM_OF_GRIEF_H), true);
-                        events.RepeatEvent(10000);
+                        events.Repeat(10s);
                         break;
                     }
                 case EVENT_SHOCK:
@@ -116,23 +116,23 @@ public:
                         me->CastSpell(me->GetVictim(), DUNGEON_MODE(SHOCK_OF_SORROW, SHOCK_OF_SORROW_H), false);
                         Talk(SAY_STUN);
 
-                        events.RepeatEvent(16000 + rand() % 6000);
+                        events.Repeat(16s, 22s);
                         break;
                     }
                 case EVENT_PILLAR:
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 50.0f, true, 0))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 50.0f, true, 0))
                             me->CastSpell(target, DUNGEON_MODE(PILLAR_OF_WOE, PILLAR_OF_WOE_H), false);
 
-                        events.RepeatEvent(12000 + rand() % 8000);
+                        events.Repeat(12s, 20s);
                         break;
                     }
                 case EVENT_PARTING:
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 50.0f, true, 0))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 50.0f, true, 0))
                             me->CastSpell(target, PARTING_SORROW, false);
 
-                        events.RepeatEvent(6000 + rand() % 10000);
+                        events.Repeat(6s, 16s);
                         break;
                     }
             }

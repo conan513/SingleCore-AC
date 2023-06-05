@@ -30,12 +30,12 @@ BINPATH="$AC_PATH_ROOT/env/dist"
 # DATAPATH_ZIP="$DATAPATH/data.zip"
 
 # azerothcore's official remote source address to pull from
-# by default git will fetch form the azrothcore remote 
+# by default git will fetch form the azrothcore remote
 # You can change it to "origin" if you want to fetch/pull from the set remote
 ORIGIN_REMOTE="https://github.com/azerothcore/azerothcore-wotlk.git"
 
-# Branch configuration for the installer to pull from. 
-# By default git will select the current working branch 
+# Branch configuration for the installer to pull from.
+# By default git will select the current working branch
 # You can set it to "master" if you want the latest updates
 INSTALLER_PULL_FROM=
 
@@ -44,8 +44,6 @@ INSTALLER_PULL_FROM=
 #  COMPILER_CONFIGURATIONS
 #
 ##############################################
-
-
 # Set preferred compilers.
 # To use gcc (not suggested) instead of clang change in:
 #  CCOMPILERC="/usr/bin/gcc"
@@ -53,7 +51,6 @@ INSTALLER_PULL_FROM=
 #
 CCOMPILERC="/usr/bin/clang"
 CCOMPILERCXX="/usr/bin/clang++"
-
 
 # how many thread must be used for compilation ( leave zero to use all available )
 MTHREADS=${MTHREADS:-0}
@@ -69,23 +66,31 @@ CDEBUG=OFF
 # * RelWithDebInfo: optimized, *with* debug info, but no debug (output) code or asserts.
 # * MinSizeRel: same as Release but optimizing for size rather than speed.
 CTYPE=${CTYPE:-Release}
+
 # compile scripts
 CSCRIPTS=${CSCRIPTS:-static}
+
+# compile modules
+CMODULES=${CMODULES:-static}
+
 # compile unit tests
 CBUILD_TESTING=OFF
-# compile server
-CSERVERS=${CSERVERS:-ON}
-# compile tools
-CTOOLS=${CTOOLS:-OFF}
+
 # use precompiled headers ( fatest compilation but not optimized if you change headers often )
 CSCRIPTPCH=${CSCRIPTPCH:-ON}
 CCOREPCH=${CCOREPCH:-ON}
-# compile with C++20
-CUSE_CPP_20=${CUSE_CPP_20:-OFF}
 
-# Skip specific modules from compilation (cmake reconfigure needed)
-# use semicolon ; to separate modules
-CDISABLED_AC_MODULES=""
+# build apps list variable
+CAPPS_BUILD=${CAPPS_BUILD:-all}
+
+# build tools list variable
+CTOOLS_BUILD=${CTOOLS_BUILD:-none}
+
+# build apps list
+CBUILD_APPS_LIST=${CBUILD_APPS_LIST:-''}
+
+# build tools list
+CBUILD_TOOLS_LIST=${CBUILD_TOOLS_LIST:-''}
 
 # you can add your custom definitions here ( -D )
 # example:  CCUSTOMOPTIONS=" -DWITH_PERFTOOLS=ON
@@ -140,124 +145,3 @@ export CPUPROFILESIGNAL=${CPUPROFILESIGNAL:-12}
 #export HEAPCHECK=${HEAPCHECK:-normal}
 
 
-##############################################
-#
-#  DB ASSEMBLER / EXPORTER CONFIGURATIONS
-#
-##############################################
-
-#
-# Comma separated list of databases
-#
-# You can add another element here if you need
-# to support multiple databases
-#
-
-DBLIST=${DBLIST:-"AUTH,CHARACTERS,WORLD"}
-# convert from comma separated list to an array.
-# This is needed to support environment variables
-readarray -td, DATABASES <<<"$DBLIST";
-
-OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$AC_PATH_ROOT/env/dist/sql/"}
-
-DBASM_WAIT_TIMEOUT=${DBASM_WAIT_TIMEOUT:-5}
-DBASM_WAIT_RETRIES=${DBASM_WAIT_RETRIES:-3}
-
-####### BACKUP
-# Set to true if you want to backup your azerothcore databases before importing the SQL with the db_assembler
-# Do not forget to stop your database software (mysql) before doing so
-
-BACKUP_ENABLE=false
-
-BACKUP_FOLDER="$AC_PATH_ROOT/env/dist/sql/backup/"
-
-#######
-
-# FULL DB
-DB_AUTH_PATHS=(
-    "$SRCPATH/data/sql/base/db_auth/"
-)
-
-DB_CHARACTERS_PATHS=(
-    "$SRCPATH/data/sql/base/db_characters"
-)
-
-DB_WORLD_PATHS=(
-    "$SRCPATH/data/sql/base/db_world/"
-)
-
-# UPDATES
-DB_AUTH_UPDATES_PATHS=(
-    "$SRCPATH/data/sql/updates/db_auth/"
-    "$SRCPATH/data/sql/updates/pending_db_auth/"
-)
-
-DB_CHARACTERS_UPDATES_PATHS=(
-    "$SRCPATH/data/sql/updates/db_characters/"
-    "$SRCPATH/data/sql/updates/pending_db_characters/"
-)
-
-DB_WORLD_UPDATES_PATHS=(
-    "$SRCPATH/data/sql/updates/db_world/"
-    "$SRCPATH/data/sql/updates/pending_db_world/"
-)
-
-# CUSTOM
-DB_AUTH_CUSTOM_PATHS=(
-    "$SRCPATH/data/sql/custom/db_auth/"
-)
-
-DB_CHARACTERS_CUSTOM_PATHS=(
-    "$SRCPATH/data/sql/custom/db_characters/"
-)
-
-DB_WORLD_CUSTOM_PATHS=(
-    "$SRCPATH/data/sql/custom/db_world/"
-)
-
-##############################################
-#
-#  DB EXPORTER/IMPORTER CONFIGURATIONS
-#
-##############################################
-
-#
-# Skip import of base sql files to avoid
-# table dropping
-#
-DB_SKIP_BASE_IMPORT_IF_EXISTS=true
-
-#
-# Example:
-#        "C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe"
-#        "/usr/bin/mysql"
-#        "mysql"
-#
-
-DB_MYSQL_EXEC="mysql"
-DB_MYSQL_DUMP_EXEC="mysqldump"
-
-
-DB_AUTH_CONF=${DB_AUTH_CONF:-"MYSQL_USER='acore'; \
-                    MYSQL_PASS='acore'; \
-                    MYSQL_HOST='localhost';\
-                    MYSQL_PORT='3306';\
-                    "}
-
-DB_CHARACTERS_CONF=${DB_CHARACTERS_CONF:-"MYSQL_USER='acore'; \
-                    MYSQL_PASS='acore'; \
-                    MYSQL_HOST='localhost';\
-                    MYSQL_PORT='3306';\
-                    "}
-
-DB_WORLD_CONF=${DB_WORLD_CONF:-"MYSQL_USER='acore'; \
-                    MYSQL_PASS='acore'; \
-                    MYSQL_HOST='localhost';\
-                    MYSQL_PORT='3306';\
-                    "}
-
-DB_AUTH_NAME="acore_auth"
-
-DB_CHARACTERS_NAME="acore_characters"
-
-DB_WORLD_NAME="acore_world"

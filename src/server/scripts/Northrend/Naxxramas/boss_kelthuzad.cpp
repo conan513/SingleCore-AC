@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "naxxramas.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "naxxramas.h"
 
 enum Yells
 {
@@ -156,7 +156,7 @@ public:
 
         float NormalizeOrientation(float o)
         {
-            return fmod(o, 2.0f * static_cast<float>(M_PI)); // Only positive values will be passed
+            return std::fmod(o, 2.0f * static_cast<float>(M_PI)); // Only positive values will be passed
         }
 
         void SpawnHelpers()
@@ -179,7 +179,7 @@ public:
                 for (uint8 j = 0; j < 8; ++j)
                 {
                     float angle = M_PI * 2 / 8 * j;
-                    me->SummonCreature(NPC_SOLDIER_OF_THE_FROZEN_WASTES, SummonGroups[i].GetPositionX() + 6 * cos(angle), SummonGroups[i].GetPositionY() + 6 * sin(angle), SummonGroups[i].GetPositionZ(), SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
+                    me->SummonCreature(NPC_SOLDIER_OF_THE_FROZEN_WASTES, SummonGroups[i].GetPositionX() + 6 * cos(angle), SummonGroups[i].GetPositionY() + 6 * std::sin(angle), SummonGroups[i].GetPositionZ(), SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
                 }
             }
             for (uint8 i = 6; i < 12; ++i)
@@ -188,7 +188,7 @@ public:
                 {
                     float dist = j == 2 ? 0.0f : 8.0f; // second in middle
                     float angle = SummonGroups[i].GetOrientation() + M_PI * 2 / 4 * j;
-                    me->SummonCreature(NPC_UNSTOPPABLE_ABOMINATION, SummonGroups[i].GetPositionX() + dist * cos(angle), SummonGroups[i].GetPositionY() + dist * sin(angle), SummonGroups[i].GetPositionZ(), SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
+                    me->SummonCreature(NPC_UNSTOPPABLE_ABOMINATION, SummonGroups[i].GetPositionX() + dist * cos(angle), SummonGroups[i].GetPositionY() + dist * std::sin(angle), SummonGroups[i].GetPositionZ(), SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
                 }
             }
             for (uint8 i = 6; i < 12; ++i)
@@ -196,7 +196,7 @@ public:
                 for (uint8 j = 0; j < 1; ++j)
                 {
                     float angle = SummonGroups[i].GetOrientation() + M_PI;
-                    me->SummonCreature(NPC_SOUL_WEAVER, SummonGroups[i].GetPositionX() + 6 * cos(angle), SummonGroups[i].GetPositionY() + 6 * sin(angle), SummonGroups[i].GetPositionZ() + 0.5f, SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
+                    me->SummonCreature(NPC_SOUL_WEAVER, SummonGroups[i].GetPositionX() + 6 * cos(angle), SummonGroups[i].GetPositionY() + 6 * std::sin(angle), SummonGroups[i].GetPositionZ() + 0.5f, SummonGroups[i].GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
                 }
             }
         }
@@ -221,7 +221,7 @@ public:
             BossAI::Reset();
             events.Reset();
             summons.DespawnAll();
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
             me->SetReactState(REACT_AGGRESSIVE);
             if (GameObject* go = me->GetMap()->GetGameObject(pInstance->GetGuidData(DATA_KELTHUZAD_FLOOR)))
             {
@@ -254,10 +254,10 @@ public:
             }
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
-            ScriptedAI::EnterEvadeMode();
+            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+            ScriptedAI::EnterEvadeMode(why);
         }
 
         void KilledUnit(Unit* who) override
@@ -296,26 +296,26 @@ public:
                 AttackStart(who);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             Talk(SAY_SUMMON_MINIONS);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
             me->RemoveAllAttackers();
             me->SetTarget();
             me->SetReactState(REACT_PASSIVE);
             me->CastSpell(me, SPELL_KELTHUZAD_CHANNEL, false);
-            events.ScheduleEvent(EVENT_SPAWN_POOL, 5000);
-            events.ScheduleEvent(EVENT_SUMMON_SOLDIER, 6400);
-            events.ScheduleEvent(EVENT_SUMMON_UNSTOPPABLE_ABOMINATION, 10000);
-            events.ScheduleEvent(EVENT_SUMMON_SOUL_WEAVER, 12000);
-            events.ScheduleEvent(EVENT_PHASE_2, 228000);
-            events.ScheduleEvent(EVENT_ENRAGE, 900000);
+            events.ScheduleEvent(EVENT_SPAWN_POOL, 5s);
+            events.ScheduleEvent(EVENT_SUMMON_SOLDIER, 6400ms);
+            events.ScheduleEvent(EVENT_SUMMON_UNSTOPPABLE_ABOMINATION, 10s);
+            events.ScheduleEvent(EVENT_SUMMON_SOUL_WEAVER, 12s);
+            events.ScheduleEvent(EVENT_PHASE_2, 228s);
+            events.ScheduleEvent(EVENT_ENRAGE, 15min);
             if (pInstance)
             {
                 if (GameObject* go = me->GetMap()->GetGameObject(pInstance->GetGuidData(DATA_KELTHUZAD_FLOOR)))
                 {
-                    events.ScheduleEvent(EVENT_FLOOR_CHANGE, 15000);
+                    events.ScheduleEvent(EVENT_FLOOR_CHANGE, 15s);
                     go->SetGoState(GO_STATE_ACTIVE);
                 }
             }
@@ -357,7 +357,7 @@ public:
                     {
                         if (GameObject* go = me->GetMap()->GetGameObject(pInstance->GetGuidData(DATA_KELTHUZAD_FLOOR)))
                         {
-                            events.ScheduleEvent(EVENT_FLOOR_CHANGE, 15000);
+                            events.ScheduleEvent(EVENT_FLOOR_CHANGE, 15s);
                             go->SetGoState(GO_STATE_READY);
                             go->SetPhaseMask(2, true);
                         }
@@ -368,34 +368,34 @@ public:
                     break;
                 case EVENT_SUMMON_SOLDIER:
                     SummonHelper(NPC_SOLDIER_OF_THE_FROZEN_WASTES, 1);
-                    events.RepeatEvent(3100);
+                    events.Repeat(3100ms);
                     break;
                 case EVENT_SUMMON_UNSTOPPABLE_ABOMINATION:
                     SummonHelper(NPC_UNSTOPPABLE_ABOMINATION, 1);
-                    events.RepeatEvent(18500);
+                    events.Repeat(18s + 500ms);
                     break;
                 case EVENT_SUMMON_SOUL_WEAVER:
                     SummonHelper(NPC_SOUL_WEAVER, 1);
-                    events.RepeatEvent(30000);
+                    events.Repeat(30s);
                     break;
                 case EVENT_PHASE_2:
                     Talk(EMOTE_PHASE_TWO);
                     Talk(SAY_AGGRO);
                     events.Reset();
                     summons.DoAction(ACTION_SECOND_PHASE);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
                     me->GetMotionMaster()->MoveChase(me->GetVictim());
                     me->RemoveAura(SPELL_KELTHUZAD_CHANNEL);
                     me->SetReactState(REACT_AGGRESSIVE);
-                    events.ScheduleEvent(EVENT_FROST_BOLT_SINGLE, urand(2000, 10000));
-                    events.ScheduleEvent(EVENT_FROST_BOLT_MULTI, urand(15000, 30000));
-                    events.ScheduleEvent(EVENT_DETONATE_MANA, 30000);
-                    events.ScheduleEvent(EVENT_PHASE_3, 1000);
-                    events.ScheduleEvent(EVENT_SHADOW_FISSURE, 25000);
-                    events.ScheduleEvent(EVENT_FROST_BLAST, 45000);
+                    events.ScheduleEvent(EVENT_FROST_BOLT_SINGLE, 2s, 10s);
+                    events.ScheduleEvent(EVENT_FROST_BOLT_MULTI, 15s, 30s);
+                    events.ScheduleEvent(EVENT_DETONATE_MANA, 30s);
+                    events.ScheduleEvent(EVENT_PHASE_3, 1s);
+                    events.ScheduleEvent(EVENT_SHADOW_FISSURE, 25s);
+                    events.ScheduleEvent(EVENT_FROST_BLAST, 45s);
                     if (Is25ManRaid())
                     {
-                        events.ScheduleEvent(EVENT_CHAINS, 90000);
+                        events.ScheduleEvent(EVENT_CHAINS, 90s);
                     }
                     break;
                 case EVENT_ENRAGE:
@@ -403,42 +403,42 @@ public:
                     break;
                 case EVENT_FROST_BOLT_SINGLE:
                     me->CastSpell(me->GetVictim(), RAID_MODE(SPELL_FROST_BOLT_SINGLE_10, SPELL_FROST_BOLT_SINGLE_25), false);
-                    events.RepeatEvent(urand(2000, 10000));
+                    events.Repeat(2s, 10s);
                     break;
                 case EVENT_FROST_BOLT_MULTI:
                     me->CastSpell(me, RAID_MODE(SPELL_FROST_BOLT_MULTI_10, SPELL_FROST_BOLT_MULTI_25), false);
-                    events.RepeatEvent(urand(15000, 30000));
+                    events.Repeat(15s, 30s);
                     break;
                 case EVENT_SHADOW_FISSURE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100.0f, true))
                     {
                         me->CastSpell(target, SPELL_SHADOW_FISURE, false);
                     }
-                    events.RepeatEvent(25000);
+                    events.Repeat(25s);
                     break;
                 case EVENT_FROST_BLAST:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, RAID_MODE(1, 0), 0, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, RAID_MODE(1, 0), 0, true))
                     {
                         me->CastSpell(target, SPELL_FROST_BLAST, false);
                     }
                     Talk(SAY_FROST_BLAST);
-                    events.RepeatEvent(45000);
+                    events.Repeat(45s);
                     break;
                 case EVENT_CHAINS:
                     for (uint8 i = 0; i < 3; ++i)
                     {
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 200, true, -SPELL_CHAINS_OF_KELTHUZAD))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 200, true, true, -SPELL_CHAINS_OF_KELTHUZAD))
                         {
                             me->CastSpell(target, SPELL_CHAINS_OF_KELTHUZAD, true);
                         }
                     }
                     Talk(SAY_CHAIN);
-                    events.RepeatEvent(90000);
+                    events.Repeat(90s);
                     break;
                 case EVENT_DETONATE_MANA:
                     {
                         std::vector<Unit*> unitList;
-                        ThreatContainer::StorageType const& threatList = me->getThreatMgr().getThreatList();
+                        ThreatContainer::StorageType const& threatList = me->GetThreatMgr().GetThreatList();
                         for (auto itr : threatList)
                         {
                             if (itr->getTarget()->GetTypeId() == TYPEID_PLAYER
@@ -455,15 +455,15 @@ public:
                             me->CastSpell(*itr, SPELL_DETONATE_MANA, false);
                             Talk(SAY_SPECIAL);
                         }
-                        events.RepeatEvent(30000);
+                        events.Repeat(30s);
                         break;
                     }
                 case EVENT_PHASE_3:
                     if (me->HealthBelowPct(45))
                     {
                         Talk(SAY_REQUEST_AID);
-                        events.DelayEvents(5500);
-                        events.ScheduleEvent(EVENT_P3_LICH_KING_SAY, 5000);
+                        events.DelayEvents(5500ms);
+                        events.ScheduleEvent(EVENT_P3_LICH_KING_SAY, 5s);
                         if (GameObject* go = me->GetMap()->GetGameObject(pInstance->GetGuidData(DATA_KELTHUZAD_PORTAL_1)))
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
@@ -482,7 +482,7 @@ public:
                         }
                         break;
                     }
-                    events.RepeatEvent(1000);
+                    events.Repeat(1s);
                     break;
                 case EVENT_P3_LICH_KING_SAY:
                     if (pInstance)
@@ -505,7 +505,7 @@ public:
                     }
                     break;
             }
-            if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE))
+            if (!me->HasUnitFlag(UNIT_FLAG_DISABLE_MOVE))
                 DoMeleeAttackIfReady();
         }
     };
@@ -554,8 +554,8 @@ public:
             }
             if (param == ACTION_GUARDIANS_OFF)
             {
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 me->RemoveAllAuras();
                 EnterEvadeMode();
                 me->SetPosition(me->GetHomePosition());
@@ -570,7 +570,7 @@ public:
             ScriptedAI::MoveInLineOfSight(who);
         }
 
-        void JustDied(Unit* ) override
+        void JustDied(Unit* /*killer*/) override
         {
             if (me->GetEntry() == NPC_UNSTOPPABLE_ABOMINATION && me->GetInstanceScript())
             {
@@ -601,17 +601,17 @@ public:
             }
         }
 
-        void EnterCombat(Unit*  /*who*/) override
+        void JustEngagedWith(Unit*  /*who*/) override
         {
             me->SetInCombatWithZone();
             if (me->GetEntry() == NPC_UNSTOPPABLE_ABOMINATION)
             {
-                events.ScheduleEvent(EVENT_MINION_FRENZY, 1000);
-                events.ScheduleEvent(EVENT_MINION_MORTAL_WOUND, 5000);
+                events.ScheduleEvent(EVENT_MINION_FRENZY, 1s);
+                events.ScheduleEvent(EVENT_MINION_MORTAL_WOUND, 5s);
             }
             else if (me->GetEntry() == NPC_GUARDIAN_OF_ICECROWN)
             {
-                events.ScheduleEvent(EVENT_MINION_BLOOD_TAP, 15000);
+                events.ScheduleEvent(EVENT_MINION_BLOOD_TAP, 15s);
             }
         }
 
@@ -644,7 +644,7 @@ public:
             {
                 case EVENT_MINION_MORTAL_WOUND:
                     me->CastSpell(me->GetVictim(), SPELL_MORTAL_WOUND, false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     break;
                 case EVENT_MINION_FRENZY:
                     if (me->HealthBelowPct(35))
@@ -652,11 +652,11 @@ public:
                         me->CastSpell(me, SPELL_FRENZY, true);
                         break;
                     }
-                    events.RepeatEvent(1000);
+                    events.Repeat(1s);
                     break;
                 case EVENT_MINION_BLOOD_TAP:
                     me->CastSpell(me->GetVictim(), SPELL_BLOOD_TAP, false);
-                    events.RepeatEvent(15000);
+                    events.Repeat(15s);
                     break;
             }
             DoMeleeAttackIfReady();

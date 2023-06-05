@@ -20,7 +20,30 @@
 
 #include "DatabaseEnvFwd.h"
 #include "Define.h"
+#include "Field.h"
+#include <tuple>
 #include <vector>
+
+template<typename T>
+struct ResultIterator
+{
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = T;
+    using pointer           = T*;
+    using reference         = T&;
+
+    explicit ResultIterator(pointer ptr) : _ptr(ptr) { }
+
+    reference operator*() const { return *_ptr; }
+    pointer operator->() { return _ptr; }
+    ResultIterator& operator++() { if (!_ptr->NextRow()) _ptr = nullptr; return *this; }
+
+    bool operator!=(const ResultIterator& right) { return _ptr != right._ptr; }
+
+private:
+    pointer _ptr;
+};
 
 class AC_DATABASE_API ResultSet
 {
@@ -29,12 +52,31 @@ public:
     ~ResultSet();
 
     bool NextRow();
-    uint64 GetRowCount() const { return _rowCount; }
-    uint32 GetFieldCount() const { return _fieldCount; }
-    std::string GetFieldName(uint32 index) const;
+    [[nodiscard]] uint64 GetRowCount() const { return _rowCount; }
+    [[nodiscard]] uint32 GetFieldCount() const { return _fieldCount; }
+    [[nodiscard]] std::string GetFieldName(uint32 index) const;
 
-    Field* Fetch() const { return _currentRow; }
+    [[nodiscard]] Field* Fetch() const { return _currentRow; }
     Field const& operator[](std::size_t index) const;
+
+    template<typename... Ts>
+    inline std::tuple<Ts...> FetchTuple()
+    {
+        AssertRows(sizeof...(Ts));
+
+        std::tuple<Ts...> theTuple = {};
+
+        std::apply([this](Ts&... args)
+        {
+            uint8 index{ 0 };
+            ((args = _currentRow[index].Get<Ts>(), index++), ...);
+        }, theTuple);
+
+        return theTuple;
+    }
+
+    auto begin()      { return ResultIterator<ResultSet>(this); }
+    static auto end() { return ResultIterator<ResultSet>(nullptr); }
 
 protected:
     std::vector<QueryResultFieldMetadata> _fieldMetadata;
@@ -44,6 +86,8 @@ protected:
 
 private:
     void CleanUp();
+    void AssertRows(std::size_t sizeRows);
+
     MySQLResult* _result;
     MySQLField* _fields;
 
@@ -58,11 +102,30 @@ public:
     ~PreparedResultSet();
 
     bool NextRow();
-    uint64 GetRowCount() const { return m_rowCount; }
-    uint32 GetFieldCount() const { return m_fieldCount; }
+    [[nodiscard]] uint64 GetRowCount() const { return m_rowCount; }
+    [[nodiscard]] uint32 GetFieldCount() const { return m_fieldCount; }
 
-    Field* Fetch() const;
+    [[nodiscard]] Field* Fetch() const;
     Field const& operator[](std::size_t index) const;
+
+    template<typename... Ts>
+    inline std::tuple<Ts...> FetchTuple()
+    {
+        AssertRows(sizeof...(Ts));
+
+        std::tuple<Ts...> theTuple = {};
+
+        std::apply([this](Ts&... args)
+        {
+            uint8 index{ 0 };
+            ((args = m_rows[uint32(m_rowPosition) * m_fieldCount + index].Get<Ts>(), index++), ...);
+        }, theTuple);
+
+        return theTuple;
+    }
+
+    auto begin()        { return ResultIterator<PreparedResultSet>(this); }
+    static auto end()   { return ResultIterator<PreparedResultSet>(nullptr); }
 
 protected:
     std::vector<QueryResultFieldMetadata> m_fieldMetadata;
@@ -78,6 +141,8 @@ private:
 
     void CleanUp();
     bool _NextRow();
+
+    void AssertRows(std::size_t sizeRows);
 
     PreparedResultSet(PreparedResultSet const& right) = delete;
     PreparedResultSet& operator=(PreparedResultSet const& right) = delete;

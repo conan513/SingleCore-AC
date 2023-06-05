@@ -16,21 +16,21 @@ npc_sergeant_bly
 npc_weegli_blastfuse
 EndContentData */
 
-#include "ScriptMgr.h"
-#include "ScriptSystem.h"
+#include "zulfarrak.h"
+#include "Cell.h"
+#include "CellImpl.h"
 #include "GameObject.h"
 #include "GameObjectAI.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
 #include "InstanceScript.h"
 #include "MotionMaster.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
+#include "ScriptMgr.h"
+#include "ScriptSystem.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "zulfarrak.h"
-#include "Cell.h"
-#include "CellImpl.h"
-#include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
 
 /*######
 ## npc_sergeant_bly
@@ -68,7 +68,7 @@ public:
             me->SetFaction(FACTION_FRIENDLY);
             postGossipStep = 0;
             Text_Timer = 0;
-            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
         }
 
         InstanceScript* instance;
@@ -285,7 +285,7 @@ public:
                 {
                     case NPC_BLY:
                     case NPC_WEEGLI:
-                        crew->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        crew->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         break;
                     default:
                         break;
@@ -345,7 +345,7 @@ public:
 
         void InitializeAI() override
         {
-            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             Reset();
         }
 
@@ -435,7 +435,7 @@ public:
             else if (instance->GetData(DATA_PYRAMID) == PYRAMID_KILLED_ALL_TROLLS)
             {
                 instance->SetData(DATA_PYRAMID, PYRAMID_MOVED_DOWNSTAIRS);
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             }
             else if (instance->GetData(DATA_PYRAMID) == PYRAMID_DESTROY_GATES)
             {
@@ -458,7 +458,7 @@ public:
             else if (instance->GetData(DATA_PYRAMID) == PYRAMID_KILLED_ALL_TROLLS)
             {
                 instance->SetData(DATA_PYRAMID, PYRAMID_MOVED_DOWNSTAIRS);
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             }
             else if (instance->GetData(DATA_PYRAMID) == PYRAMID_DESTROY_GATES)
             {
@@ -478,7 +478,7 @@ public:
                 instance->SetData(DATA_PYRAMID, PYRAMID_DESTROY_GATES);
                 if (Creature* sergeantBly = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_BLY)))
                 {
-                    sergeantBly->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    sergeantBly->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 }
             }
         }
@@ -573,7 +573,7 @@ public:
 
             if (_summonAddsTimer <= diff)
             {
-                for (auto itr : shadowpriestSezzizAdds[_summmonAddsCount])
+                for (auto& itr : shadowpriestSezzizAdds[_summmonAddsCount])
                 {
                     if (Creature* add = me->SummonCreature(itr.first, itr.second, TEMPSUMMON_DEAD_DESPAWN, 10 * IN_MILLISECONDS))
                     {

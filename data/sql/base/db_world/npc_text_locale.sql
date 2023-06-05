@@ -1,44 +1,45 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.npc_text_locale
+-- Dumping structure for table acore_world.npc_text_locale
 DROP TABLE IF EXISTS `npc_text_locale`;
 CREATE TABLE IF NOT EXISTS `npc_text_locale` (
-  `ID` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `Locale` varchar(4) NOT NULL,
-  `Text0_0` longtext DEFAULT NULL,
-  `Text0_1` longtext DEFAULT NULL,
-  `Text1_0` longtext DEFAULT NULL,
-  `Text1_1` longtext DEFAULT NULL,
-  `Text2_0` longtext DEFAULT NULL,
-  `Text2_1` longtext DEFAULT NULL,
-  `Text3_0` longtext DEFAULT NULL,
-  `Text3_1` longtext DEFAULT NULL,
-  `Text4_0` longtext DEFAULT NULL,
-  `Text4_1` longtext DEFAULT NULL,
-  `Text5_0` longtext DEFAULT NULL,
-  `Text5_1` longtext DEFAULT NULL,
-  `Text6_0` longtext DEFAULT NULL,
-  `Text6_1` longtext DEFAULT NULL,
-  `Text7_0` longtext DEFAULT NULL,
-  `Text7_1` longtext DEFAULT NULL,
+  `ID` int unsigned NOT NULL DEFAULT '0',
+  `Locale` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Text0_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text0_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text1_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text1_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text2_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text2_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text3_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text3_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text4_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text4_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text5_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text5_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text6_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text6_1` longtext COLLATE utf8mb4_unicode_ci,
+  `Text7_0` longtext COLLATE utf8mb4_unicode_ci,
+  `Text7_1` longtext COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`ID`,`Locale`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Дамп данных таблицы _acore_world.npc_text_locale: ~23 689 rows (приблизительно)
+-- Dumping data for table acore_world.npc_text_locale: ~21,984 rows (approximately)
 DELETE FROM `npc_text_locale`;
-/*!40000 ALTER TABLE `npc_text_locale` DISABLE KEYS */;
 INSERT INTO `npc_text_locale` (`ID`, `Locale`, `Text0_0`, `Text0_1`, `Text1_0`, `Text1_1`, `Text2_0`, `Text2_1`, `Text3_0`, `Text3_1`, `Text4_0`, `Text4_1`, `Text5_0`, `Text5_1`, `Text6_0`, `Text6_1`, `Text7_0`, `Text7_1`) VALUES
 	(1, 'deDE', '', 'Seid gegrüßt, $N', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
 	(1, 'frFR', 'Salutations, $N !', 'Salutations, $N !', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -15437,11 +15438,11 @@ INSERT INTO `npc_text_locale` (`ID`, `Locale`, `Text0_0`, `Text0_1`, `Text1_0`, 
 	(13318, 'deDE', 'Der Mooswandler sieht schwer verwundet aus.', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
 	(13318, 'frFR', 'Le marchemousse a l\'air gravement blessé.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(13318, 'zhCN', '这个苔行者看起来伤得很重。', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-	(13321, 'deDE', '', 'Von diesem Dock aus fährt die Bravado zwischen Sturmwind und Auberdine hin und her.', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
+	(13321, 'deDE', '', 'Von diesem Dock aus fährt die Bravado zwischen Sturmwind und Auberdine hin und her.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(13321, 'esES', '', 'Desde este muelle, El Valentía hace el viaje de ida y vuelta entre Ventormenta y Auberdine.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(13321, 'esMX', '', 'Desde este muelle, El Valentía hace el viaje de ida y vuelta entre Ventormenta y Auberdine.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-	(13321, 'frFR', NULL, 'Depuis ce quai, la Bravoure fait l\'aller-retour entre Hurlevent et Auberdine.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-	(13321, 'zhCN', '从这个港口，勇气号往返暴风城与鲁瑟兰村两地。', '从这个港口，勇气号往返暴风城与鲁瑟兰村两地。', '从这个港口，勇气号往返暴风城与奥伯丁两地。', '从这个港口，勇气号往返暴风城与奥伯丁两地。', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(13321, 'frFR', '', 'Depuis ce quai, la Bravoure fait l\'aller-retour entre Hurlevent et Auberdine.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(13321, 'zhCN', '', '从这个码头，勇敢者号在暴风城和奥伯丁之间往返', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(13322, 'deDE', 'Meine arme Flugmaschine. Sie hat den Absturz nicht überlebt und ohne Ersatzteile kriege ich sie nie wieder zum Laufen!', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
 	(13322, 'frFR', 'Ma pauvre machine volante. Elle n\'a pas survécu à l\'accident et, si je ne trouve pas de pièces de rechange, je ne réussirai jamais à la refaire marcher !', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(13322, 'zhCN', '我可怜的飞行器。她没能撑过这场坠机，又没有额外的零件。我永远没办法修好她让她运转了!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -22017,6 +22018,8 @@ INSERT INTO `npc_text_locale` (`ID`, `Locale`, `Text0_0`, `Text0_1`, `Text1_0`, 
 	(50016, 'esMX', 'Hola, $C. Normalmente estaría al ritmo de cuidar de la gente de Ventormenta, pero muchos de los guardias están luchando en otras tierras. Así que estoy aquí, supliendo y ofreciendo recompensas cuando preferiría estar patrullando...', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(50017, 'esES', 'Hola amigo. Mi nombre es Remy.$BSoy de Crestagrana, hacia el este, y vine aquí buscando negocios, buscando negocios. Tienes algo... ¿¿algo??', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(50017, 'esMX', 'Hola amigo. Mi nombre es Remy.$BSoy de Crestagrana, hacia el este, y vine aquí buscando negocios, buscando negocios. Tienes algo... ¿¿algo??', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(50022, 'esES', '¡Saludos, $c! Un día perfecto para ir a cazar, ¿no te parece? He estado teniendo bastante suerte con los jabalíes. ¿Te gustaría intentarlo?', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(50022, 'esMX', '¡Saludos, $c! Un día perfecto para ir a cazar, ¿no te parece? He estado teniendo bastante suerte con los jabalíes. ¿Te gustaría intentarlo?', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(50028, 'esES', '¡Ajá! ¡Buen día, buen día, ¡Maestro $C! Venga, siéntese y tome un trago. Tienes una mirada emprendedora y pienso que encontrarás que hablar conmigo vale la pena...', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(50028, 'esMX', '¡Ajá! ¡Buen día, buen día, ¡Maestro $C! Venga, siéntese y tome un trago. Tienes una mirada emprendedora y pienso que encontrarás que hablar conmigo vale la pena...', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(50725, 'frFR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -22059,8 +22062,8 @@ INSERT INTO `npc_text_locale` (`ID`, `Locale`, `Text0_0`, `Text0_1`, `Text1_0`, 
 	(16777215, 'deDE', 'Seid gegrüßt, $N', 'Seid gegrüßt, $N', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
 	(16777215, 'frFR', 'Salutations $N.', 'Salutations $N.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 	(16777215, 'zhCN', '欢迎你, $n.', '你好，$n。', '欢迎你, $n.', '欢迎你, $n.', '欢迎你, $n.', '欢迎你, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.', '欢迎您, $n.');
-/*!40000 ALTER TABLE `npc_text_locale` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

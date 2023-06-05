@@ -1,29 +1,30 @@
 -- --------------------------------------------------------
--- Хост:                         127.0.0.1
--- Версия сервера:               10.6.4-MariaDB - mariadb.org binary distribution
--- Операционная система:         Win64
--- HeidiSQL Версия:              11.3.0.6295
+-- Host:                         127.0.0.1
+-- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.0.0.6468
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Дамп структуры для таблица _acore_world.game_event_creature_quest
+-- Dumping structure for table acore_world.game_event_creature_quest
 DROP TABLE IF EXISTS `game_event_creature_quest`;
 CREATE TABLE IF NOT EXISTS `game_event_creature_quest` (
-  `eventEntry` TINYINT unsigned NOT NULL COMMENT 'Entry of the game event.',
-  `id` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `quest` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `eventEntry` tinyint unsigned NOT NULL COMMENT 'Entry of the game event.',
+  `id` int unsigned NOT NULL DEFAULT '0',
+  `quest` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`quest`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Дамп данных таблицы _acore_world.game_event_creature_quest: 225 rows
+-- Dumping data for table acore_world.game_event_creature_quest: ~215 rows (approximately)
 DELETE FROM `game_event_creature_quest`;
-/*!40000 ALTER TABLE `game_event_creature_quest` DISABLE KEYS */;
 INSERT INTO `game_event_creature_quest` (`eventEntry`, `id`, `quest`) VALUES
 	(8, 279, 9025),
 	(8, 5204, 8980),
@@ -233,16 +234,6 @@ INSERT INTO `game_event_creature_quest` (`eventEntry`, `id`, `quest`) VALUES
 	(10, 33533, 13959),
 	(10, 34365, 13926),
 	(10, 34365, 13927),
-	(51, 34435, 13952),
-	(51, 34476, 14174),
-	(51, 34477, 14175),
-	(51, 34478, 14167),
-	(51, 34479, 14170),
-	(51, 34480, 14176),
-	(51, 34481, 14168),
-	(51, 34482, 14177),
-	(51, 34483, 14171),
-	(51, 34484, 14169),
 	(61, 39654, 25445),
 	(61, 40184, 25444),
 	(61, 40184, 25446),
@@ -250,8 +241,8 @@ INSERT INTO `game_event_creature_quest` (`eventEntry`, `id`, `quest`) VALUES
 	(61, 40253, 25461),
 	(61, 40253, 25495),
 	(61, 40391, 25480);
-/*!40000 ALTER TABLE `game_event_creature_quest` ENABLE KEYS */;
 
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -26,6 +26,7 @@
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
+#include "SpellMgr.h"
 #include "SpellScript.h"
 
 enum DruidSpells
@@ -54,12 +55,16 @@ enum DruidSpells
     SPELL_DRUID_SURVIVAL_INSTINCTS          = 50322,
     SPELL_DRUID_SAVAGE_ROAR                 = 62071,
     SPELL_DRUID_TIGER_S_FURY_ENERGIZE       = 51178,
-    SPELL_DRUID_ITEM_T8_BALANCE_RELIC       = 64950,
     SPELL_DRUID_BEAR_FORM_PASSIVE           = 1178,
     SPELL_DRUID_DIRE_BEAR_FORM_PASSIVE      = 9635,
     SPELL_DRUID_ENRAGE                      = 5229,
     SPELL_DRUID_ENRAGED_DEFENSE             = 70725,
     SPELL_DRUID_ITEM_T10_FERAL_4P_BONUS     = 70726,
+};
+
+enum DruidIcons
+{
+    SPELL_ICON_REVITALIZE                   = 2862
 };
 
 // 1178 - Bear Form (Passive)
@@ -189,16 +194,48 @@ class spell_dru_omen_of_clarity : public AuraScript
 
     bool CheckProc(ProcEventInfo& eventInfo)
     {
-        const SpellInfo* spellInfo = eventInfo.GetSpellInfo();
+        SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
         if (!spellInfo)
+        {
             return true;
+        }
 
-        // xinef: no mana cost
-        if (spellInfo->ManaCost == 0 && spellInfo->ManaCostPercentage == 0)
+        // Prevent passive spells to proc. (I.e shapeshift passives & passive talents)
+        if (spellInfo->IsPassive())
+        {
             return false;
+        }
 
-        // xinef: SPELL_ATTR0_CU_NO_INITIAL_THREAT and SPELL_ATTR0_CU_DIRECT_DAMAGE contains spells capable of healing and damaging + some others, but this is taken care of above
-        return spellInfo->HasAttribute(SpellCustomAttributes(SPELL_ATTR0_CU_DIRECT_DAMAGE | SPELL_ATTR0_CU_NO_INITIAL_THREAT));
+        // Don't proc on crafting items.
+        if (spellInfo->HasEffect(SPELL_EFFECT_CREATE_ITEM))
+        {
+            return false;
+        }
+
+        if (eventInfo.GetTypeMask() & PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS)
+        {
+            return spellInfo->HasAttribute(SPELL_ATTR0_ON_NEXT_SWING) || spellInfo->HasAttribute(SPELL_ATTR0_ON_NEXT_SWING_NO_DAMAGE);
+        }
+
+        // Non-damaged/Non-healing spells - only druid abilities
+        if (!spellInfo->HasAttribute(SpellCustomAttributes(SPELL_ATTR0_CU_DIRECT_DAMAGE | SPELL_ATTR0_CU_NO_INITIAL_THREAT)))
+        {
+            if (spellInfo->SpellFamilyName == SPELLFAMILY_DRUID)
+            {
+                // Exclude shapeshifting
+                return !spellInfo->HasAura(SPELL_AURA_MOD_SHAPESHIFT);
+            }
+
+            return false;
+        }
+
+        // Revitalize
+        if (spellInfo->SpellIconID == SPELL_ICON_REVITALIZE)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     void Register() override
@@ -463,8 +500,8 @@ class spell_dru_glyph_of_starfire : public SpellScript
     }
 };
 
-/* 34246 - Increased Lifebloom Periodic
-   60779 - Idol of Lush Moss */
+// 34246 - Idol of the Emerald Queen
+// 60779 - Idol of Lush Moss
 class spell_dru_idol_lifebloom : public AuraScript
 {
     PrepareAuraScript(spell_dru_idol_lifebloom);
@@ -477,7 +514,7 @@ class spell_dru_idol_lifebloom : public AuraScript
             spellMod->op = SPELLMOD_DOT;
             spellMod->type = SPELLMOD_FLAT;
             spellMod->spellId = GetId();
-            spellMod->mask = GetSpellInfo()->Effects[aurEff->GetEffIndex()].SpellClassMask;
+            spellMod->mask = aurEff->GetSpellInfo()->Effects[aurEff->GetEffIndex()].SpellClassMask;
         }
         spellMod->value = aurEff->GetAmount() / 7;
     }
@@ -507,24 +544,6 @@ class spell_dru_innervate : public AuraScript
     }
 };
 
-// -5570 - Insect Swarm
-class spell_dru_insect_swarm : public AuraScript
-{
-    PrepareAuraScript(spell_dru_insect_swarm);
-
-    void CalculateAmount(AuraEffect const* aurEff, int32& amount, bool& /*canBeRecalculated*/)
-    {
-        if (Unit* caster = GetCaster())
-            if (AuraEffect const* relicAurEff = caster->GetAuraEffect(SPELL_DRUID_ITEM_T8_BALANCE_RELIC, EFFECT_0))
-                amount += relicAurEff->GetAmount() / aurEff->GetTotalTicks();
-    }
-
-    void Register() override
-    {
-        DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_dru_insect_swarm::CalculateAmount, EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE);
-    }
-};
-
 // -33763 - Lifebloom
 class spell_dru_lifebloom : public AuraScript
 {
@@ -544,11 +563,11 @@ class spell_dru_lifebloom : public AuraScript
         // final heal
         int32 stack = GetStackAmount();
         int32 healAmount = aurEff->GetAmount();
-        const SpellInfo* finalHeal = sSpellMgr->GetSpellInfo(SPELL_DRUID_LIFEBLOOM_FINAL_HEAL);
+        SpellInfo const* finalHeal = sSpellMgr->GetSpellInfo(SPELL_DRUID_LIFEBLOOM_FINAL_HEAL);
 
         if (Unit* caster = GetCaster())
         {
-            healAmount = caster->SpellHealingBonusDone(GetTarget(), finalHeal, healAmount, HEAL, 0.0f, stack);
+            healAmount = caster->SpellHealingBonusDone(GetTarget(), finalHeal, healAmount, HEAL, aurEff->GetEffIndex(), 0.0f, stack);
             healAmount = GetTarget()->SpellHealingBonusTaken(caster, finalHeal, healAmount, HEAL, stack);
             // restore mana
             int32 returnmana = (GetSpellInfo()->ManaCostPercentage * caster->GetCreateMana() / 100) * stack / 2;
@@ -565,11 +584,11 @@ class spell_dru_lifebloom : public AuraScript
             {
                 Unit* caster = GetCaster();
                 int32 healAmount = GetSpellInfo()->Effects[EFFECT_1].CalcValue(caster ? caster : target, 0, target) * dispelInfo->GetRemovedCharges();
-                const SpellInfo* finalHeal = sSpellMgr->GetSpellInfo(SPELL_DRUID_LIFEBLOOM_FINAL_HEAL);
+                SpellInfo const* finalHeal = sSpellMgr->GetSpellInfo(SPELL_DRUID_LIFEBLOOM_FINAL_HEAL);
                 if (caster)
                 {
                     // healing with bonus
-                    healAmount = caster->SpellHealingBonusDone(target, finalHeal, healAmount, HEAL, 0.0f, dispelInfo->GetRemovedCharges());
+                    healAmount = caster->SpellHealingBonusDone(target, finalHeal, healAmount, HEAL, EFFECT_1, 0.0f, dispelInfo->GetRemovedCharges());
                     healAmount = target->SpellHealingBonusTaken(caster, finalHeal, healAmount, HEAL, dispelInfo->GetRemovedCharges());
 
                     // mana amount
@@ -661,7 +680,7 @@ class spell_dru_moonkin_form_passive : public AuraScript
     void Absorb(AuraEffect* /*aurEff*/, DamageInfo& dmgInfo, uint32& absorbAmount)
     {
         // reduces all damage taken while Stunned in Moonkin Form
-        if (GetTarget()->GetUInt32Value(UNIT_FIELD_FLAGS) & (UNIT_FLAG_STUNNED) && GetTarget()->HasAuraWithMechanic(1 << MECHANIC_STUN))
+        if (GetTarget()->GetUnitFlags() & (UNIT_FLAG_STUNNED) && GetTarget()->HasAuraWithMechanic(1 << MECHANIC_STUN))
             absorbAmount = CalculatePct(dmgInfo.GetDamage(), absorbPct);
     }
 
@@ -728,7 +747,7 @@ class spell_dru_primal_tenacity : public AuraScript
     void Absorb(AuraEffect* /*aurEff*/, DamageInfo& dmgInfo, uint32& absorbAmount)
     {
         // reduces all damage taken while Stunned in Cat Form
-        if (GetTarget()->GetShapeshiftForm() == FORM_CAT && GetTarget()->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED) && GetTarget()->HasAuraWithMechanic(1 << MECHANIC_STUN))
+        if (GetTarget()->GetShapeshiftForm() == FORM_CAT && GetTarget()->HasUnitFlag(UNIT_FLAG_STUNNED) && GetTarget()->HasAuraWithMechanic(1 << MECHANIC_STUN))
             absorbAmount = CalculatePct(dmgInfo.GetDamage(), absorbPct);
     }
 
@@ -1129,6 +1148,27 @@ class spell_dru_berserk : public SpellScript
     }
 };
 
+// 24905 - Moonkin Form (Passive)
+class spell_dru_moonkin_form_passive_proc : public AuraScript
+{
+    PrepareAuraScript(spell_dru_moonkin_form_passive_proc);
+
+    bool CheckProc(ProcEventInfo& eventInfo)
+    {
+        if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
+        {
+            return !spellInfo->IsAffectingArea();
+        }
+
+        return false;
+    }
+
+    void Register() override
+    {
+        DoCheckProc += AuraCheckProcFn(spell_dru_moonkin_form_passive_proc::CheckProc);
+    }
+};
+
 void AddSC_druid_spell_scripts()
 {
     RegisterSpellScript(spell_dru_bear_form_passive);
@@ -1145,7 +1185,6 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_glyph_of_starfire);
     RegisterSpellScript(spell_dru_idol_lifebloom);
     RegisterSpellScript(spell_dru_innervate);
-    RegisterSpellScript(spell_dru_insect_swarm);
     RegisterSpellScript(spell_dru_lifebloom);
     RegisterSpellScript(spell_dru_living_seed);
     RegisterSpellScript(spell_dru_living_seed_proc);
@@ -1164,4 +1203,5 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_typhoon);
     RegisterSpellScript(spell_dru_t10_restoration_4p_bonus);
     RegisterSpellScript(spell_dru_wild_growth);
+    RegisterSpellScript(spell_dru_moonkin_form_passive_proc);
 }

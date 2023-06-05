@@ -16,10 +16,10 @@
  */
 
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
-#include "sunwell_plateau.h"
+#include "ScriptedCreature.h"
 #include "WorldSession.h"
+#include "sunwell_plateau.h"
 
 enum Yells
 {
@@ -143,7 +143,7 @@ public:
             me->SetStandState(UNIT_STAND_STATE_SLEEP);
             me->SetDisableGravity(false);
             me->SetReactState(REACT_AGGRESSIVE);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
+            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
             events2.Reset();
 
             sathBanished = false;
@@ -196,14 +196,14 @@ public:
             }
         }
 
-        void JustDied(Unit* who) override
+        void JustDied(Unit* killer) override
         {
-            BossAI::JustDied(who);
+            BossAI::JustDied(killer);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_ARCANE_BUFFET, 6000);
             events.ScheduleEvent(EVENT_FROST_BREATH, 15000);
             events.ScheduleEvent(EVENT_WILD_MAGIC, 10000);
@@ -240,7 +240,7 @@ public:
                     me->RemoveAllAuras();
                     me->SetReactState(REACT_PASSIVE);
                     me->CombatStop();
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     me->SetFaction(FACTION_FRIENDLY);
                     events2.ScheduleEvent(EVENT_TALK_GOOD_2, 1000);
                     break;
@@ -263,13 +263,13 @@ public:
                     break;
                 case EVENT_TALK_GOOD_5:
                     me->SetVisible(false);
-                    Unit::Kill(me, me);
+                    me->KillSelf();
                     break;
                 case EVENT_TALK_BAD_1:
                     me->SetReactState(REACT_PASSIVE);
                     me->CombatStop();
                     me->RemoveAllAuras();
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     Talk(SAY_EVIL_ENRAGE);
                     events2.ScheduleEvent(EVENT_TALK_BAD_2, 3000);
                     break;
@@ -409,7 +409,7 @@ public:
                 damage = 0;
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
             events.ScheduleEvent(EVENT_CHECK_HEALTH, 1000);
             events.ScheduleEvent(EVENT_CHECK_HEALTH2, 1000);
@@ -523,7 +523,7 @@ public:
             events.ScheduleEvent(EVENT_CHECK_HEALTH2, 1000);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(SAY_SATH_AGGRO);
         }

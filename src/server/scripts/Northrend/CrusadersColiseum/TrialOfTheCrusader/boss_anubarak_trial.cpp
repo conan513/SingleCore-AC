@@ -17,8 +17,8 @@
 
 #include "PassiveAI.h"
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellScript.h"
 #include "trial_of_the_crusader.h"
 
@@ -140,9 +140,6 @@ enum AnubEvents
     EVENT_SUMMON_SCARAB,
 };
 
-#define SUBMERGE_INTERVAL   80000
-#define EMERGE_INTERVAL     60000
-
 class boss_anubarak_trial : public CreatureScript
 {
 public:
@@ -176,16 +173,16 @@ public:
         void Reset() override
         {
             me->SetStandState(UNIT_STAND_STATE_SUBMERGED);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             summons.DespawnAll();
             for( uint8 i = 0; i < 10; ++i )
             {
                 float angle = rand_norm() * 2 * M_PI;
                 float dist = rand_norm() * 40.0f;
-                if( Creature* c = me->SummonCreature(NPC_SCARAB, AnubLocs[0].GetPositionX() + cos(angle) * dist, AnubLocs[0].GetPositionY() + sin(angle) * dist, AnubLocs[0].GetPositionZ(), 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000) )
+                if( Creature* c = me->SummonCreature(NPC_SCARAB, AnubLocs[0].GetPositionX() + cos(angle) * dist, AnubLocs[0].GetPositionY() + std::sin(angle) * dist, AnubLocs[0].GetPositionZ(), 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000) )
                 {
                     c->SetFaction(FACTION_PREY);
-                    c->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    c->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                     c->GetMotionMaster()->MoveRandom(15.0f);
                 }
             }
@@ -201,17 +198,17 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             me->setActive(true);
             events.Reset();
-            events.RescheduleEvent(EVENT_ENRAGE, 600000);
-            events.RescheduleEvent(EVENT_SPELL_FREEZING_SLASH, urand(7000, 15000));
-            events.RescheduleEvent(EVENT_SPELL_PENETRATING_COLD, urand(15000, 20000));
-            events.RescheduleEvent(EVENT_SUMMON_NERUBIAN, urand(5000, 8000));
-            events.RescheduleEvent(EVENT_SUBMERGE, SUBMERGE_INTERVAL);
+            events.RescheduleEvent(EVENT_ENRAGE, 10min);
+            events.RescheduleEvent(EVENT_SPELL_FREEZING_SLASH, 7s, 15s);
+            events.RescheduleEvent(EVENT_SPELL_PENETRATING_COLD, 15s, 20s);
+            events.RescheduleEvent(EVENT_SUMMON_NERUBIAN, 5s, 8s);
+            events.RescheduleEvent(EVENT_SUBMERGE, 80s);
             if( !IsHeroic() )
-                events.RescheduleEvent(EVENT_RESPAWN_SPHERE, 4000);
+                events.RescheduleEvent(EVENT_RESPAWN_SPHERE, 4s);
 
             for (ObjectGuid const& guid : summons)
                 if (pInstance)
@@ -251,7 +248,7 @@ public:
             if( me->HasUnitState(UNIT_STATE_CASTING) )
                 return;
 
-            if( !bPhase3 && HealthBelowPct(30) && !me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE) && !me->HasAura(SPELL_SUBMERGE) && !me->HasAura(SPELL_EMERGE) )
+            if( !bPhase3 && HealthBelowPct(30) && !me->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE) && !me->HasAura(SPELL_SUBMERGE) && !me->HasAura(SPELL_EMERGE) )
             {
                 bPhase3 = true;
                 events.CancelEvent(EVENT_SUBMERGE);
@@ -289,31 +286,31 @@ public:
                                 }
                             i = (i + 1) % 6;
                         } while( i != StartAt );
-                        events.RepeatEvent(4000);
+                        events.Repeat(4s);
                     }
                     break;
                 case EVENT_SPELL_FREEZING_SLASH:
                     {
                         if( me->GetVictim() )
                             me->CastSpell(me->GetVictim(), SPELL_FREEZING_SLASH, false);
-                        events.RepeatEvent(urand(15000, 20000));
+                        events.Repeat(15s, 20s);
                     }
                     break;
                 case EVENT_SPELL_PENETRATING_COLD:
                     {
                         me->CastCustomSpell(SPELL_PENETRATING_COLD, SPELLVALUE_MAX_TARGETS, RAID_MODE(2, 5, 2, 5));
-                        events.RepeatEvent(18000);
+                        events.Repeat(18s);
                     }
                     break;
                 case EVENT_SUMMON_NERUBIAN:
                     {
                         me->CastCustomSpell(SPELL_SUMMON_BURROWER, SPELLVALUE_MAX_TARGETS, RAID_MODE(1, 2, 2, 4));
-                        events.RepeatEvent(45000);
+                        events.Repeat(45s);
                     }
                     break;
                 case EVENT_SUBMERGE:
                     {
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         bool berserk = me->HasAura(SPELL_BERSERK);
                         me->RemoveAllAuras();
                         if (berserk)
@@ -324,9 +321,9 @@ public:
                         events.CancelEvent(EVENT_SUMMON_NERUBIAN);
                         events.CancelEvent(EVENT_SPELL_FREEZING_SLASH);
                         events.CancelEvent(EVENT_SPELL_PENETRATING_COLD);
-                        events.RescheduleEvent(EVENT_EMERGE, EMERGE_INTERVAL);
-                        events.RescheduleEvent(EVENT_SPELL_SUMMON_SPIKE, 2500);
-                        events.RescheduleEvent(EVENT_SUMMON_SCARAB, 3000);
+                        events.RescheduleEvent(EVENT_EMERGE, 1min);
+                        events.RescheduleEvent(EVENT_SPELL_SUMMON_SPIKE, 2500ms);
+                        events.RescheduleEvent(EVENT_SUMMON_SCARAB, 3s);
                     }
                     break;
                 case EVENT_SUMMON_SCARAB:
@@ -334,7 +331,7 @@ public:
                         uint8 i = urand(0, 3);
                         if( Creature* c = ObjectAccessor::GetCreature(*me, BurrowGUID[i]) )
                             me->CastSpell(c, SPELL_SUMMON_SCARAB, true);
-                        events.RepeatEvent(4000);
+                        events.Repeat(4s);
                     }
                     break;
                 case EVENT_EMERGE:
@@ -342,20 +339,20 @@ public:
                         me->CastSpell(me, SPELL_SPIKE_TELE, true);
                         summons.DespawnEntry(NPC_SPIKE);
                         events.CancelEvent(EVENT_SUMMON_SCARAB);
-                        events.RescheduleEvent(EVENT_EMERGE_2, 2000);
+                        events.RescheduleEvent(EVENT_EMERGE_2, 2s);
                     }
                     break;
                 case EVENT_EMERGE_2:
                     {
                         Talk(SAY_EMERGE);
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         me->setAttackTimer(BASE_ATTACK, 3000);
                         me->RemoveAura(SPELL_SUBMERGE);
                         me->CastSpell(me, SPELL_EMERGE, false);
-                        events.RescheduleEvent(EVENT_SUMMON_NERUBIAN, urand(5000, 8000));
-                        events.RescheduleEvent(EVENT_SPELL_FREEZING_SLASH, urand(7000, 15000));
-                        events.RescheduleEvent(EVENT_SPELL_PENETRATING_COLD, urand(15000, 20000));
-                        events.RescheduleEvent(EVENT_SUBMERGE, SUBMERGE_INTERVAL);
+                        events.RescheduleEvent(EVENT_SUMMON_NERUBIAN, 5s, 8s);
+                        events.RescheduleEvent(EVENT_SPELL_FREEZING_SLASH, 7s, 15s);
+                        events.RescheduleEvent(EVENT_SPELL_PENETRATING_COLD, 15s, 20s);
+                        events.RescheduleEvent(EVENT_SUBMERGE, 80s);
                     }
                     break;
                 case EVENT_SPELL_SUMMON_SPIKE:
@@ -389,11 +386,11 @@ public:
                 Talk(SAY_KILL_PLAYER);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             events.Reset();
             summons.DespawnAll();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             if( pInstance )
                 pInstance->SetData(TYPE_FAILED, 1);
         }
@@ -408,7 +405,7 @@ public:
 
             if (!bIntro)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 if( !me->IsInCombat() )
                     Talk(SAY_INTRO);
                 bIntro = true;
@@ -416,7 +413,7 @@ public:
             ScriptedAI::MoveInLineOfSight(who);
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return target->GetEntry() != NPC_FROST_SPHERE;
         }
@@ -457,7 +454,7 @@ public:
                 {
                     AttackStart(target);
                     DoZoneInCombat();
-                    if( Unit* t = SelectTarget(SELECT_TARGET_RANDOM, 0, 250.0f, true) )
+                    if( Unit* t = SelectTarget(SelectTargetMethod::Random, 0, 250.0f, true) )
                     {
                         me->AddThreat(t, 20000.0f);
                         AttackStart(t);
@@ -465,7 +462,7 @@ public:
                 }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             DoZoneInCombat();
         }
@@ -505,9 +502,9 @@ public:
             me->m_Events.AddEvent(new HideNpcEvent(*me), me->m_Events.CalculateTime(5000));
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
-            return target->GetEntry() != NPC_FROST_SPHERE && !me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            return target->GetEntry() != NPC_FROST_SPHERE && !me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
         }
     };
 };
@@ -559,9 +556,9 @@ public:
             if( me->GetHealth() <= damage )
             {
                 damage = 0;
-                if( !me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE) )
+                if( !me->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE) )
                 {
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->GetMotionMaster()->MoveIdle();
                     me->GetMotionMaster()->MoveCharge(me->GetPositionX(), me->GetPositionY(), 143.0f, 20.0f);
                     permafrostTimer = 1500;
@@ -569,7 +566,7 @@ public:
             }
         }
 
-        void SpellHit(Unit*  /*caster*/, const SpellInfo* spell) override
+        void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
         {
             if( spell->Id == SPELL_SPIKE_FAIL )
             {
@@ -630,9 +627,9 @@ public:
             me->CastSpell(me, SPELL_EXPOSE_WEAKNESS, true);
             me->CastSpell(me, SPELL_SPIDER_FRENZY, true);
             events.Reset();
-            events.RescheduleEvent(EVENT_SUBMERGE, 30000);
+            events.RescheduleEvent(EVENT_SUBMERGE, 30s);
             if( IsHeroic() )
-                events.RescheduleEvent(EVENT_SPELL_SHADOW_STRIKE, urand(30000, 45000));
+                events.RescheduleEvent(EVENT_SPELL_SHADOW_STRIKE, 30s, 45s);
             if( Unit* target = me->SelectNearestTarget(250.0f) )
             {
                 AttackStart(target);
@@ -640,7 +637,7 @@ public:
             }
         }
 
-        void SpellHitTarget(Unit* target, const SpellInfo* spell) override
+        void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
             if( !target || !spell )
                 return;
@@ -652,7 +649,7 @@ public:
                     o -= M_PI;
                 else
                     o += M_PI;
-                me->NearTeleportTo(target->GetPositionX() + cos(o) * 5.0f, target->GetPositionY() + sin(o) * 5.0f, target->GetPositionZ() + 0.6f, target->GetOrientation());
+                me->NearTeleportTo(target->GetPositionX() + cos(o) * 5.0f, target->GetPositionY() + std::sin(o) * 5.0f, target->GetPositionZ() + 0.6f, target->GetOrientation());
                 AttackStart(target);
                 me->GetMotionMaster()->MoveChase(target);
                 events.DelayEvents(3000);
@@ -674,34 +671,34 @@ public:
                 case 0:
                     break;
                 case EVENT_SPELL_SHADOW_STRIKE:
-                    if( Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 250.0f, true) )
+                    if( Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 250.0f, true) )
                         me->CastSpell(target, SPELL_SHADOW_STRIKE, false);
-                    events.RepeatEvent(urand(30000, 45000));
+                    events.Repeat(30s, 45s);
                     break;
                 case EVENT_SUBMERGE:
                     if( HealthBelowPct(80) && !me->HasAura(RAID_MODE(66193, 67855, 67856, 67857)) ) // not having permafrost - allow submerge
                     {
                         me->GetMotionMaster()->MoveIdle();
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         me->RemoveAllAuras();
                         me->CastSpell(me, SPELL_EXPOSE_WEAKNESS, true);
                         me->CastSpell(me, SPELL_SPIDER_FRENZY, true);
                         me->CastSpell(me, SPELL_SUBMERGE, false);
 
-                        events.DelayEvents(15000);
-                        events.RescheduleEvent(EVENT_EMERGE, 10000);
+                        events.DelayEvents(15s);
+                        events.RescheduleEvent(EVENT_EMERGE, 10s);
                     }
                     else
-                        events.RepeatEvent(3000);
+                        events.Repeat(3s);
                     break;
                 case EVENT_EMERGE:
                     me->SetHealth(me->GetMaxHealth());
                     me->GetMotionMaster()->MoveChase(me->GetVictim());
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->CastSpell(me, SPELL_EMERGE, false);
                     me->RemoveAura(SPELL_SUBMERGE);
 
-                    events.RescheduleEvent(EVENT_SUBMERGE, 30000);
+                    events.RescheduleEvent(EVENT_SUBMERGE, 30s);
                     break;
             }
 
@@ -713,7 +710,7 @@ public:
             me->m_Events.AddEvent(new HideNpcEvent(*me), me->m_Events.CalculateTime(5000));
         }
 
-        bool CanAIAttack(const Unit* target) const override
+        bool CanAIAttack(Unit const* target) const override
         {
             return target->GetEntry() != NPC_FROST_SPHERE;
         }
@@ -751,7 +748,7 @@ public:
                 me->RemoveAllAuras();
                 me->GetMotionMaster()->MoveIdle();
                 events.Reset();
-                events.RescheduleEvent(3, 4000);
+                events.RescheduleEvent(3, 4s);
             }
         }
 
@@ -767,14 +764,14 @@ public:
                 me->RemoveAllAuras();
             }
             DoZoneInCombat();
-            DoResetThreat();
-            if( Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 250.0f, true) )
+            DoResetThreatList();
+            if( Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 250.0f, true) )
             {
                 if (!next)
                 {
                     me->CastSpell(me, SPELL_SPIKE_SPEED1, true);
                     me->CastSpell(me, SPELL_SPIKE_TRAIL, true);
-                    events.RescheduleEvent(1, 7000);
+                    events.RescheduleEvent(1, 7s);
                 }
                 TargetGUID = target->GetGUID();
                 me->CastSpell(target, SPELL_MARK, true);
@@ -810,7 +807,7 @@ public:
                 case 1:
                     me->CastSpell(me, SPELL_SPIKE_SPEED2, true);
 
-                    events.RescheduleEvent(2, 7000);
+                    events.RescheduleEvent(2, 7s);
                     break;
                 case 2:
                     me->CastSpell(me, SPELL_SPIKE_SPEED3, true);

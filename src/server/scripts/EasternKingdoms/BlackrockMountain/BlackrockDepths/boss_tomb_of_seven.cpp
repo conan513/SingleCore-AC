@@ -15,11 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "blackrock_depths.h"
 #include "Player.h"
+#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
-#include "ScriptMgr.h"
+#include "blackrock_depths.h"
 
 enum Spells
 {
@@ -136,7 +136,7 @@ public:
                 break;
             case GOSSIP_ACTION_INFO_DEF+2:
                 CloseGossipMenuFor(player);
-                creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 // Start encounter
                 InstanceScript* instance = creature->GetInstanceScript();
                 if (instance)
@@ -176,36 +176,34 @@ public:
         void Reset() override
         {
             Voidwalkers = false;
-            // Reset his gossip menu
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             me->SetFaction(FACTION_FRIENDLY);
 
             // was set before event start, so set again
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+            me->SetImmuneToPC(true);
 
             if (instance->GetData(TYPE_TOMB_OF_SEVEN) == DONE) // what is this trying to do? Probably some kind of crash recovery
             {
-                me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_NONE);
             }
             else
             {
-                me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP);
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
-            _events.ScheduleEvent(EVENT_SPELL_SHADOWBOLTVOLLEY, 10000);
-            _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 18000);
-            _events.ScheduleEvent(EVENT_SPELL_CURSEOFWEAKNESS, 5000);
-            _events.ScheduleEvent(EVENT_SPELL_DEMONARMOR, 16000);
-            _events.ScheduleEvent(EVENT_SPELL_SUMMON_VOIDWALKERS, 1000);
+            _events.ScheduleEvent(EVENT_SPELL_SHADOWBOLTVOLLEY, 10s);
+            _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 18s);
+            _events.ScheduleEvent(EVENT_SPELL_CURSEOFWEAKNESS, 5s);
+            _events.ScheduleEvent(EVENT_SPELL_DEMONARMOR, 16s);
+            _events.ScheduleEvent(EVENT_SPELL_SUMMON_VOIDWALKERS, 1s);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             me->RemoveAllAuras();
-            me->DeleteThreatList();
+            me->GetThreatMgr().ClearAllThreat();
             me->CombatStop(true);
             me->LoadCreaturesAddon(true);
             if (me->IsAlive())
@@ -224,24 +222,24 @@ public:
             {
                 case EVENT_SPELL_SHADOWBOLTVOLLEY:
                     DoCastVictim(SPELL_SHADOWBOLTVOLLEY);
-                    _events.ScheduleEvent(EVENT_SPELL_SHADOWBOLTVOLLEY, 12000);
+                    _events.ScheduleEvent(EVENT_SPELL_SHADOWBOLTVOLLEY, 12s);
                     break;
                 case EVENT_SPELL_IMMOLATE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, 100, true))
                     {
                         DoCast(target, SPELL_IMMOLATE);
-                        _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 25000);
+                        _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 25s);
                     }
                     // Didn't get a target, try again in 1s
-                    _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 1000);
+                    _events.ScheduleEvent(EVENT_SPELL_IMMOLATE, 1s);
                     break;
                 case EVENT_SPELL_CURSEOFWEAKNESS:
                     DoCastVictim(SPELL_CURSEOFWEAKNESS);
-                    _events.ScheduleEvent(EVENT_SPELL_CURSEOFWEAKNESS, 45000);
+                    _events.ScheduleEvent(EVENT_SPELL_CURSEOFWEAKNESS, 45s);
                     break;
                 case EVENT_SPELL_DEMONARMOR:
                     DoCast(me, SPELL_DEMONARMOR);
-                    _events.ScheduleEvent(EVENT_SPELL_DEMONARMOR, 300000);
+                    _events.ScheduleEvent(EVENT_SPELL_DEMONARMOR, 300s);
                     break;
                 case EVENT_SPELL_SUMMON_VOIDWALKERS:
                     if (!Voidwalkers && HealthBelowPct(51))
@@ -250,7 +248,7 @@ public:
                         Voidwalkers = true;
                     }
                     // Not ready yet, try again in 1s
-                    _events.ScheduleEvent(EVENT_SPELL_SUMMON_VOIDWALKERS, 1000);
+                    _events.ScheduleEvent(EVENT_SPELL_SUMMON_VOIDWALKERS, 1s);
                     break;
             }
 

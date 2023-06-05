@@ -16,11 +16,11 @@
  */
 
 #include "GridNotifiers.h"
-#include "icecrown_citadel.h"
 #include "ObjectMgr.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "SpellAuras.h"
+#include "icecrown_citadel.h"
 
 enum Texts
 {
@@ -147,23 +147,23 @@ public:
             events.Reset();
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (!instance->CheckRequiredBosses(DATA_ROTFACE, who->ToPlayer()))
             {
-                EnterEvadeMode();
+                EnterEvadeMode(EVADE_REASON_OTHER);
                 instance->DoCastSpellOnPlayers(LIGHT_S_HAMMER_TELEPORT);
                 return;
             }
 
             // schedule events
             events.Reset();
-            events.ScheduleEvent(EVENT_SLIME_SPRAY, 20000);
-            events.ScheduleEvent(EVENT_HASTEN_INFECTIONS, 90000);
-            events.ScheduleEvent(EVENT_MUTATED_INFECTION, 14000);
-            events.ScheduleEvent(EVENT_ROTFACE_OOZE_FLOOD, 8000);
+            events.ScheduleEvent(EVENT_SLIME_SPRAY, 20s);
+            events.ScheduleEvent(EVENT_HASTEN_INFECTIONS, 90s);
+            events.ScheduleEvent(EVENT_MUTATED_INFECTION, 14s);
+            events.ScheduleEvent(EVENT_ROTFACE_OOZE_FLOOD, 8s);
             if (IsHeroic())
-                events.ScheduleEvent(EVENT_ROTFACE_VILE_GAS, urand(15000, 20000));
+                events.ScheduleEvent(EVENT_ROTFACE_VILE_GAS, 15s, 20s);
 
             me->setActive(true);
             Talk(SAY_AGGRO);
@@ -219,13 +219,13 @@ public:
                 Talk(SAY_KILL);
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason why) override
         {
             me->SetControlled(false, UNIT_STATE_ROOT);
             me->DisableRotate(false);
-            ScriptedAI::EnterEvadeMode();
+            ScriptedAI::EnterEvadeMode(why);
             if (Creature* professor = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PROFESSOR_PUTRICIDE)))
-                professor->AI()->EnterEvadeMode();
+                professor->AI()->EnterEvadeMode(why);
         }
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
@@ -258,7 +258,7 @@ public:
 
         void UpdateAI(uint32 diff) override
         {
-            if (!UpdateVictim() || !CheckInRoom())
+            if (!UpdateVictim())
                 return;
 
             events.Update(diff);
@@ -273,7 +273,7 @@ public:
                     me->DisableRotate(false);
                     break;
                 case EVENT_SLIME_SPRAY:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, NonTankTargetSelector(me)))
+                    if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, NonTankTargetSelector(me)))
                     {
                         if (Creature* c = me->SummonCreature(NPC_OOZE_SPRAY_STALKER, *target, TEMPSUMMON_TIMED_DESPAWN, 8000))
                         {
@@ -287,14 +287,14 @@ public:
                         }
                     }
                     events.DelayEvents(1);
-                    events.ScheduleEvent(EVENT_SLIME_SPRAY, 20000);
-                    events.ScheduleEvent(EVENT_UNROOT, 0);
+                    events.ScheduleEvent(EVENT_SLIME_SPRAY, 20s);
+                    events.ScheduleEvent(EVENT_UNROOT, 0ms);
                     break;
                 case EVENT_HASTEN_INFECTIONS:
                     if (infectionCooldown >= 8000)
                     {
                         infectionCooldown -= 2000;
-                        events.ScheduleEvent(EVENT_HASTEN_INFECTIONS, 90000);
+                        events.ScheduleEvent(EVENT_HASTEN_INFECTIONS, 90s);
                     }
                     break;
                 case EVENT_MUTATED_INFECTION:
@@ -309,22 +309,22 @@ public:
                         if (++_oozeFloodStage == 4)
                             _oozeFloodStage = 0;
                     }
-                    events.ScheduleEvent(EVENT_ROTFACE_OOZE_FLOOD, 25000);
+                    events.ScheduleEvent(EVENT_ROTFACE_OOZE_FLOOD, 25s);
                     break;
                 case EVENT_ROTFACE_VILE_GAS:
                     {
                         std::list<Unit*> targets;
                         uint32 minTargets = RAID_MODE<uint32>(3, 8, 3, 8);
-                        SelectTargetList(targets, minTargets, SELECT_TARGET_RANDOM, -5.0f, true);
+                        SelectTargetList(targets, minTargets, SelectTargetMethod::Random, 0, -5.0f, true);
                         float minDist = 0.0f;
                         if (targets.size() >= minTargets)
                             minDist = -5.0f;
 
-                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, minDist, true))
+                        if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0, minDist, true))
                             if (Creature* professor = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_PROFESSOR_PUTRICIDE)))
                                 professor->CastSpell(target, SPELL_VILE_GAS_H, true); // triggered, to skip LoS check
                     }
-                    events.ScheduleEvent(EVENT_ROTFACE_VILE_GAS, urand(15000, 20000));
+                    events.ScheduleEvent(EVENT_ROTFACE_VILE_GAS, 15s, 20s);
                     break;
                 default:
                     break;
@@ -358,13 +358,18 @@ public:
         EventMap events;
         InstanceScript* instance;
 
-        void IsSummonedBy(Unit* summoner) override
+        void IsSummonedBy(WorldObject* summoner) override
         {
             if (!summoner)
                 return;
 
-            me->AddThreat(summoner, 500000.0f);
-            AttackStart(summoner);
+            if (summoner->GetTypeId() != TYPEID_UNIT)
+            {
+                return;
+            }
+
+            me->AddThreat(summoner->ToUnit(), 500000.0f);
+            AttackStart(summoner->ToUnit());
         }
 
         void JustDied(Unit* /*killer*/) override
@@ -382,8 +387,8 @@ public:
                 me->CastSpell(me, SPELL_LITTLE_OOZE_COMBINE, true);
                 me->CastSpell(me, SPELL_WEAK_RADIATING_OOZE, true);
                 events.Reset();
-                events.ScheduleEvent(EVENT_STICKY_OOZE, 5000);
-                DoResetThreat();
+                events.ScheduleEvent(EVENT_STICKY_OOZE, 5s);
+                DoResetThreatList();
                 me->SetInCombatWithZone();
                 if (TempSummon* ts = me->ToTempSummon())
                     if (Unit* summoner = ts->GetSummonerUnit())
@@ -401,13 +406,13 @@ public:
             if (events.ExecuteEvent() == EVENT_STICKY_OOZE)
             {
                 me->CastSpell(me->GetVictim(), SPELL_STICKY_OOZE, false);
-                events.ScheduleEvent(EVENT_STICKY_OOZE, 15000);
+                events.ScheduleEvent(EVENT_STICKY_OOZE, 15s);
             }
 
             DoMeleeAttackIfReady();
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             me->SetInCombatWithZone();
         }
@@ -437,7 +442,7 @@ public:
         EventMap events;
         InstanceScript* instance;
 
-        void IsSummonedBy(Unit* /*summoner*/) override
+        void IsSummonedBy(WorldObject* /*summoner*/) override
         {
             if (Player* p = me->SelectNearestPlayer(100.0f))
                 AttackStart(p);
@@ -467,8 +472,8 @@ public:
                 me->CastSpell(me, SPELL_UNSTABLE_OOZE, true);
                 me->CastSpell(me, SPELL_GREEN_ABOMINATION_HITTIN__YA_PROC, true);
                 events.Reset();
-                events.ScheduleEvent(EVENT_STICKY_OOZE, 5000);
-                DoResetThreat();
+                events.ScheduleEvent(EVENT_STICKY_OOZE, 5s);
+                DoResetThreatList();
                 me->SetInCombatWithZone();
                 if (Player* p = me->SelectNearestPlayer(100.0f))
                     AttackStart(p);
@@ -483,7 +488,7 @@ public:
             {
                 case EVENT_STICKY_OOZE:
                     me->CastSpell(me->GetVictim(), SPELL_STICKY_OOZE, false);
-                    events.ScheduleEvent(EVENT_STICKY_OOZE, 15000);
+                    events.ScheduleEvent(EVENT_STICKY_OOZE, 15s);
                 default:
                     break;
             }
@@ -492,7 +497,7 @@ public:
                 DoMeleeAttackIfReady();
         }
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             me->SetInCombatWithZone();
         }
@@ -886,18 +891,18 @@ public:
             summons.DespawnAll();
         }
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
             me->setActive(true);
-            events.ScheduleEvent(EVENT_DECIMATE, urand(20000, 25000));
-            events.ScheduleEvent(EVENT_MORTAL_WOUND, urand(1500, 2500));
-            events.ScheduleEvent(EVENT_SUMMON_ZOMBIES, urand(25000, 30000));
+            events.ScheduleEvent(EVENT_DECIMATE, 20s, 25s);
+            events.ScheduleEvent(EVENT_MORTAL_WOUND, 1500ms, 2500ms);
+            events.ScheduleEvent(EVENT_SUMMON_ZOMBIES, 25s, 30s);
         }
 
         void JustSummoned(Creature* summon) override
         {
             summons.Summon(summon);
-            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
+            if (Unit* target = SelectTarget(SelectTargetMethod::Random, 0))
                 summon->AI()->AttackStart(target);
         }
 
@@ -931,17 +936,17 @@ public:
                 {
                     case EVENT_DECIMATE:
                         me->CastSpell(me->GetVictim(), SPELL_DECIMATE, false);
-                        events.ScheduleEvent(EVENT_DECIMATE, urand(20000, 25000));
+                        events.ScheduleEvent(EVENT_DECIMATE, 20s, 25s);
                         break;
                     case EVENT_MORTAL_WOUND:
                         me->CastSpell(me->GetVictim(), SPELL_MORTAL_WOUND, false);
-                        events.ScheduleEvent(EVENT_MORTAL_WOUND, urand(1500, 2500));
+                        events.ScheduleEvent(EVENT_MORTAL_WOUND, 1500ms, 2500ms);
                         break;
                     case EVENT_SUMMON_ZOMBIES:
                         Talk(EMOTE_PRECIOUS_ZOMBIES);
                         for (uint32 i = 0; i < 11; ++i)
                             me->CastSpell(me, SPELL_AWAKEN_PLAGUED_ZOMBIES, true);
-                        events.ScheduleEvent(EVENT_SUMMON_ZOMBIES, urand(20000, 25000));
+                        events.ScheduleEvent(EVENT_SUMMON_ZOMBIES, 20s, 25s);
                         break;
                     default:
                         break;

@@ -16,8 +16,8 @@
  */
 
 #include "Player.h"
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "ScriptedCreature.h"
 #include "serpent_shrine.h"
 
 enum Talk
@@ -172,9 +172,9 @@ public:
             BossAI::JustDied(killer);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             me->SetStandState(UNIT_STAND_STATE_KNEEL);
         }
 
@@ -203,7 +203,7 @@ public:
                     {
                         if (me->GetDisplayId() != me->GetNativeDisplayId())
                         {
-                            DoResetThreat();
+                            DoResetThreatList();
                             me->LoadEquipment();
                             me->RemoveAurasDueToSpell(SPELL_METAMORPHOSIS);
                             events.ScheduleEvent(EVENT_SPELL_WHIRLWIND, 10000);
@@ -223,7 +223,7 @@ public:
                     events.ScheduleEvent(EVENT_HEALTH_CHECK, 1000);
                     break;
                 case EVENT_SWITCH_TO_DEMON:
-                    DoResetThreat();
+                    DoResetThreatList();
                     Talk(SAY_SWITCH_TO_DEMON);
                     me->LoadEquipment(0, true);
                     me->GetMotionMaster()->MoveChase(me->GetVictim(), 25.0f);
@@ -234,7 +234,7 @@ public:
                     events.ScheduleEvent(EVENT_SWITCH_TO_ELF, 60000);
                     break;
                 case EVENT_SWITCH_TO_ELF:
-                    DoResetThreat();
+                    DoResetThreatList();
                     me->LoadEquipment();
                     me->GetMotionMaster()->MoveChase(me->GetVictim(), 0.0f);
                     me->RemoveAurasDueToSpell(SPELL_METAMORPHOSIS);
@@ -289,12 +289,12 @@ public:
         ObjectGuid ownerGUID;
         EventMap events;
 
-        void EnterEvadeMode() override
+        void EnterEvadeMode(EvadeReason /*why*/) override
         {
             me->DespawnOrUnsummon(1);
         }
 
-        void IsSummonedBy(Unit* summoner) override
+        void IsSummonedBy(WorldObject* summoner) override
         {
             if (!summoner)
                 return;
@@ -316,7 +316,7 @@ public:
                 damage = 0;
         }
 
-        bool CanAIAttack(const Unit* who) const override
+        bool CanAIAttack(Unit const* who) const override
         {
             return who->GetGUID() == ownerGUID;
         }
@@ -355,10 +355,10 @@ public:
         void HandleScriptEffect(SpellEffIndex effIndex)
         {
             PreventHitDefaultEffect(effIndex);
-            GetCaster()->getThreatMgr().resetAllAggro();
+            GetCaster()->GetThreatMgr().ResetAllThreat();
 
             if (roll_chance_i(33))
-                if (Unit* target = GetCaster()->GetAI()->SelectTarget(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                if (Unit* target = GetCaster()->GetAI()->SelectTarget(SelectTargetMethod::Random, 0, 30.0f, true))
                     target->CastSpell(GetCaster(), SPELL_TAUNT, true);
         }
 
