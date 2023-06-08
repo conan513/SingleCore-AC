@@ -1,0 +1,80 @@
+[worldserver]
+
+###################################################################################################
+#	MONEY FOR KILLS
+###################################################################################################
+
+# Enable the module? (1: true | 0: false)
+# Default: 1
+
+MFK.Enable = 1
+
+# Announce the module when the player logs in?
+# Default: 1
+
+MFK.Announce = 0
+
+# Enable announcements to notify the server of a world boss kill
+# Default 1
+
+MFK.Announce.World.WorldBoss = 1
+
+# It is recommended to only enable world suicide announcements if group and guild are both disabled and vice versa
+# as it can become spammy in some situations. Having all 3 enabled would display 3 messages for some people.
+# Enable player suicide announcements to display to the world
+# Default 1
+
+MFK.Announce.World.Suicide = 1
+
+# Enable player suicide announcements to display to their guild
+# Default 0
+
+MFK.Announce.Guild.Suicide = 0
+
+# Enable player suicide announcements to display to their party
+# Default 0
+MFK.Announce.Group.Suicide = 0
+
+# Enable PvP announcements
+# Default 1
+
+MFK.Announce.World.PvP = 1
+
+# Enable Group announcements for killing a dungeon boss
+# Default 1
+
+MFK.Announce.Group.DungeonBoss = 1
+
+# Only allow the player with the killing blow to claim the bounty?
+# Default: 0 (All players receive the bounty)
+
+MFK.Bounty.KillingBlowOnly = 0
+
+# Award bounty to party members far away from the group?
+# Default: 0 (Only award players near the group)
+
+MFK.Bounty.MoneyForNothing = 0
+
+# How much gold does a Player take from the victim's corpse on a PVP kill?
+# Setting this to 0 will disable player gold stealing.
+# Default: 5 (5% of the victim's gold)
+
+MFK.PVP.CorpseLootPercent = 5
+
+# Creature kills are expressed in Copper and calculated as ((CreatureLevel * Multiplier) / 3)
+# Player kills are expressed in Copper and calculated as ((PlayerLevel * Multiplier) / 3)
+# Boss kills are expressed in Copper and calculated as ((CreatureLevel * Multiplier) * 100)
+
+# Loot Examples:
+# Level 80 MOB Multiplier = 100: (8000 / 3) = 2666 = 26 Silver 66 copper
+# Level 80 PVP Multiplier = 200: (16000 / 3) = 5333 = 53 Silver, 33 copper
+# Level 80 DBoss Multiplier = 25: ((8000 * 100) * 25) = 200,000 copper = 20 gold
+# Level 80 WBoss Multiplier = 200: ((16000 * 200) * 100)  = 1,600,000 copper = 160 gold
+
+# NOTE: There are many dungeon bosses per dungeon, so set accordingly! 
+# NOTE: A value of 0 will disable the payment type
+
+MFK.Bounty.Kill.Multiplier = 10
+MFK.PVP.Kill.Multiplier = 20
+MFK.Bounty.DungeonBoss.Multiplier = 25
+MFK.Bounty.WorldBoss.Multiplier = 20

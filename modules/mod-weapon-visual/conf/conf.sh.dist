@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#
+# CUSTOM
+#
+
+DB_CHARACTERS_CUSTOM_PATHS+=(
+	$MOD_WEAPON_VISUAL_ROOT"/sql/characters/base"
+)
+
+DB_WORLD_CUSTOM_PATHS+=(
+	$MOD_WEAPON_VISUAL_ROOT"/sql/world/base"
+)

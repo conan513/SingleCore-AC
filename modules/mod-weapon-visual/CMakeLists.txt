@@ -1,0 +1,7 @@
+CU_SET_PATH("CMAKE_NPC_VISUALWEAPON_DIR" "${CMAKE_CURRENT_LIST_DIR}")
+
+AC_ADD_SCRIPT("${CMAKE_CURRENT_LIST_DIR}/src/Npc_VisualWeapon.cpp")
+
+AC_ADD_SCRIPT_LOADER("SC_Npc_VisualWeapon" "${CMAKE_CURRENT_LIST_DIR}/src/loader.h")
+
+message("-- Visual Weapon NPC CONFIGURED --")

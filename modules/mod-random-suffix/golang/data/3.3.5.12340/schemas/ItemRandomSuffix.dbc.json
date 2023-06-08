@@ -1,0 +1,118 @@
+[
+  {
+    "name": "ID",
+    "type": "int32"
+  },
+  {
+    "name": "Name_Lang_enUS",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enGB",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_koKR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_frFR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_deDE",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_zhCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_zhTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_esES",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_esMX",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ruRU",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ptPT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ptBR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_itIT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_Unk",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_Mask",
+    "type": "uint32"
+  },
+  {
+    "name": "InternalName",
+    "type": "string_offset"
+  },
+  {
+    "name": "Enchantment_1",
+    "type": "int32"
+  },
+  {
+    "name": "Enchantment_2",
+    "type": "int32"
+  },
+  {
+    "name": "Enchantment_3",
+    "type": "int32"
+  },
+  {
+    "name": "Enchantment_4",
+    "type": "int32"
+  },
+  {
+    "name": "Enchantment_5",
+    "type": "int32"
+  },
+  {
+    "name": "AllocationPct_1",
+    "type": "int32"
+  },
+  {
+    "name": "AllocationPct_2",
+    "type": "int32"
+  },
+  {
+    "name": "AllocationPct_3",
+    "type": "int32"
+  },
+  {
+    "name": "AllocationPct_4",
+    "type": "int32"
+  },
+  {
+    "name": "AllocationPct_5",
+    "type": "int32"
+  }
+]

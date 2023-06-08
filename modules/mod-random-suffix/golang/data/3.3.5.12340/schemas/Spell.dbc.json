@@ -1,0 +1,938 @@
+[
+  {
+    "name": "ID",
+    "type": "int32"
+  },
+  {
+    "name": "Category",
+    "type": "uint32"
+  },
+  {
+    "name": "DispelType",
+    "type": "uint32"
+  },
+  {
+    "name": "Mechanic",
+    "type": "uint32"
+  },
+  {
+    "name": "Attributes",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx2",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx3",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx4",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx5",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx6",
+    "type": "uint32"
+  },
+  {
+    "name": "AttributesEx7",
+    "type": "uint32"
+  },
+  {
+    "name": "ShapeshiftMask",
+    "type": "uint32"
+  },
+  {
+    "name": "unk_320_2",
+    "type": "int32"
+  },
+  {
+    "name": "ShapeshiftExclude",
+    "type": "uint32"
+  },
+  {
+    "name": "unk_320_3",
+    "type": "int32"
+  },
+  {
+    "name": "Targets",
+    "type": "uint32"
+  },
+  {
+    "name": "TargetCreatureType",
+    "type": "uint32"
+  },
+  {
+    "name": "RequiresSpellFocus",
+    "type": "uint32"
+  },
+  {
+    "name": "FacingCasterFlags",
+    "type": "uint32"
+  },
+  {
+    "name": "CasterAuraState",
+    "type": "uint32"
+  },
+  {
+    "name": "TargetAuraState",
+    "type": "uint32"
+  },
+  {
+    "name": "ExcludeCasterAuraState",
+    "type": "uint32"
+  },
+  {
+    "name": "ExcludeTargetAuraState",
+    "type": "uint32"
+  },
+  {
+    "name": "CasterAuraSpell",
+    "type": "uint32"
+  },
+  {
+    "name": "TargetAuraSpell",
+    "type": "uint32"
+  },
+  {
+    "name": "ExcludeCasterAuraSpell",
+    "type": "uint32"
+  },
+  {
+    "name": "ExcludeTargetAuraSpell",
+    "type": "uint32"
+  },
+  {
+    "name": "CastingTimeIndex",
+    "type": "uint32"
+  },
+  {
+    "name": "RecoveryTime",
+    "type": "uint32"
+  },
+  {
+    "name": "CategoryRecoveryTime",
+    "type": "uint32"
+  },
+  {
+    "name": "InterruptFlags",
+    "type": "uint32"
+  },
+  {
+    "name": "AuraInterruptFlags",
+    "type": "uint32"
+  },
+  {
+    "name": "ChannelInterruptFlags",
+    "type": "uint32"
+  },
+  {
+    "name": "ProcTypeMask",
+    "type": "uint32"
+  },
+  {
+    "name": "ProcChance",
+    "type": "uint32"
+  },
+  {
+    "name": "ProcCharges",
+    "type": "uint32"
+  },
+  {
+    "name": "MaxLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "BaseLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "DurationIndex",
+    "type": "uint32"
+  },
+  {
+    "name": "PowerType",
+    "type": "int32"
+  },
+  {
+    "name": "ManaCost",
+    "type": "uint32"
+  },
+  {
+    "name": "ManaCostPerLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "ManaPerSecond",
+    "type": "uint32"
+  },
+  {
+    "name": "ManaPerSecondPerLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "RangeIndex",
+    "type": "uint32"
+  },
+  {
+    "name": "Speed",
+    "type": "float32"
+  },
+  {
+    "name": "ModalNextSpell",
+    "type": "uint32"
+  },
+  {
+    "name": "CumulativeAura",
+    "type": "uint32"
+  },
+  {
+    "name": "Totem_1",
+    "type": "uint32"
+  },
+  {
+    "name": "Totem_2",
+    "type": "uint32"
+  },
+  {
+    "name": "Reagent_1",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_2",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_3",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_4",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_5",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_6",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_7",
+    "type": "int32"
+  },
+  {
+    "name": "Reagent_8",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_1",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_2",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_3",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_4",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_5",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_6",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_7",
+    "type": "int32"
+  },
+  {
+    "name": "ReagentCount_8",
+    "type": "int32"
+  },
+  {
+    "name": "EquippedItemClass",
+    "type": "int32"
+  },
+  {
+    "name": "EquippedItemSubclass",
+    "type": "int32"
+  },
+  {
+    "name": "EquippedItemInvTypes",
+    "type": "int32"
+  },
+  {
+    "name": "Effect_1",
+    "type": "uint32"
+  },
+  {
+    "name": "Effect_2",
+    "type": "uint32"
+  },
+  {
+    "name": "Effect_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectDieSides_1",
+    "type": "int32"
+  },
+  {
+    "name": "EffectDieSides_2",
+    "type": "int32"
+  },
+  {
+    "name": "EffectDieSides_3",
+    "type": "int32"
+  },
+  {
+    "name": "EffectRealPointsPerLevel_1",
+    "type": "float32"
+  },
+  {
+    "name": "EffectRealPointsPerLevel_2",
+    "type": "float32"
+  },
+  {
+    "name": "EffectRealPointsPerLevel_3",
+    "type": "float32"
+  },
+  {
+    "name": "EffectBasePoints_1",
+    "type": "int32"
+  },
+  {
+    "name": "EffectBasePoints_2",
+    "type": "int32"
+  },
+  {
+    "name": "EffectBasePoints_3",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMechanic_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectMechanic_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectMechanic_3",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetA_1",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetA_2",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetA_3",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetB_1",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetB_2",
+    "type": "uint32"
+  },
+  {
+    "name": "ImplicitTargetB_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectRadiusIndex_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectRadiusIndex_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectRadiusIndex_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAura_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAura_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAura_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAuraPeriod_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAuraPeriod_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectAuraPeriod_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectMultipleValue_1",
+    "type": "float32"
+  },
+  {
+    "name": "EffectMultipleValue_2",
+    "type": "float32"
+  },
+  {
+    "name": "EffectMultipleValue_3",
+    "type": "float32"
+  },
+  {
+    "name": "EffectChainTargets_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectChainTargets_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectChainTargets_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectItemType_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectItemType_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectItemType_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectMiscValue_1",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMiscValue_2",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMiscValue_3",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMiscValueB_1",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMiscValueB_2",
+    "type": "int32"
+  },
+  {
+    "name": "EffectMiscValueB_3",
+    "type": "int32"
+  },
+  {
+    "name": "EffectTriggerSpell_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectTriggerSpell_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectTriggerSpell_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectPointsPerCombo_1",
+    "type": "float32"
+  },
+  {
+    "name": "EffectPointsPerCombo_2",
+    "type": "float32"
+  },
+  {
+    "name": "EffectPointsPerCombo_3",
+    "type": "float32"
+  },
+  {
+    "name": "EffectSpellClassMaskA_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskA_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskA_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskB_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskB_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskB_3",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskC_1",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskC_2",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectSpellClassMaskC_3",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellVisualID_1",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellVisualID_2",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellIconID",
+    "type": "uint32"
+  },
+  {
+    "name": "ActiveIconID",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellPriority",
+    "type": "uint32"
+  },
+  {
+    "name": "Name_Lang_enUS",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enGB",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_koKR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_frFR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_deDE",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_zhCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_enTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_zhTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_esES",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_esMX",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ruRU",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ptPT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_ptBR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_itIT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_Unk",
+    "type": "string_offset"
+  },
+  {
+    "name": "Name_Lang_Mask",
+    "type": "uint32"
+  },
+  {
+    "name": "NameSubtext_Lang_enUS",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_enGB",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_koKR",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_frFR",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_deDE",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_enCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_zhCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_enTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_zhTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_esES",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_esMX",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_ruRU",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_ptPT",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_ptBR",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_itIT",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_Unk",
+    "type": "string_offset"
+  },
+  {
+    "name": "NameSubtext_Lang_Mask",
+    "type": "uint32"
+  },
+  {
+    "name": "Description_Lang_enUS",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_enGB",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_koKR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_frFR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_deDE",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_enCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_zhCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_enTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_zhTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_esES",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_esMX",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_ruRU",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_ptPT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_ptBR",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_itIT",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_Unk",
+    "type": "string_offset"
+  },
+  {
+    "name": "Description_Lang_Mask",
+    "type": "uint32"
+  },
+  {
+    "name": "AuraDescription_Lang_enUS",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_enGB",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_koKR",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_frFR",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_deDE",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_enCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_zhCN",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_enTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_zhTW",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_esES",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_esMX",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_ruRU",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_ptPT",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_ptBR",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_itIT",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_Unk",
+    "type": "string_offset"
+  },
+  {
+    "name": "AuraDescription_Lang_Mask",
+    "type": "uint32"
+  },
+  {
+    "name": "ManaCostPct",
+    "type": "uint32"
+  },
+  {
+    "name": "StartRecoveryCategory",
+    "type": "uint32"
+  },
+  {
+    "name": "StartRecoveryTime",
+    "type": "uint32"
+  },
+  {
+    "name": "MaxTargetLevel",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellClassSet",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellClassMask_1",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellClassMask_2",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellClassMask_3",
+    "type": "uint32"
+  },
+  {
+    "name": "MaxTargets",
+    "type": "uint32"
+  },
+  {
+    "name": "DefenseType",
+    "type": "uint32"
+  },
+  {
+    "name": "PreventionType",
+    "type": "uint32"
+  },
+  {
+    "name": "StanceBarOrder",
+    "type": "uint32"
+  },
+  {
+    "name": "EffectChainAmplitude_1",
+    "type": "float32"
+  },
+  {
+    "name": "EffectChainAmplitude_2",
+    "type": "float32"
+  },
+  {
+    "name": "EffectChainAmplitude_3",
+    "type": "float32"
+  },
+  {
+    "name": "MinFactionID",
+    "type": "uint32"
+  },
+  {
+    "name": "MinReputation",
+    "type": "uint32"
+  },
+  {
+    "name": "RequiredAuraVision",
+    "type": "uint32"
+  },
+  {
+    "name": "RequiredTotemCategoryID_1",
+    "type": "uint32"
+  },
+  {
+    "name": "RequiredTotemCategoryID_2",
+    "type": "uint32"
+  },
+  {
+    "name": "RequiredAreasID",
+    "type": "int32"
+  },
+  {
+    "name": "SchoolMask",
+    "type": "uint32"
+  },
+  {
+    "name": "RuneCostID",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellMissileID",
+    "type": "uint32"
+  },
+  {
+    "name": "PowerDisplayID",
+    "type": "int32"
+  },
+  {
+    "name": "EffectBonusMultiplier_1",
+    "type": "float32"
+  },
+  {
+    "name": "EffectBonusMultiplier_2",
+    "type": "float32"
+  },
+  {
+    "name": "EffectBonusMultiplier_3",
+    "type": "float32"
+  },
+  {
+    "name": "SpellDescriptionVariableID",
+    "type": "uint32"
+  },
+  {
+    "name": "SpellDifficultyID",
+    "type": "uint32"
+  }
+]

@@ -1,0 +1,96 @@
+[worldserver]
+#
+###################################################################################################
+
+###################################################################################################
+#
+# RANDOM ENCHANTS OPTIONS
+#
+#     RandomEnchants.AnnounceOnLogin
+#        Announce a message on login for this module
+#        Default:     1
+
+RandomEnchants.AnnounceOnLogin=1
+
+#
+#     RandomEnchants.Debug
+#        Print debug logs
+#        Default:    0
+
+RandomEnchants.Debug=0
+
+#
+#     RandomEnchants.OnLoginMessage
+#        Message to display on login(Only applies if AnnounceOnLogin is enabled)
+#        Default:    "This server is running a RandomEnchants Module."
+
+RandomEnchants.OnLoginMessage="This server is running a RandomEnchants Module."
+
+#
+#     RandomEnchants.OnLoot
+#        Chance at random enchant on looting an item
+#        Default:     1
+
+RandomEnchants.OnLoot=1
+
+#
+#     RandomEnchants.OnCreate
+#        Chance at random enchant on creating an item via profession
+#        Default:     1
+
+RandomEnchants.OnCreate=1
+
+#
+#     RandomEnchants.OnQuestReward
+#        Chance at random enchant on obtaining item from quest reward
+#        Default:     1
+
+RandomEnchants.OnQuestReward=1
+
+# #
+# #     RandomEnchants.OnGroupRollRewardItem
+# #        Chance at random enchant on obtaining item group roll rewards (i.e. NEED/GREED)
+# #        Default:     1
+
+# RandomEnchants.OnGroupRollRewardItem=1
+
+#
+#     RandomEnchants.OnVendorPurchase
+#        Chance at random enchant on obtaining item from a vendor purchase
+#        Default:     1
+
+RandomEnchants.OnVendorPurchase=1
+
+
+# #
+# #     RandomEnchants.OnAllItemsCreated
+# #        Chance at all item creation to get random enchants. If this is true, the other options will be
+# #        automatically false as this option covers all the other cases
+# #        Default:     1
+# RandomEnchants.OnAllItemsCreated=1
+
+#
+#     RandomEnchants.RollPercentage.1
+#     RandomEnchants.RollPercentage.2
+#     RandomEnchants.RollPercentage.3
+#     RandomEnchants.RollPercentage.4
+#        Each of the above toggles how the chance of getting each roll
+#        This goes up to 5 rolls for items that can be enchanted 5 times.
+#        Default:     30.0
+#                     35.0
+#                     40.0
+#                     45.0
+#                     50.0
+
+RandomEnchants.RollPercentage.1=30.0
+RandomEnchants.RollPercentage.2=35.0
+RandomEnchants.RollPercentage.3=40.0
+RandomEnchants.RollPercentage.4=45.0
+
+#
+#     RandomEnchants.RollPlayerClassPreference
+#        Rolls enchants based on player class preferences, i.e. if player's class can use multiple stats (e.g. Druids)
+#        Then roll depending on the class's current spec.
+#        Default:     0
+
+RandomEnchants.RollPlayerClassPreference=0

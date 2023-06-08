@@ -1,0 +1,1052 @@
+# Helper anchors
+
+## Weapon classes
+sharp-weapons-sc: &ssc [Axe,Axe2,Polearm,Sword,Sword2,Dagger,Spear]
+
+blunt-weapons-sc: &bsc [Mace, Mace2, Staff, Fist]
+
+melee-weapons-sc: &msc [Axe, Axe2, Mace, Mace2, Sword, Sword2, Polearm, Dagger, Fist]
+
+ranged-weapons-sc: &rsc [Bow,Gun,Crossbow,Thrown]
+
+wands-sc: &wsc [Wand]
+
+# Config start
+
+src-item-suffix-dbc: ../../env/docker/data/dbc/ItemRandomSuffix.dbc
+src-item-suffix-schema: golang/data/3.3.5.12340/schemas/ItemRandomSuffix.dbc.json
+
+src-spell-item-enchant-dbc: ../../env/docker/data/dbc/SpellItemEnchantment.dbc
+src-spell-item-enchant-schema: golang/data/3.3.5.12340/schemas/SpellItemEnchantment.dbc.json
+
+item-random-suffix-dbc-custom-start-id: 1000          # Custom ItemRandomSuffixDBC entries start from 1000. can refer to your DBC viewer for more info on this.
+number-of-attributes: 3                               # number of attribute per combination, e.g. if 3, then cannot have more than 3 diff attrs for each generated suffix
+number-of-attributes-weapons: 1                       # same as above, but for weapons
+stat-point-alloc-tiers: [10000, 12000, 14000, 16000]
+weapon-stat-penalty: 0.75                             # 0.75 of each tier of `stat-point-alloc-tiers`
+
+dst-generated-world-sql: data/sql/db-world/mod_acore_random_suffix.sql
+dst-generated-item-suffix-dbc: patch-Z.MPQ/DBFilesClient/ItemRandomSuffix.dbc
+dst-generated-spell-item-enchant-dbc: patch-Z.MPQ/DBFilesClient/SpellItemEnchantment.dbc
+
+suffixes:
+  Strength: [Strength]
+  Agility: [Agility]
+  Stamina: [Stamina]
+  Intellect: [Intellect]
+  Spirit: [Spirit]
+  Attack Power: [AttackPower]
+  Spell Power: [SpellPower]
+  Hit: [Hit]
+  Haste: [Haste]
+  Crit: [Crit]
+  Expertise: [Expertise]
+  Defense: [DefenseRating]
+  Dodge: [Dodge]
+  Parry: [Parry]
+  Eluding: [Agility,Dodge]
+  Bear: [Stamina,Strength]
+  Beast: [Haste,Crit,Stamina]
+  Champion: [Strength,Stamina,DefenseRating]
+  Curator: [Stamina,Strength,Dodge,Parry]
+  Eagle: [Intellect,Stamina]
+  Falcon: [Agility,Intellect]
+  Gorilla: [Intellect,Strength]
+  Hunt: [AttackPower,Agility,Intellect]
+  Monkey: [Agility,Stamina]
+  Owl: [Intellect,Spirit]
+  Prophet: [Intellect,Spirit,SpellPower]
+  Tiger: [Agility,Strength]
+  Undertow: [Stamina,Intellect,Haste,Spirit]
+  Whale: [Spirit,Stamina]
+  Wind: [Spirit,Haste]
+  Wraith: [Spirit,Crit]
+  Necromancer: [Stamina,Hit,SpellPower]
+  Mercenary: [Stamina,Strength,Haste]
+  Squire: [Stamina,Hit,Strength]
+  Seer: [Stamina,SpellPower,Crit]
+  Nightmare: [Intellect,Stamina,Crit]
+  Foreseer: [Intellect,Haste,SpellPower]
+  Marksman: [Agility,Stamina,Hit]
+  Bandit: [Agility,Stamina,Crit]
+  Fireflash:  [Stamina,Intellect,Crit,Haste]
+  Sorcerer: [Intellect,Stamina,SpellPower]
+  Striking: [Stamina,AttackPower,Haste]
+  Substratum: [Stamina,Strength,Haste,Dodge]
+  Battle: [Strength,Stamina,Crit]
+  Sentinel: [Stamina,Strength,Haste,Crit]
+  Scorpion: [Haste,Crit]
+  Invoker: [Intellect,Crit,SpellPower]
+  Wild: [Agility,Stamina,AttackPower]
+  Galeburst: [Stamina,Agility,Haste,Crit]
+  Moon: [Intellect,Stamina,Spirit]
+  Hierophant: [Stamina,Spirit,SpellPower]
+    # CUSTOM!
+  # Brawny Sorcerer: [Strength,Intellect,Stamina,SpellPower]
+  # Agile Sorcerer: [Agility,Intellect,Stamina,SpellPower]
+  # Quick Sorcerer: [Intellect,Stamina,SpellPower,Haste]
+  # Accurate Sorcerer: [Intellect,Stamina,SpellPower,Hit]
+  # Decisive Sorcerer: [Intellect,Stamina,SpellPower,Crit]
+  Quick-Witted: [Intellect,Stamina,Haste]
+  # Quick-Witted Decisiveness: [Intellect,Stamina,Haste,Hit]
+  Might: [Strength,AttackPower]
+  Spellsword: [Strength,Stamina,SpellPower]
+  # Quick Spellsword: [Strength,Stamina,SpellPower,Haste]
+  # Accurate Spellsword: [Strength,Stamina,SpellPower,Hit]
+  # Decisive Spellsword: [Strength,Stamina,SpellPower,Crit]
+  # Expert Spellsword: [Strength,Stamina,SpellPower,Expertise]
+  # Cautious Spellsword: [Strength,Stamina,SpellPower,DefenseRating]
+  # Nimble Spellsword: [Strength,Stamina,SpellPower,Dodge]
+  # Deflective Spellsword: [Strength,Stamina,SpellPower,Parry]
+  Berzerker: [Strength,Haste,Crit]
+  # Expert Berzerker: [Strength,Haste,Crit,Expertise]
+  # Cautious Berzerker: [Strength,Haste,Crit,DefenseRating]
+  # Nimble Berzerker: [Strength,Haste,Crit,Dodge]
+  # Deflective Berzerker: [Strength,Haste,Crit,Parry]
+  Athlete: [Strength,Agility,Stamina]
+  # Athletic Slinger: [Strength,Agility,Stamina,SpellPower]
+  # Quick Athlete: [Strength,Agility,Stamina,Haste]
+  # Acurate Athlete: [Strength,Agility,Stamina,Hit]
+  # Decisive Athlete: [Strength,Agility,Stamina,Crit]
+  # Nimble Athlete: [Strength,Agility,Stamina,Dodge]
+  # Cautious Athlete: [Strength,Agility,Stamina,DefenseRating]
+  # Expert Athlete: [Strength,Agility,Stamina,Expertise]
+  # Forceful Athlete: [Strength,Agility,Stamina,AttackPower]
+  Spellbrawn: [Strength,SpellPower]
+  Fierce: [Strength,Haste]
+  Etched: [Strength,Hit]
+  Inscribed: [Strength,Crit]
+  Robust: [Strength,DefenseRating]
+  # Heroic: [Strength,Stamina,DefenseRating,Dodge]
+  # Enduring: [Strength,Stamina,DefenseRating,Parry]
+  Wolverine: [Strength,Agility,AttackPower]
+  # Enchanted Wolverine: [Strength,Agility,AttackPower,SpellPower]
+  # Quick Wolverine: [Strength,Agility,AttackPower,Haste]
+  # Accurate Wolverine: [Strength,Agility,AttackPower,Hit]
+  # Decisive Wolverine: [Strength,Agility,AttackPower,Crit]
+  # Expert Wolverine: [Strength,Agility,AttackPower,Expertise]
+  # Cautious Wolverine: [Strength,Agility,AttackPower,DefenseRating]
+  # Nimble Wolverine: [Strength,Agility,AttackPower,Dodge]
+  # Quick Hierophant: [Spirit,Stamina,SpellPower,Haste]
+  # Accurate Hierophant: [Spirit,Stamina,SpellPower,Hit]
+  # Decisive Hierophant: [Spirit,Stamina,SpellPower,Crit]
+  Trickster: [Strength,Agility,SpellPower]
+  # Quick Trickster: [Strength,Agility,SpellPower,Haste]
+  # Accurate Trickster: [Strength,Agility,SpellPower,Hit]
+  # Decisive Trickster: [Strength,Agility,SpellPower,Crit]
+  # Expert Trickster: [Strength,Agility,SpellPower,Expertise]
+  # Cautious Trickster: [Strength,Agility,SpellPower,DefenseRating]
+  # Nimble Trickster: [Strength,Agility,SpellPower,Dodge]
+  Monk: [Strength,Agility,Haste]
+  # Accurate Monk: [Strength,Agility,Haste,Hit]
+  # Decisive Monk: [Strength,Agility,Haste,Crit]
+  # Expert Monk: [Strength,Agility,Haste,Expertise]
+  # Cautious Monk: [Strength,Agility,Haste,DefenseRating]
+  # Nimble Monk: [Strength,Agility,Haste,Dodge]
+  Fighter: [Strength,Agility,Hit]
+  # Decisive Fighter: [Strength,Agility,Hit,Crit]
+  # Expert Fighter: [Strength,Agility,Hit,Expertise]
+  # Cautious Fighter: [Strength,Agility,Hit,DefenseRating]
+  # Nimble Fighter: [Strength,Agility,Hit,Dodge]
+  # Brawler: [Strength,Agility,Crit]
+  # Expert Brawler: [Strength,Agility,Crit,Expertise]
+  # Cautious Brawler: [Strength,Agility,Crit,DefenseRating]
+  # Nimble Brawler: [Strength,Agility,Crit,Dodge]
+  # Martial Artist: [Strength,Agility,Expertise]
+  # Cautious Martial Artist: [Strength,Agility,Expertise,DefenseRating]
+  # Nimble Martial Artist: [Strength,Agility,Expertise,Dodge]
+  Survivor: [Strength,Agility,DefenseRating]
+  # Nimble Survivor: [Strength,Agility,DefenseRating,Dodge]
+  Coordinated: [Strength,Agility,Dodge]
+  Vindicator: [Strength,Intellect,Stamina]
+  # Forceful Vindicator: [Strength,Intellect,Stamina,AttackPower]
+  # Quick Vindicator: [Strength,Intellect,Stamina,Haste]
+  # Accurate Vindicator: [Strength,Intellect,Stamina,Hit]
+  # Decisive Vindicator: [Strength,Intellect,Stamina,Crit]
+  # Expert Vindicator: [Strength,Intellect,Stamina,Expertise]
+  # Cautious Vindicator: [Strength,Intellect,Stamina,DefenseRating]
+  # Nimble Vindicator: [Strength,Intellect,Stamina,Dodge]
+  # Deflective Vindicator: [Strength,Intellect,Stamina,Parry]
+  Cavalier: [Strength,Intellect,AttackPower]
+  # Scholarly Cavalier: [Strength,Intellect,AttackPower,SpellPower]
+  # Quick Cavalier: [Strength,Intellect,AttackPower,Haste]
+  # Accurate Cavalier: [Strength,Intellect,AttackPower,Hit]
+  # Decisive Cavalier: [Strength,Intellect,AttackPower,Crit]
+  # Expert Cavalier: [Strength,Intellect,AttackPower,Expertise]
+  # Cautious Cavalier: [Strength,Intellect,AttackPower,DefenseRating]
+  # Nimble Cavalier: [Strength,Intellect,AttackPower,Dodge]
+  # Deflective Cavalier: [Strength,Intellect,AttackPower,Parry]
+  Warrior-Mage: [Strength,Intellect,SpellPower]
+  # Quick Warrior-Mage: [Strength,Intellect,SpellPower,Haste]
+  # Accurate Warrior-Mage: [Strength,Intellect,SpellPower,Hit]
+  # Decisive Warrior-Mage: [Strength,Intellect,SpellPower,Crit]
+  # Expert Warrior-Mage: [Strength,Intellect,SpellPower,Expertise]
+  # Cautious Warrior-Mage: [Strength,Intellect,SpellPower,DefenseRating]
+  # Nimble Warrior-Mage: [Strength,Intellect,SpellPower,Dodge]
+  # Deflective Warrior-Mage: [Strength,Intellect,SpellPower,Parry]
+  Devotee: [Strength,Intellect,Haste]
+  # Accurate Devotee: [Strength,Intellect,Haste,Hit]
+  # Decisive Devotee: [Strength,Intellect,Haste,Crit]
+  # Expert Devotee: [Strength,Intellect,Haste,Expertise]
+  # Cautious Devotee: [Strength,Intellect,Haste,DefenseRating]
+  # Nimble Devotee: [Strength,Intellect,Haste,Dodge]
+  # Deflective Devotee: [Strength,Intellect,Haste,Parry]
+  Seeker: [Strength,Intellect,Hit]
+  # Decisive Seeker: [Strength,Intellect,Hit,Crit]
+  # Expert Seeker: [Strength,Intellect,Hit,Expertise]
+  # Cautious Seeker: [Strength,Intellect,Hit,DefenseRating]
+  # Nimble Seeker: [Strength,Intellect,Hit,Dodge]
+  # Deflective Seeker: [Strength,Intellect,Hit,Parry]
+  Justiciar: [Strength,Intellect,Crit]
+  # Expert Justiciar: [Strength,Intellect,Crit,Expertise]
+  # Cautious Justiciar: [Strength,Intellect,Crit,DefenseRating]
+  # Nimble Justiciar: [Strength,Intellect,Crit,Dodge]
+  # Deflective Justiciar: [Strength,Intellect,Crit,Parry]
+  Protector: [Strength,Intellect,DefenseRating]
+  # Nimble Protector: [Strength,Intellect,DefenseRating,Dodge]
+  # Deflective Protector: [Strength,Intellect,DefenseRating,Parry]
+  Gallant: [Strength,Intellect,Expertise]
+  # Cautious Gallant: [Strength,Intellect,Expertise,DefenseRating]
+  # Nimble Gallant: [Strength,Intellect,Expertise,Dodge]
+  # Deflective Gallant: [Strength,Intellect,Expertise,Parry]
+  Caballero: [Strength,Intellect,Dodge]
+  # Deflective Caballero: [Strength,Intellect,Dodge,Parry]
+  Pyrrhic: [Strength,Intellect,Parry]
+  Grappler: [Strength,Stamina,Expertise]
+  # Cautious Grappler: [Strength,Stamina,Expertise,DefenseRating]
+  # Nimble Grappler: [Strength,Stamina,Expertise,Dodge]
+  # Deflective Grappler: [Strength,Stamina,Expertise,Parry]
+  Wrestler: [Strength,Stamina,Dodge]
+  Fencer: [Strength,Stamina,Parry]
+  Battlemage: [Strength,AttackPower,SpellPower]
+  # Quick Battlemage: [Strength,AttackPower,SpellPower,Haste]
+  # Accurate Battlemage: [Strength,AttackPower,SpellPower,Hit]
+  # Decisive Battlemage: [Strength,AttackPower,SpellPower,Crit]
+  # Expert Battlemage: [Strength,AttackPower,SpellPower,Expertise]
+  # Cautious Battlemage: [Strength,AttackPower,SpellPower,DefenseRating]
+  # Nimble Battlemage: [Strength,AttackPower,SpellPower,Dodge]
+  # Deflective Battlemage: [Strength,AttackPower,SpellPower,Parry]
+  Trooper: [Strength,AttackPower,Haste]
+  # Accurate Trooper: [Strength,AttackPower,Haste,Hit]
+  # Decisive Trooper: [Strength,AttackPower,Haste,Crit]
+  # Expert Trooper: [Strength,AttackPower,Haste,Expertise]
+  # Cautious Trooper: [Strength,AttackPower,Haste,DefenseRating]
+  # Nimble Trooper: [Strength,AttackPower,Haste,Dodge]
+  # Deflective Trooper: [Strength,AttackPower,Haste,Parry]
+  Belligerent: [Strength,AttackPower,Hit]
+  # Decisive Belligerent: [Strength,AttackPower,Hit,Crit]
+  # Expert Belligerent: [Strength,AttackPower,Hit,Expertise]
+  # Cautious Belligerent: [Strength,AttackPower,Hit,DefenseRating]
+  # Nimble Belligerent: [Strength,AttackPower,Hit,Dodge]
+  # Deflective Belligerent: [Strength,AttackPower,Hit,Parry]
+  Marine: [Strength,AttackPower,Crit]
+  # Expert Marine: [Strength,AttackPower,Crit,Expertise]
+  # Cautious Marine: [Strength,AttackPower,Crit,DefenseRating]
+  # Nimble Marine: [Strength,AttackPower,Crit,Dodge]
+  # Deflective Marine: [Strength,AttackPower,Crit,Parry]
+  Veteran: [Strength,AttackPower,Expertise]
+  # Cautious Veteran: [Strength,AttackPower,Expertise,DefenseRating]
+  # Nimble Veteran: [Strength,AttackPower,Expertise,Dodge]
+  # Deflective Veteran: [Strength,AttackPower,Expertise,Parry]
+  Guardsman: [Strength,AttackPower,DefenseRating]
+  # Nimble Guardsman: [Strength,AttackPower,DefenseRating,Dodge]
+  # Deflective Guardsman: [Strength,AttackPower,DefenseRating,Parry]
+  # Nimble Duelist: [Strength,AttackPower,Dodge]
+  # Deflective Duelist: [Strength,AttackPower,Parry]
+  # Perceptive Duelist: [Strength,AttackPower,Dodge,Parry]
+  Adherent: [Strength,SpellPower,Haste]
+  # Accurate Adherent: [Strength,SpellPower,Haste,Hit]
+  # Decisive Adherent: [Strength,SpellPower,Haste,Crit]
+  # Expert Adherent: [Strength,SpellPower,Haste,Expertise]
+  # Cautious Adherent: [Strength,SpellPower,Haste,DefenseRating]
+  # Nimble Adherent: [Strength,SpellPower,Haste,Dodge]
+  # Deflective Adherent: [Strength,SpellPower,Haste,Parry]
+  Bearer: [Strength,SpellPower,Hit]
+  # Decisive Bearer: [Strength,SpellPower,Hit,Crit]
+  # Expert Bearer: [Strength,SpellPower,Hit,Expertise]
+  # Cautious Bearer: [Strength,SpellPower,Hit,DefenseRating]
+  # Nimble Bearer: [Strength,SpellPower,Hit,Dodge]
+  # Deflective Bearer: [Strength,SpellPower,Hit,Parry]
+  War-Mystic: [Strength,SpellPower,Crit]
+  # Expert War-Mystic: [Strength,SpellPower,Crit,Expertise]
+  # Cautious War-Mystic: [Strength,SpellPower,Crit,DefenseRating]
+  # Nimble War-Mystic: [Strength,SpellPower,Crit,Dodge]
+  # Deflective War-Mystic: [Strength,SpellPower,Crit,Parry]
+  # Nimble Spellbrawn: [Strength,SpellPower,Dodge]
+  # Perceptive Spellbrawn: [Strength,SpellPower,Dodge,Parry]
+  # Deflective Spellbrawn: [Strength,SpellPower,Parry]
+  Warmonger: [Strength,Haste,Hit]
+  # Decisive Warmonger: [Strength,Haste,Hit,Crit]
+  # Expert Warmonger: [Strength,Haste,Hit,Expertise]
+  # Cautious Warmonger: [Strength,Haste,Hit,DefenseRating]
+  # Nimble Warmonger: [Strength,Haste,Hit,Dodge]
+  # Deflective Warmonger: [Strength,Haste,Hit,Parry]
+  Millitant: [Strength,Haste,Expertise]
+  # Cautious Millitant: [Strength,Haste,Expertise,DefenseRating]
+  # Nimble Millitant: [Strength,Haste,Expertise,Dodge]
+  # Deflective Millitant: [Strength,Haste,Expertise,Parry]
+  Safeguard: [Strength,Haste,DefenseRating]
+  # Nimble Safeguard: [Strength,Haste,DefenseRating,Dodge]
+  # Deflective Safeguard: [Strength,Haste,DefenseRating,Parry]
+  # Nimble Sentry: [Strength,Haste,Dodge]
+  # Perceptive Sentry: [Strength,Haste,Dodge,Parry]
+  # Deflective Sentry: [Strength,Haste,Parry]
+  # Nimble Combatant: [Strength,Hit,Dodge]
+  # Perceptive Combatant: [Strength,Hit,Dodge,Parry]
+  # Deflective Combatant: [Strength,Hit,Parry]
+  Bruiser: [Strength,Hit,Crit]
+  # Expert Bruiser: [Strength,Hit,Crit,Expertise]
+  # Cautious Assailant: [Strength,Crit,Expertise,DefenseRating]
+  # Cautious Sparring: [Strength,Hit,Expertise,DefenseRating]
+  # Cautious Bruiser: [Strength,Hit,Crit,DefenseRating]
+  Sparring: [Strength,Hit,Expertise]
+  Challenger: [Strength,Hit,DefenseRating]
+  Assailant: [Strength,Crit,Expertise]
+  Provoker: [Strength,Crit,DefenseRating]
+  Vagabond: [Strength,Expertise,DefenseRating]
+  # Nimble Wayward: [Strength,Expertise,Dodge]
+  # Perceptive Wayward: [Strength,Expertise,Dodge,Parry]
+  # Nimble Abettor: [Strength,DefenseRating,Dodge]
+  # Perceptive Abettor: [Strength,DefenseRating,Dodge,Parry]
+  # Deflective Abettor: [Strength,DefenseRating,Parry]
+  # Nimble Knocker: [Strength,Crit,Dodge]
+  # Perceptive Knocker: [Strength,Crit,Dodge,Parry]
+  # Deflective Knocker: [Strength,Crit,Parry]
+  # Nimble Vagabond: [Strength,Expertise,DefenseRating,Dodge]
+  # Deflective Vagabond: [Strength,Expertise,DefenseRating,Parry]
+  # Nimble Assailant: [Strength,Crit,Expertise,Dodge]
+  # Deflective Assailant: [Strength,Crit,Expertise,Parry]
+  # Nimble Provoker: [Strength,Crit,DefenseRating,Dodge]
+  # Deflective Provoker: [Strength,Crit,DefenseRating,Parry]
+  # Nimble Bruiser: [Strength,Hit,Crit,Dodge]
+  # Deflective Bruiser: [Strength,Hit,Crit,Parry]
+  # Nimble Sparring: [Strength,Hit,Expertise,Dodge]
+  # Deflective Sparring: [Strength,Hit,Expertise,Parry]
+  # Nimble Challenger: [Strength,Hit,DefenseRating,Dodge]
+  # Deflective Challenger: [Strength,Hit,DefenseRating,Parry]
+  Cohort: [Strength,Expertise,Parry]
+  Bonnet: [Strength,Dodge,Parry]
+  Spellbreaker: [Strength,SpellPower,DefenseRating]
+  # Nimble Spellbreaker: [Strength,SpellPower,DefenseRating,Dodge]
+  # Deflective Spellbreaker: [Strength,SpellPower,DefenseRating,Parry]
+  Arcane-Brawler: [Strength,SpellPower,Expertise]
+  # Deflective Arcane-Brawler: [Strength,SpellPower,Expertise,Parry]
+  # Cautious Arcane-Brawler: [Strength,SpellPower,Expertise,DefenseRating]
+  # Nimble Arcane-Brawler: [Strength,SpellPower,Expertise,Dodge]
+  Wastrel: [Agility,Intellect,Stamina]
+  Palmist: [Agility,Intellect,SpellPower]
+  Theurgist: [Agility,Intellect,Haste]
+  Juggler: [Agility,Intellect,Hit]
+  Voodoo: [Agility,Intellect,Crit]
+  Pawang: [Agility,Intellect,Expertise]
+  Hythlodaeus: [Agility,Stamina,SpellPower]
+  Brynne: [Agility,Stamina,Haste]
+  Outlaw: [Agility,Stamina,Expertise]
+  Griz: [Agility,Stamina,DefenseRating]
+  Koda: [Agility,Stamina,Dodge]
+  Katalonan: [Agility,AttackPower,SpellPower]
+  Ruffian: [Agility,AttackPower,Haste]
+  # Forceful Wastrel: [Agility,Intellect,Stamina,AttackPower]
+  # Quick Wastrel: [Agility,Intellect,Stamina,Haste]
+  # Quick Palmist: [Agility,Intellect,SpellPower,Haste]
+  # Quick Hythlodaeus: [Agility,Stamina,SpellPower,Haste]
+  # Quick Katalonan: [Agility,AttackPower,SpellPower,Haste]
+  # Accurate Wastrel: [Agility,Intellect,Stamina,Hit]
+  # Accurate Palmist: [Agility,Intellect,SpellPower,Hit]
+  # Accurate Theurgist: [Agility,Intellect,Haste,Hit]
+  # Accurate Hythlodaeus: [Agility,Stamina,SpellPower,Hit]
+  # Accurate Brynne: [Agility,Stamina,Haste,Hit]
+  # Accurate Katalonan: [Agility,AttackPower,SpellPower,Hit]
+  # Accurate Ruffian: [Agility,AttackPower,Haste,Hit]
+  # Decisive Wastrel: [Agility,Intellect,Stamina,Crit]
+  # Decisive Palmist: [Agility,Intellect,SpellPower,Crit]
+  # Decisive Theurgist: [Agility,Intellect,Haste,Crit]
+  # Decisive Juggler: [Agility,Intellect,Hit,Crit]
+  # Decisive Hythlodaeus: [Agility,Stamina,SpellPower,Crit]
+  # Decisive Katalonan: [Agility,AttackPower,SpellPower,Crit]
+  # Decisive Ruffian: [Agility,AttackPower,Haste,Crit]
+  # Expert Wastrel: [Agility,Intellect,Stamina,Expertise]
+  # Expert Palmist: [Agility,Intellect,SpellPower,Expertise]
+  # Expert Theurgist: [Agility,Intellect,Haste,Expertise]
+  # Expert Juggler: [Agility,Intellect,Hit,Expertise]
+  # Expert Voodoo: [Agility,Intellect,Crit,Expertise]
+  # Expert Hythlodaeus: [Agility,Stamina,SpellPower,Expertise]
+  # Expert Brynne: [Agility,Stamina,Haste,Expertise]
+  # Expert Katalonan: [Agility,AttackPower,SpellPower,Expertise]
+  # Expert Ruffian: [Agility,AttackPower,Haste,Expertise]
+  # Cautious Brynne: [Agility,Stamina,Haste,DefenseRating]
+  # Cautious Ruffian: [Agility,AttackPower,Haste,DefenseRating]
+  # Nimble Brynne: [Agility,Stamina,Haste,Dodge]
+  # Nimble Griz: [Agility,Stamina,DefenseRating,Dodge]
+  # Nimble Ruffian: [Agility,AttackPower,Haste,Dodge]
+  Skulker: [Agility,AttackPower,Hit]
+  Savage: [Agility,AttackPower,Crit]
+  # Decisive Skulker: [Agility,AttackPower,Hit,Crit]
+  # Expert Skulker: [Agility,AttackPower,Hit,Expertise]
+  # Expert Savage: [Agility,AttackPower,Crit,Expertise]
+  # Cautious Skulker: [Agility,AttackPower,Hit,DefenseRating]
+  # Cautious Savage: [Agility,AttackPower,Crit,DefenseRating]
+  # Nimble Skulker: [Agility,AttackPower,Hit,Dodge]
+  # Nimble Savage: [Agility,AttackPower,Crit,Dodge]
+  Swindler: [Agility,AttackPower,Expertise]
+  Picaroon: [Agility,AttackPower,DefenseRating]
+  # Nimble Picaroon: [Agility,AttackPower,DefenseRating,Dodge]
+  Brawny Wolverine: [Agility,AttackPower,Dodge]
+  Tangse: [Agility,SpellPower,Haste]
+  Scallywag: [Agility,SpellPower,Crit]
+  Scoundriff: [Agility,SpellPower,Expertise]
+  Ruffianate: [Agility,Haste,Hit]
+  Daxara: [Agility,SpellPower,Hit]
+  Sneakthief: [Agility,Haste,Crit]
+  Hoodlum: [Agility,Haste,Expertise]
+  # Accurate Tangse: [Agility,SpellPower,Haste,Hit]
+  # Decisive Tangse: [Agility,SpellPower,Haste,Crit]
+  # Decisive Daxara: [Agility,SpellPower,Hit,Crit]
+  # Decisive Ruffianate: [Agility,Haste,Hit,Crit]
+  # Expert Tangse: [Agility,SpellPower,Haste,Expertise]
+  # Expert Daxara: [Agility,SpellPower,Hit,Expertise]
+  # Expert Scallywag: [Agility,SpellPower,Crit,Expertise]
+  # Expert Ruffianate: [Agility,Haste,Hit,Expertise]
+  # Expert Sneakthief: [Agility,Haste,Crit,Expertise]
+  # Cautious Ruffianate: [Agility,Haste,Hit,DefenseRating]
+  # Cautious Sneakthief: [Agility,Haste,Crit,DefenseRating]
+  # Nimble Ruffianate: [Agility,Haste,Hit,Dodge]
+  # Nimble Sneakthief: [Agility,Haste,Crit,Dodge]
+  Expert Strength: [Strength,Expertise]
+  Nimble Strength: [Strength,Dodge]
+  Deflective Strength: [Strength,Parry]
+  Forceful Agility: [Agility,AttackPower]
+  Scholarly Agility: [Agility,SpellPower]
+  Quick Agility: [Agility,Haste]
+  Accurate Agility: [Agility,Hit]
+  Decisive Agility: [Agility,Crit]
+  Expert Agility: [Agility,Expertise]
+  Cautious Agility: [Agility,DefenseRating]
+  Scholarly Intellect: [Intellect,SpellPower]
+  Quick Intellect: [Intellect,Haste]
+  Accurate Intellect: [Intellect,Hit]
+  Decisive Intellect: [Intellect,Crit]
+  Scholarly Sprit: [Spirit,SpellPower]
+  Accurate Sprit: [Spirit,Hit]
+  Forceful Stamina: [Stamina,AttackPower]
+  Scholarly Stamina: [Stamina,SpellPower]
+  Quick Stamina: [Stamina,Haste]
+  Accurate Stamina: [Stamina,Hit]
+  Decisive Stamina: [Stamina,Crit]
+  Expert Stamina: [Stamina,Expertise]
+  Cautious Stamina: [Stamina,DefenseRating]
+  Nimble Stamina: [Stamina,Dodge]
+  Deflective Stamina: [Stamina,Parry]
+  Quick Attack Power: [AttackPower,Haste]
+  Accurate Attack Power: [AttackPower,Hit]
+  Decisive Attack Power: [AttackPower,Crit]
+  Expert Attack Power: [AttackPower,Expertise]
+  Cautious Attack Power: [AttackPower,DefenseRating]
+  Nimble Attack Power: [AttackPower,Dodge]
+  Deflective Attack Power: [AttackPower,Parry]
+  Quick Spell Power: [SpellPower,Haste]
+  Accurate Spell Power: [SpellPower,Hit]
+  Decisive Spell Power: [SpellPower,Crit]
+  Accurate Haste: [Haste,Hit]
+  Expert Haste: [Haste,Expertise]
+  Cautious Haste: [Haste,DefenseRating]
+  Nimble Haste: [Haste,Dodge]
+  Deflective Haste: [Haste,Parry]
+  Decisive Hit: [Hit,Crit]
+  Expert Hit: [Hit,Expertise]
+  Cautious Hit: [Hit,DefenseRating]
+  Nimble Hit: [Hit,Dodge]
+  Deflective Hit: [Hit,Parry]
+  Expert Crit: [Crit,Expertise]
+  Cautious Crit: [Crit,DefenseRating]
+  Nimble Crit: [Crit,Dodge]
+  Deflective Crit: [Crit,Parry]
+  Cautious Expertise: [Expertise,DefenseRating]
+  Nimble Expertise: [Expertise,Dodge]
+  Deflective Expertise: [Expertise,Parry]
+  Nimble Defense: [DefenseRating,Dodge]
+  Deflective Defense: [DefenseRating,Parry]
+  Deflective Nimbleness: [Dodge,Parry]
+  Werebear: [Agility,Haste,DefenseRating]
+  Cougar: [Agility,Haste,Dodge]
+  Leopard: [Agility,Hit,Crit]
+  Cheetah: [Agility,Hit,Expertise]
+  Fossa: [Agility,Hit,DefenseRating]
+  Puma: [Agility,Hit,Dodge]
+  Ursa: [Agility,Crit,DefenseRating]
+  Jaguar: [Agility,Crit,Expertise]
+  Margay: [Agility,Crit,Dodge]
+  Tremarctos: [Agility,DefenseRating,Dodge]
+  Theologian: [Intellect,Spirit,Haste]
+  Thaumaturge: [Intellect,Spirit,Hit]
+  Hexer: [Intellect,Spirit,Crit]
+  Sage: [Intellect,Stamina,Hit]
+  Magi: [Intellect,SpellPower,Hit]
+  Conjuror: [Intellect,Haste,Hit]
+  Evocator: [Intellect,Haste,Crit]
+  Sihir: [Intellect,Hit,Crit]
+  Fae: [Spirit,Stamina,Haste]
+  Augerer: [Spirit,Stamina,Hit]
+  Gazer: [Spirit,Stamina,Crit]
+  Auspex: [Spirit,SpellPower,Haste]
+  Ovate: [Spirit,SpellPower,Hit]
+  Bard: [Spirit,SpellPower,Crit]
+  Fenian: [Spirit,Haste,Hit]
+  Psychic: [Spirit,Haste,Crit]
+  Scryer: [Spirit,Hit,Crit]
+  # Enchanted Moon: [Intellect,Spirit,Stamina,SpellPower]
+  # Decisive Theologian: [Intellect,Spirit,Haste,Crit]
+  # Decisive Thaumaturge: [Intellect,Spirit,Hit,Crit]
+  # Decisive Sage: [Intellect,Stamina,Hit,Crit]
+  # Decisive Magi: [Intellect,SpellPower,Hit,Crit]
+  # Decisive Conjuror: [Intellect,Haste,Hit,Crit]
+  # Decisive Fae: [Spirit,Stamina,Haste,Crit]
+  # Decisive Moon: [Intellect,Spirit,Stamina,Crit]
+  # Decisive Augerer: [Spirit,Stamina,Hit,Crit]
+  # Decisive Auspex: [Spirit,SpellPower,Haste,Crit]
+  # Decisive Ovate: [Spirit,SpellPower,Hit,Crit]
+  # Decisive Fenian: [Spirit,Haste,Hit,Crit]
+  # Accurate Theologian: [Intellect,Spirit,Haste,Hit]
+  # Accurate Fae: [Spirit,Stamina,Haste,Hit]
+  # Accurate Moon: [Intellect,Spirit,Stamina,Hit]
+  # Accurate Auspex: [Spirit,SpellPower,Haste,Hit]
+  # Expert Leopard: [Agility,Hit,Crit,Expertise]
+  # Catious Leopard: [Agility,Hit,Crit,DefenseRating]
+  # Nimble Werebear: [Agility,Haste,DefenseRating,Dodge]
+  # Nimble Leopard: [Agility,Hit,Crit,Dodge]
+  # Nimble Fossa: [Agility,Hit,DefenseRating,Dodge]
+  # Nimble Ursa: [Agility,Crit,DefenseRating,Dodge]
+  Brave: [Strength,Stamina,AttackPower]
+  # Accurate Brave: [Strength,Stamina,AttackPower,Hit]
+  # Enchanted Brave: [Strength,Stamina,AttackPower,SpellPower]
+  # Quick Brave: [Strength,Stamina,AttackPower,Haste]
+  # Expert Brave: [Strength,Stamina,AttackPower,Expertise]
+  # Cautious Brave: [Strength,Stamina,AttackPower,DefenseRating]
+  # Nimble Brave: [Strength,Stamina,AttackPower,Dodge]
+  # Deflective Brave: [Strength,Stamina,AttackPower,Parry]
+  # Decisive Brave: [Strength,Stamina,AttackPower,Crit]
+  Contender: [Stamina,AttackPower,Hit]
+  Aspirant: [Stamina,AttackPower,Crit]
+  Boxer: [Stamina,AttackPower,Expertise]
+  Legionnaire: [Stamina,AttackPower,DefenseRating]
+  Oppugner: [Stamina,AttackPower,Dodge]
+  Counterer: [Stamina,AttackPower,Parry]
+  Spellbinder: [Stamina,SpellPower,Haste]
+  Efficiency: [Stamina,Haste,Hit]
+  Expedient: [Stamina,Haste,Expertise]
+  Safety: [Stamina,Haste,DefenseRating]
+  # Accurate Wild: [Agility,Stamina,AttackPower,Hit]
+  # Accurate Mercenary: [Strength,Stamina,Haste,Hit]
+  # Accurate Spellbinder: [Stamina,SpellPower,Haste,Hit]
+  # Scholarly Wild: [Agility,Stamina,AttackPower,SpellPower]
+  # Quick Wild: [Agility,Stamina,AttackPower,Haste]
+  # Expert Wild: [Agility,Stamina,AttackPower,Expertise]
+  # Expert Contender: [Stamina,AttackPower,Hit,Expertise]
+  # Expert Aspirant: [Stamina,AttackPower,Crit,Expertise]
+  # Expert Mercenary: [Strength,Stamina,Haste,Expertise]
+  # Expert Efficiency: [Stamina,Haste,Hit,Expertise]
+  # Cautious Wild: [Agility,Stamina,AttackPower,DefenseRating]
+  # Cautious Contender: [Stamina,AttackPower,Hit,DefenseRating]
+  # Cautious Aspirant: [Stamina,AttackPower,Crit,DefenseRating]
+  # Cautious Boxer: [Stamina,AttackPower,Expertise,DefenseRating]
+  # Cautious Mercenary: [Strength,Stamina,Haste,DefenseRating]
+  # Cautious Efficiency: [Stamina,Haste,Hit,DefenseRating]
+  # Cautious Expedience: [Stamina,Haste,Expertise,DefenseRating]
+  # Nimble Wild: [Agility,Stamina,AttackPower,Dodge]
+  # Nimble Contender: [Stamina,AttackPower,Hit,Dodge]
+  # Nimble Aspirant: [Stamina,AttackPower,Crit,Dodge]
+  # Nimble Boxer: [Stamina,AttackPower,Expertise,Dodge]
+  # Nimble Legionnaire: [Stamina,AttackPower,DefenseRating,Dodge]
+  # Nimble Efficiency: [Stamina,Haste,Hit,Dodge]
+  # Nimble Expedience: [Stamina,Haste,Expertise,Dodge]
+  # Nimble Safety: [Stamina,Haste,DefenseRating,Dodge]
+  # Decisive Wild: [Agility,Stamina,AttackPower,Crit]
+  # Decisive Contender: [Stamina,AttackPower,Hit,Crit]
+  # Decisive Spellbinder: [Stamina,SpellPower,Haste,Crit]
+  # Decisive Efficiency: [Stamina,Haste,Hit,Crit]
+  # Deflective Contender: [Stamina,AttackPower,Hit,Parry]
+  # Deflective Aspirant: [Stamina,AttackPower,Crit,Parry]
+  # Deflective Boxer: [Stamina,AttackPower,Expertise,Parry]
+  # Deflective Legionnaire: [Stamina,AttackPower,DefenseRating,Parry]
+  # Deflective Oppugner: [Stamina,AttackPower,Dodge,Parry]
+  # Deflective Mercenary: [Strength,Stamina,Haste,Parry]
+  # Deflective Efficiency: [Stamina,Haste,Hit,Parry]
+  # Deflective Expedience: [Stamina,Haste,Expertise,Parry]
+  # Deflective Safety: [Stamina,Haste,DefenseRating,Parry]
+  Scramble: [Stamina,Haste,Dodge]
+  Scuttle: [Stamina,Haste,Parry]
+  Celerity: [AttackPower,Haste,Hit]
+  Alacrity: [AttackPower,Haste,Crit]
+  Hustle: [AttackPower,Haste,Expertise]
+  Promptness: [AttackPower,Haste,DefenseRating]
+  Urgency: [AttackPower,Haste,Dodge]
+  Dispatch: [SpellPower,Haste,Hit]
+  Fleetness: [AttackPower,Haste,Parry]
+  Overdrive: [SpellPower,Haste,Crit]
+  Fervour: [Haste,Hit,Crit]
+  Turmoil: [Haste,Hit,Expertise]
+  Liveliness: [Haste,Hit,DefenseRating]
+  Rush: [Haste,Hit,Dodge]
+  Rashness: [Haste,Hit,Parry]
+  Breakneck: [Haste,Crit,Expertise]
+  Meteor: [Haste,Crit,DefenseRating]
+  Rathe: [Haste,Crit,Dodge]
+  Aburpt: [Haste,Crit,Parry]
+  Expeditiousness: [Haste,Expertise,DefenseRating]
+  Zippiness: [Haste,Expertise,Dodge]
+  Readiness: [Haste,DefenseRating,Dodge]
+  Spurriousness: [Haste,Expertise,Parry]
+  Snappiness: [Haste,DefenseRating,Parry]
+  Alertness: [Haste,Dodge,Parry]
+  Correctness: [Stamina,Hit,Crit]
+  Fidelity: [Stamina,Hit,Expertise]
+  Verity: [Stamina,Hit,DefenseRating]
+  Certainty: [Stamina,Hit,Dodge]
+  Reliability: [Stamina,Hit,Parry]
+  Veracity: [AttackPower,Hit,Crit]
+  Diligence: [AttackPower,Hit,Expertise]
+  Fastidiousness: [AttackPower,Hit,Dodge]
+  Strictness: [AttackPower,Hit,Parry]
+  Surety: [Hit,Crit,Expertise]
+  Rigour: [Hit,Crit,DefenseRating]
+  Overtness: [Hit,Crit,Dodge]
+  Sagacity: [Hit,Crit,Parry]
+  Guile: [Hit,Expertise,DefenseRating]
+  Judicious: [Hit,Expertise,Dodge]
+  Discretion: [Hit,Expertise,Parry]
+  Regard: [Hit,DefenseRating,Dodge]
+  Salience: [Hit,DefenseRating,Parry]
+  Meticulosity: [AttackPower,Hit,DefenseRating]
+  Zealotry: [Stamina,Crit,Expertise]
+  Ardent: [Stamina,Crit,DefenseRating]
+  Tense: [Stamina,Crit,Dodge]
+  Shrill: [Stamina,Crit,Parry]
+  Sombre: [AttackPower,Crit,Expertise]
+  Crucial: [AttackPower,Crit,DefenseRating]
+  Exigent: [AttackPower,Crit,Dodge]
+  Scathing: [AttackPower,Crit,Parry]
+  Exceptional: [Crit,Expertise,DefenseRating]
+  Prominent: [Crit,Expertise,Dodge]
+  Deterrent: [Crit,DefenseRating,Dodge]
+  Ward: [Crit,DefenseRating,Parry]
+  Curbing: [Crit,Dodge,Parry]
+  Support: [Crit,Expertise,Parry]
+  Fortification: [DefenseRating,Dodge,Parry]
+  Deft: [Stamina,Expertise,DefenseRating]
+  Versed: [Stamina,Expertise,Dodge]
+  Accomplished: [AttackPower,Expertise,DefenseRating]
+  Talented: [Stamina,Expertise,Parry]
+  Facile: [AttackPower,Expertise,Dodge]
+  Slick: [AttackPower,Expertise,Parry]
+  Arbiter: [Expertise,DefenseRating,Dodge]
+  Guide: [Expertise,DefenseRating,Parry]
+  Umpire: [Expertise,Dodge,Parry]
+  Driver: [Stamina,DefenseRating,Dodge]
+  Ace: [Stamina,DefenseRating,Parry]
+  Star: [AttackPower,DefenseRating,Dodge]
+  Meister: [AttackPower,DefenseRating,Parry]
+  Artisan: [Stamina,Dodge,Parry]
+  Suzerain: [AttackPower,Dodge,Parry]
+  Patriarch: [SpellPower,Hit,Crit]
+  Watchfulness: [Hit,Dodge,Parry]
+  # Scholarly Hunt: [Agility,Intellect,AttackPower,SpellPower]
+  # Quick Hunt: [Agility,Intellect,AttackPower,Haste]
+  # Quick Prophet: [Intellect,Spirit,SpellPower,Haste]
+  # Decisive Squire: [Strength,Stamina,Hit,Crit]
+  # Decisive Marksman: [Agility,Stamina,Hit,Crit]
+  # Decisive Striking: [Stamina,AttackPower,Haste,Crit]
+  # Decisive Foreseer: [Intellect,SpellPower,Haste,Crit]
+  # Decisive Necromancer: [Stamina,SpellPower,Hit,Crit]
+  # Decisive Hunt: [Agility,Intellect,AttackPower,Crit]
+  # Decisive Prophet: [Intellect,Spirit,SpellPower,Crit]
+  # Decisive Celerity: [AttackPower,Haste,Hit,Crit]
+  # Decisive Dispatch: [SpellPower,Haste,Hit,Crit]
+  # Accurate Striking: [Stamina,AttackPower,Haste,Hit]
+  # Accurate Foreseer: [Intellect,SpellPower,Haste,Hit]
+  # Accurate Hunt: [Agility,Intellect,AttackPower,Hit]
+  # Accurate Prophet: [Intellect,Spirit,SpellPower,Hit]
+  # Expert Squire: [Strength,Stamina,Hit,Expertise]
+  # Expert Marksman: [Agility,Stamina,Hit,Expertise]
+  # Expert Battle: [Strength,Stamina,Crit,Expertise]
+  # Expert Bandit: [Agility,Stamina,Crit,Expertise]
+  # Expert Striking: [Stamina,AttackPower,Haste,Expertise]
+  # Expert Beast: [Stamina,Haste,Crit,Expertise]
+  # Expert Hunt: [Agility,Intellect,AttackPower,Expertise]
+  # Expert Celerity: [AttackPower,Haste,Hit,Expertise]
+  # Expert Alacrity: [AttackPower,Haste,Crit,Expertise]
+  # Expert Fervour: [Haste,Hit,Crit,Expertise]
+  # Expert Correctness: [Stamina,Hit,Crit,Expertise]
+  # Expert Veracity: [AttackPower,Hit,Crit,Expertise]
+  # Cautious Squire: [Strength,Stamina,Hit,DefenseRating]
+  # Cautious Marksman: [Agility,Stamina,Hit,DefenseRating]
+  # Cautious Battle: [Strength,Stamina,Crit,DefenseRating]
+  # Cautious Bandit: [Agility,Stamina,Crit,DefenseRating]
+  # Cautious Striking: [Stamina,AttackPower,Haste,DefenseRating]
+  # Cautious Beast: [Stamina,Haste,Crit,DefenseRating]
+  # Cautious Celerity: [AttackPower,Haste,Hit,DefenseRating]
+  # Cautious Alacrity: [AttackPower,Haste,Crit,DefenseRating]
+  # Cautious Hustle: [AttackPower,Haste,Expertise,DefenseRating]
+  # Cautious Fervour: [Haste,Hit,Crit,DefenseRating]
+  # Cautious Turmoil: [Haste,Hit,Expertise,DefenseRating]
+  # Cautious Breakneck: [Haste,Crit,Expertise,DefenseRating]
+  # Cautious Correctness: [Stamina,Hit,Crit,DefenseRating]
+  # Cautious Fidelity: [Stamina,Hit,Expertise,DefenseRating]
+  # Cautious Veracity: [AttackPower,Hit,Crit,DefenseRating]
+  # Cautious Diligence: [AttackPower,Hit,Expertise,DefenseRating]
+  # Cautious Surety: [Hit,Crit,Expertise,DefenseRating]
+  # Cautious Zealotry: [Stamina,Crit,Expertise,DefenseRating]
+  # Cautious Sombre: [AttackPower,Crit,Expertise,DefenseRating]
+  # Nimble Squire: [Strength,Stamina,Hit,Dodge]
+  # Nimble Marksman: [Agility,Stamina,Hit,Dodge]
+  # Nimble Battle: [Strength,Stamina,Crit,Dodge]
+  # Nimble Bandit: [Agility,Stamina,Crit,Dodge]
+  # Nimble Striking: [Stamina,AttackPower,Haste,Dodge]
+  # Nimble Beast: [Stamina,Haste,Crit,Dodge]
+  # Nimble Celerity: [AttackPower,Haste,Hit,Dodge]
+  # Nimble Alacrity: [AttackPower,Haste,Crit,Dodge]
+  # Nimble Hustle: [AttackPower,Haste,Expertise,Dodge]
+  # Nimble Promptness: [AttackPower,Haste,DefenseRating,Dodge]
+  # Nimble Fervour: [Haste,Hit,Crit,Dodge]
+  # Nimble Turmoil: [Haste,Hit,Expertise,Dodge]
+  # Nimble Liveliness: [Haste,Hit,DefenseRating,Dodge]
+  # Nimble Breakneck: [Haste,Crit,Expertise,Dodge]
+  # Nimble Meteor: [Haste,Crit,DefenseRating,Dodge]
+  # Nimble Expeditiousness: [Haste,Expertise,DefenseRating,Dodge]
+  # Nimble Correctness: [Stamina,Hit,Crit,Dodge]
+  # Nimble Fidelity: [Stamina,Hit,Expertise,Dodge]
+  # Nimble Verity: [Stamina,Hit,DefenseRating,Dodge]
+  # Nimble Veracity: [AttackPower,Hit,Crit,Dodge]
+  # Nimble Diligence: [AttackPower,Hit,Expertise,Dodge]
+  # Nimble Meticulosity: [AttackPower,Hit,DefenseRating,Dodge]
+  # Nimble Surety: [Hit,Crit,Expertise,Dodge]
+  # Nimble Rigour: [Hit,Crit,DefenseRating,Dodge]
+  # Nimble Guile: [Hit,Expertise,DefenseRating,Dodge]
+  # Nimble Zealotry: [Stamina,Crit,Expertise,Dodge]
+  # Nimble Ardent: [Stamina,Crit,DefenseRating,Dodge]
+  # Nimble Sombre: [AttackPower,Crit,Expertise,Dodge]
+  # Nimble Crucial: [AttackPower,Crit,DefenseRating,Dodge]
+  # Nimble Exceptional: [Crit,Expertise,DefenseRating,Dodge]
+  # Nimble Deft: [Stamina,Expertise,DefenseRating,Dodge]
+  # Nimble Accomplished: [AttackPower,Expertise,DefenseRating,Dodge]
+  # Deflective Squire: [Strength,Stamina,Hit,Parry]
+  # Deflective Battle: [Strength,Stamina,Crit,Parry]
+  # Deflective Striking: [Stamina,AttackPower,Haste,Parry]
+  # Deflective Beast: [Stamina,Haste,Crit,Parry]
+  # Deflective Scramble: [Stamina,Haste,Dodge,Parry]
+  # Deflective Celerity: [AttackPower,Haste,Hit,Parry]
+  # Deflective Alacrity: [AttackPower,Haste,Crit,Parry]
+  # Deflective Hustle: [AttackPower,Haste,Expertise,Parry]
+  # Deflective Promptness: [AttackPower,Haste,DefenseRating,Parry]
+  # Deflective Urgency: [AttackPower,Haste,Dodge,Parry]
+  # Deflective Fervour: [Haste,Hit,Crit,Parry]
+  # Deflective Turmoil: [Haste,Hit,Expertise,Parry]
+  # Deflective Liveliness: [Haste,Hit,DefenseRating,Parry]
+  # Deflective Rush: [Haste,Hit,Dodge,Parry]
+  # Deflective Breakneck: [Haste,Crit,Expertise,Parry]
+  # Deflective Meteor: [Haste,Crit,DefenseRating,Parry]
+  # Deflective Rathe: [Haste,Crit,Dodge,Parry]
+  # Deflective Expeditiousness: [Haste,Expertise,DefenseRating,Parry]
+  # Deflective Zippiness: [Haste,Expertise,Dodge,Parry]
+  # Deflective Readiness: [Haste,DefenseRating,Dodge,Parry]
+  # Deflective Correctness: [Stamina,Hit,Crit,Parry]
+  # Deflective Fidelity: [Stamina,Hit,Expertise,Parry]
+  # Deflective Verity: [Stamina,Hit,DefenseRating,Parry]
+  # Deflective Certainty: [Stamina,Hit,Dodge,Parry]
+  # Deflective Veracity: [AttackPower,Hit,Crit,Parry]
+  # Deflective Diligence: [AttackPower,Hit,Expertise,Parry]
+  # Deflective Meticulosity: [AttackPower,Hit,DefenseRating,Parry]
+  # Deflective Fastidiousness: [AttackPower,Hit,Dodge,Parry]
+  # Deflective Surety: [Hit,Crit,Expertise,Parry]
+  # Deflective Rigour: [Hit,Crit,DefenseRating,Parry]
+  # Deflective Overtness: [Hit,Crit,Dodge,Parry]
+  # Deflective Guile: [Hit,Expertise,DefenseRating,Parry]
+  # Deflective Judicious: [Hit,Expertise,Dodge,Parry]
+  # Deflective Regard: [Hit,DefenseRating,Dodge,Parry]
+  # Deflective Zealotry: [Stamina,Crit,Expertise,Parry]
+  # Deflective Ardent: [Stamina,Crit,DefenseRating,Parry]
+  # Deflective Tense: [Stamina,Crit,Dodge,Parry]
+  # Deflective Sombre: [AttackPower,Crit,Expertise,Parry]
+  # Deflective Crucial: [AttackPower,Crit,DefenseRating,Parry]
+  # Deflective Exigent: [AttackPower,Crit,Dodge,Parry]
+  # Deflective Exceptional: [Crit,Expertise,DefenseRating,Parry]
+  # Deflective Prominent: [Crit,Expertise,Dodge,Parry]
+  # Deflective Deterrent: [Crit,DefenseRating,Dodge,Parry]
+  # Deflective Deft: [Stamina,Expertise,DefenseRating,Parry]
+  # Deflective Versed: [Stamina,Expertise,Dodge,Parry]
+  # Deflective Accomplished: [AttackPower,Expertise,DefenseRating,Parry]
+  # Deflective Facile: [AttackPower,Expertise,Dodge,Parry]
+  # Deflective Arbiter: [Expertise,DefenseRating,Dodge,Parry]
+  # Deflective Driver: [Stamina,DefenseRating,Dodge,Parry]
+  # Deflective Star: [AttackPower,DefenseRating,Dodge,Parry]
+
+# Knight: [Stamina,DefenseRating,SpellPower]
+# Crusade: [SpellPower,Intellect,DefenseRating]
+# Grove: [Agility,Strength,Stamina]
+# Pattern: [Stamina,Intellect,Crit,Haste]
+# Wildfire: [Stamina,Intellect,Haste,Crit]
+# Elements: [Stamina,Intellect,Crit,Haste]
+# Vision: [Intellect,SpellPower,Stamina]
+# Physician: [Stamina,Intellect,SpellPower]
+# Sun: [SpellPower,Stamina,Intellect]
+# Thief: [Stamina,AttackPower,Haste]
+# Exemplar: [Stamina,Strength,Haste,Dodge]
+# Ancestor: [Strength,Crit,Stamina]
+# Soldier: [Strength,Stamina,Crit]
+# Landslide: [Strength,Stamina,Haste,Crit]
+# Principle: [Stamina,Strength,Haste,Crit]
+# Hero: [Stamina,Strength,Crit,Haste]
+# Earthfall: [Stamina,Strength,Crit,Haste]
+# Mongoose: [Crit,Haste]
+# Mind: [SpellPower,Crit,Intellect]
+# Shadow: [Agility,AttackPower,Stamina]
+# Incarnation: [Stamina,Agility,Haste,Crit]
+# Manifestation: [Agility,Stamina,Haste,Crit]
+# Stormblast: [Stamina,Agility,Haste,Crit]
+# Windflurry: [Stamina,Agility,Crit,Haste]
+# Archetype: [Stamina,Agility,Haste,Crit]
+# Elder: [Stamina,Intellect,Spirit]
+# Restoration: [Stamina,SpellPower,Spirit]
+
+weaponsuffixes:
+  2:    {name: 'Frostbrand 1',                               minlvl: 20, maxlvl: 27, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  12:   {name: 'Frostbrand 2',                               minlvl: 28, maxlvl: 37, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  524:  {name: 'Frostbrand 3',                               minlvl: 38, maxlvl: 47, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1667: {name: 'Frostbrand 4',                               minlvl: 48, maxlvl: 57, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1668: {name: 'Frostbrand 5',                               minlvl: 58, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2635: {name: 'Frostbrand 6',                               minlvl: 66, maxlvl: 70, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3782: {name: 'Frostbrand 7',                               minlvl: 71, maxlvl: 75, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3783: {name: 'Frostbrand 8',                               minlvl: 76, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3784: {name: 'Frostbrand 9',                               minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  5:    {name: 'Flametongue 1',                              minlvl: 10, maxlvl: 17, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  4:    {name: 'Flametongue 2',                              minlvl: 18, maxlvl: 25, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  3:    {name: 'Flametongue 3',                              minlvl: 26, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  523:  {name: 'Flametongue 4',                              minlvl: 36, maxlvl: 45, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  1665: {name: 'Flametongue 5',                              minlvl: 46, maxlvl: 55, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  1666: {name: 'Flametongue 6',                              minlvl: 56, maxlvl: 63, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  2634: {name: 'Flametongue 7',                              minlvl: 64, maxlvl: 70, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  3779: {name: 'Flametongue 8',                              minlvl: 71, maxlvl: 75, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  3780: {name: 'Flametongue 9',                              minlvl: 76, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  3781: {name: 'Flametongue 10',                             minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  7:    {name: 'Deadly Poison',                              minlvl: 30, maxlvl: 37, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  8:    {name: 'Deadly Poison II',                           minlvl: 38, maxlvl: 45, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  626:  {name: 'Deadly Poison III',                          minlvl: 46, maxlvl: 53, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  627:  {name: 'Deadly Poison IV',                           minlvl: 54, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2630: {name: 'Deadly Poison V',                            minlvl: 60, maxlvl: 61, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2642: {name: 'Deadly Poison VI',                           minlvl: 62, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2643: {name: 'Deadly Poison VII',                          minlvl: 70, maxlvl: 75, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3770: {name: 'Deadly Poison VIII',                         minlvl: 76, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3771: {name: 'Deadly Poison IX',                           minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  9:    {name: 'Poison (15 Dmg)',                            minlvl: 20, maxlvl: 27, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  10:   {name: 'Poison (20 Dmg)',                            minlvl: 28, maxlvl: 32, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  11:   {name: 'Poison (25 Dmg)',                            minlvl: 33, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  42:   {name: 'Poison (Instant 20)',                        minlvl: 28, maxlvl: 36, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  323:  {name: 'Instant Poison',                             minlvl: 20, maxlvl: 27, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  324:  {name: 'Instant Poison II',                          minlvl: 28, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  325:  {name: 'Instant Poison III',                         minlvl: 36, maxlvl: 43, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  623:  {name: 'Instant Poison IV',                          minlvl: 44, maxlvl: 51, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  624:  {name: 'Instant Poison V',                           minlvl: 52, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  625:  {name: 'Instant Poison VI',                          minlvl: 60, maxlvl: 67, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2641: {name: 'Instant Poison VII',                         minlvl: 68, maxlvl: 72, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3768: {name: 'Instant Poison VIII',                        minlvl: 73, maxlvl: 78, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3769: {name: 'Instant Poison IX',                          minlvl: 79, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  703:  {name: 'Wound Poison',                               minlvl: 32, maxlvl: 39, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  704:  {name: 'Wound Poison II',                            minlvl: 40, maxlvl: 47, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  705:  {name: 'Wound Poison III',                           minlvl: 48, maxlvl: 55, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  706:  {name: 'Wound Poison IV',                            minlvl: 56, maxlvl: 63, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2644: {name: 'Wound Poison V',                             minlvl: 64, maxlvl: 71, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3772: {name: 'Wound Poison VI',                            minlvl: 72, maxlvl: 77, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3773: {name: 'Wound Poison VII',                           minlvl: 78, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1003: {name: 'Venomhide Poison',                           minlvl: 38, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2640: {name: 'Anesthetic Poison',                          minlvl: 68, maxlvl: 76, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3774: {name: 'Anesthetic Poison II',                       minlvl: 77, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3102: {name: 'Poison',                                     minlvl: 65, maxlvl: 73, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  22:   {name: 'Crippling Poison',                           minlvl: 20, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  35:   {name: 'Mind Numbing Poison',                        minlvl: 24, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  25:   {name: 'Shadow Oil',                                 minlvl: 24, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  26:   {name: 'Frost Oil',                                  minlvl: 40, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  36:   {name: 'Enchant: Fiery Blaze',                       minlvl: 40, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  37:   {name: 'Steel Weapon Chain',                         minlvl: 1,  maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3223: {name: 'Adamantite Weapon Chain',                    minlvl: 50, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3731: {name: 'Titanium Weapon Chain',                      minlvl: 70, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  803:  {name: 'Fiery Weapon',                               minlvl: 6,  maxlvl: 20, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1894: {name: 'Icy Weapon',                                 minlvl: 1,  maxlvl: 60, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1899: {name: 'Unholy Weapon',                              minlvl: 1,  maxlvl: 60, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3239: {name: 'Icebreaker Weapon',                          minlvl: 70, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3322: {name: 'Frozen Rune Weapon',                         minlvl: 55, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3341: {name: 'Frozen Rune Weapon 2',                       minlvl: 60, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3342: {name: 'Frozen Rune Weapon 3',                       minlvl: 70, maxlvl: 74, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3343: {name: 'Frozen Rune Weapon 4',                       minlvl: 75, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3344: {name: 'Frozen Rune Weapon 5',                       minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  912:  {name: 'Demonslaying',                               minlvl: 30, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3251: {name: 'Giantslaying',                               minlvl: 77, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  283:  {name: 'Windfury 1',                                 minlvl: 30, maxlvl: 39, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  284:  {name: 'Windfury 2',                                 minlvl: 40, maxlvl: 49, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  525:  {name: 'Windfury 3',                                 minlvl: 50, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1669: {name: 'Windfury 4',                                 minlvl: 60, maxlvl: 67, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2636: {name: 'Windfury 5',                                 minlvl: 68, maxlvl: 70, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3785: {name: 'Windfury 6',                                 minlvl: 71, maxlvl: 75, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3786: {name: 'Windfury 7',                                 minlvl: 76, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3787: {name: 'Windfury 8',                                 minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3609: {name: 'Lesser Firestone',                           minlvl: 28, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3610: {name: 'Firestone',                                  minlvl: 36, maxlvl: 45, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3611: {name: 'Greater Firestone',                          minlvl: 46, maxlvl: 55, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3612: {name: 'Major Firestone',                            minlvl: 56, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3597: {name: 'Master Firestone',                           minlvl: 66, maxlvl: 73, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3613: {name: 'Fel Firestone',                              minlvl: 74, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3614: {name: 'Grand Firestone',                            minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  1898: {name: 'Lifestealing',                               minlvl: 1, maxlvl:  60, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1900: {name: 'Crusader',                                   minlvl: 1, maxlvl:  70, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2673: {name: 'Mongoose',                                   minlvl: 35, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2674: {name: 'Spellsurge',                                 minlvl: 35, maxlvl: 73, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  2675: {name: 'Battlemaster',                               minlvl: 35, maxlvl: 73, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3241: {name: 'Lifeward',                                   minlvl: 73, maxlvl: 80, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrDPS,MeleeAgiDPS]}
+  3225: {name: 'Executioner',                                minlvl: 75, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrDPS,MeleeAgiDPS]}
+  3273: {name: 'Deathfrost',                                 minlvl: 60, maxlvl: 72, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,Caster]}
+  3345: {name: 'Earthliving 1',                              minlvl: 30, maxlvl: 39, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3346: {name: 'Earthliving 2',                              minlvl: 40, maxlvl: 49, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3347: {name: 'Earthliving 3',                              minlvl: 50, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3348: {name: 'Earthliving 4',                              minlvl: 60, maxlvl: 69, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3349: {name: 'Earthliving 5',                              minlvl: 70, maxlvl: 79, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3350: {name: 'Earthliving 6',                              minlvl: 80, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3615: {name: 'Spellstone',                                 minlvl: 36, maxlvl: 47, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3616: {name: 'Greater Spellstone',                         minlvl: 48, maxlvl: 59, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3617: {name: 'Major Spellstone',                           minlvl: 60, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3618: {name: 'Master Spellstone',                          minlvl: 66, maxlvl: 71, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3619: {name: 'Demonic Spellstone',                         minlvl: 72, maxlvl: 77, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3620: {name: 'Grand Spellstone',                           minlvl: 78, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3789: {name: 'Berserking',                                 minlvl: 60, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3790: {name: 'Black Magic',                                minlvl: 60, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [Caster]}
+  3869: {name: 'Blade Ward',                                 minlvl: 75, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank]}
+  3870: {name: 'Blood Draining',                             minlvl: 75, maxlvl: 83, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeAgiTank]}
+  125:  {name: '+1 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  126:  {name: '+2 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  127:  {name: '+3 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  128:  {name: '+4 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  129:  {name: '+5 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  130:  {name: '+6 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  131:  {name: '+7 Sword Skill',                             minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  132:  {name: '+1 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  133:  {name: '+2 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  134:  {name: '+3 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  135:  {name: '+4 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  136:  {name: '+5 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  137:  {name: '+6 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  138:  {name: '+7 Two-Handed Sword Skill',                  minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Sword2], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  139:  {name: '+1 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  140:  {name: '+2 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  141:  {name: '+3 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  142:  {name: '+4 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  143:  {name: '+5 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  144:  {name: '+6 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  145:  {name: '+7 Mace Skill',                              minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  146:  {name: '+1 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  147:  {name: '+2 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  148:  {name: '+3 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  149:  {name: '+4 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  150:  {name: '+5 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  151:  {name: '+6 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  152:  {name: '+7 Two-Handed Mace Skill',                   minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Mace2],  enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  153:  {name: '+1 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  154:  {name: '+2 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  155:  {name: '+3 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  156:  {name: '+4 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  157:  {name: '+5 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  158:  {name: '+6 Ase Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  159:  {name: '+7 Axe Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  160:  {name: '+1 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  161:  {name: '+2 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  162:  {name: '+3 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  163:  {name: '+4 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  164:  {name: '+5 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  165:  {name: '+6 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  166:  {name: '+7 Two-Handed Axe Skill',                    minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Axe2],   enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  167:  {name: '+1 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  168:  {name: '+2 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  169:  {name: '+3 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  170:  {name: '+4 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  171:  {name: '+5 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  172:  {name: '+6 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  173:  {name: '+7 Dagger Skill',                            minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Dagger], enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  174:  {name: '+1 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  175:  {name: '+2 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  176:  {name: '+3 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  177:  {name: '+4 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  178:  {name: '+5 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  179:  {name: '+6 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  180:  {name: '+7 Gun Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Gun],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  181:  {name: '+1 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  182:  {name: '+2 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  183:  {name: '+3 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  184:  {name: '+4 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  185:  {name: '+5 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  186:  {name: '+6 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  187:  {name: '+7 Bow Skill',                               minlvl: 1,  maxlvl: 85, itemclass: 2, itemsubclasses: [Bow],    enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  286:  {name: '+2 Weapon Fire Damage',                      minlvl: 1,  maxlvl: 12, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  287:  {name: '+4 Weapon Fire Damage',                      minlvl: 7,  maxlvl: 16, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  288:  {name: '+6 Weapon Fire Damage',                      minlvl: 10, maxlvl: 25, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  289:  {name: '+8 Weapon Fire Damage',                      minlvl: 20, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  290:  {name: '+10 Weapon Fire Damage',                     minlvl: 30, maxlvl: 45, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  291:  {name: '+12 Weapon Fire Damage',                     minlvl: 40, maxlvl: 55, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  292:  {name: '+14 Weapon Fire Damage',                     minlvl: 50, maxlvl: 65, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  67:   {name: '+1 Damage',                                  minlvl: 1,  maxlvl: 6,  itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  77:   {name: '+2 Damage',                                  minlvl: 1,  maxlvl: 12, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  78:   {name: '+3 Damage',                                  minlvl: 5,  maxlvl: 13, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  117:  {name: '+4 Damage',                                  minlvl: 7,  maxlvl: 16, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  118:  {name: '+5 Damage',                                  minlvl: 9,  maxlvl: 18, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  119:  {name: '+6 Damage',                                  minlvl: 10, maxlvl: 25, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  120:  {name: '+7 Damage',                                  minlvl: 20, maxlvl: 33, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1895: {name: '+9 Weapon Damage',                           minlvl: 29, maxlvl: 35, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  3237: {name: '+10 Weapon Damage',                          minlvl: 30, maxlvl: 45, itemclass: 2, itemsubclasses: *msc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  40:   {name: 'Sharpened (+2 Damage)',                      minlvl: 1,  maxlvl: 4,  itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  13:   {name: 'Sharpened (+3 Damage)',                      minlvl: 5,  maxlvl: 14, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  14:   {name: 'Sharpened (+4 Damage)',                      minlvl: 15, maxlvl: 24, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  483:  {name: 'Sharpened (+6 Damage)',                      minlvl: 25, maxlvl: 34, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1643: {name: 'Sharpened (+8 Damage)',                      minlvl: 35, maxlvl: 44, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2712: {name: 'Sharpened (+12 Damage)',                     minlvl: 50, maxlvl: 59, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2713: {name: 'Sharpened (+14 Crit Rating and +12 Damage)', minlvl: 60, maxlvl: 74, itemclass: 2, itemsubclasses: *ssc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  19:   {name: 'Weighted (+2 Damage)',                       minlvl: 1,  maxlvl: 4,  itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  20:   {name: 'Weighted (+3 Damage)',                       minlvl: 5,  maxlvl: 14, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  21:   {name: 'Weighted (+4 Damage)',                       minlvl: 15, maxlvl: 24, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  484:  {name: 'Weighted (+6 Damage)',                       minlvl: 25, maxlvl: 34, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  1703: {name: 'Weighted (+8 Damage)',                       minlvl: 35, maxlvl: 44, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2954: {name: 'Weighted (+12 Damage)',                      minlvl: 50, maxlvl: 59, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  2955: {name: 'Weighted (+14 Crit Rating and +12 Damage)',  minlvl: 60, maxlvl: 74, itemclass: 2, itemsubclasses: *bsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS]}
+  30:   {name: 'Scope (+1 Damage)',                          minlvl: 5,  maxlvl: 12, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  32:   {name: 'Scope (+2 Damage)',                          minlvl: 10, maxlvl: 22, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  33:   {name: 'Scope (+3 Damage)',                          minlvl: 20, maxlvl: 36, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  663:  {name: 'Scope (+5 Damage)',                          minlvl: 30, maxlvl: 42, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  664:  {name: 'Scope (+7 Damage)',                          minlvl: 40, maxlvl: 58, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  2722: {name: 'Scope (+10 Damage)',                         minlvl: 55, maxlvl: 70, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  2723: {name: 'Scope (+12 Damage)',                         minlvl: 55, maxlvl: 70, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  3843: {name: 'Scope (+15 Damage)',                         minlvl: 70, maxlvl: 80, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+  2724: {name: 'Scope (+28 Critical Strike Rating)',         minlvl: 60, maxlvl: 83, itemclass: 2, itemsubclasses: *rsc,     enchantcats: [MeleeStrTank,MeleeStrDPS,MeleeAgiDPS,RangedAgi]}
+
+# # OUT - these weapon enchants arent included
+# ## Shaman only - rockbiter will not have effect
+# (29,   'Rockbiter 1',                                              1,  7,  96,     @ITEMCLASS-WEAPON, NULL),
+# (6,    'Rockbiter 2',                                              8,  15, 96,     @ITEMCLASS-WEAPON, NULL),
+# (1,    'Rockbiter 3',                                              16, 23, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3031, 'Rockbiter 4',                                              24, 33, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3034, 'Rockbiter 5',                                              34, 43, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3037, 'Rockbiter 6',                                              44, 53, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3040, 'Rockbiter 7',                                              54, 61, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3043, 'Rockbiter 8',                                              62, 69, 96,     @ITEMCLASS-WEAPON, NULL),
+# (3020, 'Rockbiter 9',                                              70, 75, 96,     @ITEMCLASS-WEAPON, NULL),
+# (504,  '+80 Rockbiter',                                            76, 83, 96,     @ITEMCLASS-WEAPON, NULL),
+# ## DK Only
+# (3365, 'Rune of Swordshattering',                                  55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3366, 'Rune of Lichbane',                                         55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3367, 'Rune of Spellshattering',                                  55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3368, 'Rune of the Fallen Crusader',                              55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3369, 'Rune of Cinderglacier',                                    55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3370, 'Rune of Razorice',                                         55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3594, 'Rune of Swordbreaking',                                    55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3595, 'Rune of Spellbreaking',                                    55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3847, 'Rune of the Stoneskin Gargoyle',                           55, 83, NULL,   @ITEMCLASS-WEAPON, NULL),
+# (3883, 'Rune of the Nerubian Carapace',                            55, 83, NULL,   @ITEMCLASS-WEAPON, NULL);
+# # Dont include fishing lures
+# (263,  'Fishing Lure (+25 Fishing Skill)',                         1,  83, NULL,   @ITEMCLASS-WEAPON, 1048576),
+# (264,  'Fishing Lure (+50 Fishing Skill)',                         1,  83, NULL,   @ITEMCLASS-WEAPON, 1048576),
+# (265,  'Fishing Lure (+75 Fishing Skill)',                         1,  83, NULL,   @ITEMCLASS-WEAPON, 1048576),
+# (266,  'Fishing Lure (+100 Fishing Skill)',                        1,  83, NULL,   @ITEMCLASS-WEAPON, 1048576),
+# (3868, 'Fishing Lure (+100 Fishing Skill)',                        1,  83, NULL,   @ITEMCLASS-WEAPON, 1048576),
