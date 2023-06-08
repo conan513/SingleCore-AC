@@ -5018,7 +5018,7 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
 
     SetUInt32Value(UNIT_FIELD_LEVEL, fields[6].Get<uint8>());
     SetUInt32Value(PLAYER_XP, fields[7].Get<uint32>());
-    m_realLevel = m_adaptiveLevel = fields[6].GetUInt8();
+    m_realLevel = m_adaptiveLevel = fields[6].Get<uint8>();
 
     if (!_LoadIntoDataField(fields[66].Get<std::string>(), PLAYER_EXPLORED_ZONES_1, PLAYER_EXPLORED_ZONES_SIZE))
     {
