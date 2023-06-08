@@ -148,8 +148,8 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
 
     if (randomPropertyId < 0)
     {
-        if (!val.Item->RandomSuffix)
-            return false;
+        // if (!val.Item->RandomSuffix)
+        //     return false;
 
         if (randomPropertyId < -static_cast<int32>(sItemRandomSuffixStore.GetNumRows()))
             return false;
@@ -164,8 +164,8 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
     }
     else if (randomPropertyId > 0)
     {
-        if (!val.Item->RandomProperty)
-            return false;
+        // if (!val.Item->RandomProperty)
+        //     return false;
 
         if (ItemRandomPropertiesEntry const* propEntry = sItemRandomPropertiesStore.LookupEntry(randomPropertyId))
         {
@@ -181,8 +181,8 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
         val.RandomProperty = nullptr;
     }
 
-    if ((val.RandomSuffix && !val.RandomSuffixBaseAmount) || (val.RandomSuffixBaseAmount && !val.RandomSuffix))
-        return false;
+    // if ((val.RandomSuffix && !val.RandomSuffixBaseAmount) || (val.RandomSuffixBaseAmount && !val.RandomSuffix))
+    //     return false;
 
     return true;
 }
