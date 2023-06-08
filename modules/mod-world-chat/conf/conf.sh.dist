@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-	
-#
-# CUSTOM
-#
-
-DB_WORLD_CUSTOM_PATHS+=(
-    $MOD_WORLD_CHAT_ROOT"/sql/world/"
-)

@@ -23,7 +23,7 @@ COMMENT='Stores the enchant IDs for the visuals of mod-weapon-visual';
 2. Re-run cmake and launch a clean build of AzerothCore
 3. Import `sql/world/base/creature_template.sql` into your world DB.
 4. Import `sql/characters/base/mod_weapon_visual_effect.sql` into your characters DB.
-5. Log in game, spawn Npc ID 55003, Enjoy.
+5. Log in game, spawn Npc ID 900000, Enjoy.
 
 ### Usage
 - Enable this module and talk with the assigned creature :D

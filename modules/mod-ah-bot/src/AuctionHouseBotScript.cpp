@@ -3,8 +3,11 @@
 */
 
 #include "ScriptMgr.h"
-#include "Player.h"
 #include "AuctionHouseBot.h"
+#include "Log.h"
+#include "Mail.h"
+#include "Player.h"
+#include "WorldSession.h"
 
 class AHBot_WorldScript : public WorldScript
 {
@@ -18,7 +21,7 @@ public:
 
     void OnStartup() override
     {
-        sLog->outString("Initialize AuctionHouseBot...");
+        LOG_INFO("server.loading", "Initialize AuctionHouseBot...");
         auctionbot->Initialize();
     }
 };

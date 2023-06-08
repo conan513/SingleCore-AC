@@ -38,3 +38,13 @@ ServerAutoShutdown.PreAnnounce.Seconds = 3600
 #
 
 ServerAutoShutdown.PreAnnounce.Message = "[SERVER]: Automated (quick) server restart in %s"
+
+#
+#    ServerAutoShutdown.StartEvents
+#        Description: Starts the events listed in the config separated by space whenever the server starts up.
+#                     Use this if you wish to start events manually and don't wish them to reset with the daily restart.
+#        Example:     "1 2" -- This will start Midsummer Festival (1) and Winter Veil (2) whenever your server restarts.
+#        Default:     ""
+#
+
+ServerAutoShutdown.StartEvents = ""

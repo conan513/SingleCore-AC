@@ -1,9 +1,0 @@
-CU_SET_PATH("CMAKE_PvPScript_DIR" "${CMAKE_CURRENT_LIST_DIR}")
-
-AC_ADD_SCRIPT("${CMAKE_CURRENT_LIST_DIR}/src/PvPScript.cpp")
-
-AC_ADD_SCRIPT_LOADER("PvP"      "${CMAKE_CURRENT_LIST_DIR}/src/loader.h")
-
-AC_ADD_CONFIG_FILE("${CMAKE_CURRENT_LIST_DIR}/conf/PvPScript.conf.dist")
-
-message("-- PvPScript CONFIGURED --")

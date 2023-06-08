@@ -1,59 +1,55 @@
 /*
- * Copyright (C) 2021+ ChromieCraft <www.chromiecraft.com>
- * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>
+ * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "ScriptMgr.h"
 #include "Config.h"
 #include "Common.h"
 #include "World.h"
+#include "StringFormat.h"
 
-
-#define PVPSTATS_ANNOUNCER_CONF_ENABLED "PvPstatsAnnouncer.Enabled"
-#define PVPSTATS_ANNOUNCER_CONF_LIMIT "PvPstatsAnnouncer.Limit"
-#define PVPSTATS_ANNOUNCER_CONF_BRACKET_ID "PvPstatsAnnouncer.BracketId"
-#define PVPSTATS_ANNOUNCER_CONF_REPEAT_MINUTES "PvPstatsAnnouncer.RepeatMinutes"
-#define PVPSTATS_ANNOUNCER_CONF_START_TEXT "PvPstatsAnnouncer.StartText"
-#define PVPSTATS_ANNOUNCER_CONF_END_TEXT "PvPstatsAnnouncer.EndText"
-
-class PvPstatsAnnouncer : public WorldScript {
-private:
-    uint32 time = 0;
-
-    void output(std::string str)
-    {
-//        sLog->outString(str.c_str());
-        sWorld->SendGlobalText(str.c_str(), nullptr);
-    }
-
+class PvPstatsAnnouncer : public WorldScript
+{
 public:
-
     PvPstatsAnnouncer() : WorldScript("PvPstatsAnnouncer") { }
 
-    void OnUpdate(uint32 diff)
+    void OnUpdate(uint32 diff) override
     {
-        if (!sConfigMgr->GetBoolDefault(PVPSTATS_ANNOUNCER_CONF_ENABLED, false))
+        if (!sConfigMgr->GetOption<bool>("PvPstatsAnnouncer.Enabled", false))
         {
             return;
         }
 
-        auto repeatTime = static_cast<uint32>(sConfigMgr->GetIntDefault(PVPSTATS_ANNOUNCER_CONF_REPEAT_MINUTES, 40) * MINUTE * IN_MILLISECONDS);
-        this->time += diff;
+        auto repeatTime = sConfigMgr->GetOption<uint32>("PvPstatsAnnouncer.RepeatMinutes", 40) * MINUTE * IN_MILLISECONDS;
+        _time += diff;
 
-        if (this->time > repeatTime)
+        if (_time > repeatTime)
         {
-            auto limit = static_cast<uint8_t>(sConfigMgr->GetIntDefault(PVPSTATS_ANNOUNCER_CONF_LIMIT, 5));
-            auto bracketId = sConfigMgr->GetIntDefault(PVPSTATS_ANNOUNCER_CONF_BRACKET_ID, 1);
+            auto limit = sConfigMgr->GetOption<uint8>("PvPstatsAnnouncer.Limit", 5);
+            auto bracketId = sConfigMgr->GetOption<uint8>("PvPstatsAnnouncer.BracketId", 1);
 
             auto stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_PVPSTATS_BRACKET_MONTH);
-            stmt->setUInt8(0, bracketId);
-            stmt->setUInt8(1, limit);
+            stmt->SetData(0, bracketId);
+            stmt->SetData(1, limit);
 
             auto result = CharacterDatabase.Query(stmt);
 
             if (result)
             {
-                this->output(sConfigMgr->GetStringDefault(PVPSTATS_ANNOUNCER_CONF_START_TEXT, ""));
+                OutputGlobal(sConfigMgr->GetOption<std::string>("PvPstatsAnnouncer.StartText", ""));
 
                 uint8 i = 1;
                 do
@@ -61,20 +57,28 @@ public:
                     Field* fields = result->Fetch();
                     if (fields)
                     {
-                        this->output(Acore::StringFormat("%u. %s - %u", i, fields[2].GetCString(), fields[1].GetUInt32()));
+                        OutputGlobal(Acore::StringFormatFmt("{}. {} - {}", i, fields[2].Get<std::string_view>(), fields[1].Get<uint32>()));
                         i++;
                     }
                 } while (result->NextRow());
 
-                this->output(sConfigMgr->GetStringDefault(PVPSTATS_ANNOUNCER_CONF_END_TEXT, ""));
+                OutputGlobal(sConfigMgr->GetOption<std::string>("PvPstatsAnnouncer.EndText", ""));
             }
 
-            this->time = 0;
+            _time = 0;
         }
+    }
+private:
+    uint32 _time = 0;
+
+    void OutputGlobal(std::string const& message)
+    {
+        sWorld->SendGlobalText(message.c_str(), nullptr);
     }
 };
 
-void AddPvPstatsAnnouncerScripts() {
+void AddPvPstatsAnnouncerScripts()
+{
     new PvPstatsAnnouncer();
 }
 

@@ -13,7 +13,7 @@ static bool removeAura, BossAnnouncerEnable, BossAnnounceToPlayerOnLogin;
 class Boss_Announcer : public PlayerScript
 {
 public:
-    Boss_Announcer() : PlayerScript("Boss_Announcer") {}
+	Boss_Announcer() : PlayerScript("Boss_Announcer") {}
 
     void OnLogin(Player *player)
     {
@@ -120,24 +120,24 @@ public:
 class Boss_Announcer_World : public WorldScript
 {
 public:
-    Boss_Announcer_World() : WorldScript("Boss_Announcer_World") { }
+	Boss_Announcer_World() : WorldScript("Boss_Announcer_World") { }
 
-    void OnBeforeConfigLoad(bool reload) override
-    {
-        if (!reload) {
+	void OnBeforeConfigLoad(bool reload) override
+	{
+		if (!reload) {
             SetInitialWorldSettings();
-        }
-    }
+		}
+	}
     void  SetInitialWorldSettings()
     {
-        removeAura = sConfigMgr->GetBoolDefault("Boss.Announcer.RemoveAuraUponKill", false);
-        BossAnnouncerEnable = sConfigMgr->GetBoolDefault("Boss.Announcer.Enable", true);
-        BossAnnounceToPlayerOnLogin = sConfigMgr->GetBoolDefault("Boss.Announcer.Announce", true);
+        removeAura = sConfigMgr->GetOption<bool>("Boss.Announcer.RemoveAuraUponKill", false);
+        BossAnnouncerEnable = sConfigMgr->GetOption<bool>("Boss.Announcer.Enable", true);
+        BossAnnounceToPlayerOnLogin = sConfigMgr->GetOption<bool>("Boss.Announcer.Announce", true);
     }
 };
 
 void AddBoss_AnnouncerScripts()
 {
-    new Boss_Announcer_World;
-    new Boss_Announcer;
+	new Boss_Announcer_World;
+	new Boss_Announcer;
 }

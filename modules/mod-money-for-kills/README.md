@@ -17,6 +17,8 @@
 
 
 ## Credits
+
 * [stygiancore](  http://stygianthebest.github.io ): (Author of the module):
+* [SoulSeekkor]( https://github.com/SoulSeekkor ) cleaned up deprecation warnings
 
 * AzerothCore: [repository](https://github.com/azerothcore) - [website](http://azerothcore.org/) - [discord chat community](https://discord.gg/PaqQRkd)

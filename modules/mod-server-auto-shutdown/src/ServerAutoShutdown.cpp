@@ -1,11 +1,24 @@
 /*
- * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
- * Copyright (C) 2021+ WarheadCore <https://github.com/WarheadCore>
+ * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "ServerAutoShutdown.h"
 #include "Config.h"
 #include "Duration.h"
+#include "GameEventMgr.h"
 #include "Language.h"
 #include "Log.h"
 #include "ObjectMgr.h"
@@ -23,7 +36,7 @@ namespace
 
     time_t GetNextResetTime(time_t time, uint8 hour, uint8 minute, uint8 second)
     {
-        tm timeLocal = TimeBreakdown(time);
+        tm timeLocal = Acore::Time::TimeBreakdown(time);
         timeLocal.tm_hour = hour;
         timeLocal.tm_min = minute;
         timeLocal.tm_sec = second;
@@ -55,7 +68,7 @@ void ServerAutoShutdown::Init()
 
     if (tokens.size() != 3)
     {
-        sLog->outError("> ServerAutoShutdown: Incorrect time in config option 'ServerAutoShutdown.Time' - '%s'", configTime.c_str());
+        LOG_ERROR("module", "> ServerAutoShutdown: Incorrect time in config option 'ServerAutoShutdown.Time' - '{}'", configTime);
         _isEnableModule = false;
         return;
     }
@@ -65,7 +78,7 @@ void ServerAutoShutdown::Init()
     {
         for (auto const& itr : index)
         {
-            if (Acore::StringTo<uint8>(tokens.at(itr)) == std::nullopt)
+            if (!Acore::StringTo<uint8>(tokens.at(itr)))
                 return false;
         }
 
@@ -74,7 +87,7 @@ void ServerAutoShutdown::Init()
 
     if (!CheckTime({ 0, 1, 2 }))
     {
-        LOG_ERROR("modules","> ServerAutoShutdown: Incorrect time in config option 'ServerAutoShutdown.Time' - '%s'", configTime.c_str());
+        LOG_ERROR("module", "> ServerAutoShutdown: Incorrect time in config option 'ServerAutoShutdown.Time' - '{}'", configTime);
         _isEnableModule = false;
         return;
     }
@@ -85,47 +98,48 @@ void ServerAutoShutdown::Init()
 
     if (hour > 23)
     {
-        LOG_ERROR("modules", "> ServerAutoShutdown: Incorrect hour in config option 'ServerAutoShutdown.Time' - '%s'", configTime.c_str());
+        LOG_ERROR("module", "> ServerAutoShutdown: Incorrect hour in config option 'ServerAutoShutdown.Time' - '{}'", configTime);
         _isEnableModule = false;
     }
     else if (minute >= 60)
     {
-        LOG_ERROR("modules", "> ServerAutoShutdown: Incorrect minute in config option 'ServerAutoShutdown.Time' - '%s'", configTime.c_str());
+        LOG_ERROR("module", "> ServerAutoShutdown: Incorrect minute in config option 'ServerAutoShutdown.Time' - '{}'", configTime);
         _isEnableModule = false;
     }
     else if (second >= 60)
     {
-        LOG_ERROR("modules", "> ServerAutoShutdown: Incorrect second in config option 'ServerAutoShutdown.Time' - '%s'", configTime.c_str());
+        LOG_ERROR("module", "> ServerAutoShutdown: Incorrect second in config option 'ServerAutoShutdown.Time' - '{}'", configTime);
         _isEnableModule = false;
     }
 
     auto nowTime = time(nullptr);
+    //Seconds nowTime = GameTime::GetGameTime();
     uint64 nextResetTime = GetNextResetTime(nowTime, hour, minute, second);
     uint32 diffToShutdown = nextResetTime - static_cast<uint32>(nowTime);
 
     if (diffToShutdown < 10)
     {
-        LOG_WARN("modules", "> ServerAutoShutdown: Next time to shutdown < 10 seconds, Set next day");
-        nextResetTime += DAY;
+        LOG_WARN("module", "> ServerAutoShutdown: Next time to shutdown < 10 seconds, Set next day");
+        nextResetTime += Days(1).count();
     }
 
     diffToShutdown = nextResetTime - static_cast<uint32>(nowTime);
 
-    LOG_INFO("modules", " ");
-    LOG_INFO("modules","> ServerAutoShutdown: System loading");
+    LOG_INFO("module", " ");
+    LOG_INFO("module","> ServerAutoShutdown: System loading");
 
     // Cancel all task for support reload config
     scheduler.CancelAll();
     sWorld->ShutdownCancel();
 
-    LOG_INFO("modules", "> ServerAutoShutdown: Next time to shutdown - %s", TimeToHumanReadable(nextResetTime).c_str());
-    LOG_INFO("modules", "> ServerAutoShutdown: Remaining time to shutdown - %s", secsToTimeString(diffToShutdown).c_str());
-    LOG_INFO("modules", " ");
+    LOG_INFO("module", "> ServerAutoShutdown: Next time to shutdown - {}", Acore::Time::TimeToHumanReadable(Seconds(nextResetTime)));
+    LOG_INFO("module", "> ServerAutoShutdown: Remaining time to shutdown - {}", Acore::Time::ToTimeString<Seconds>(diffToShutdown));
+    LOG_INFO("module", " ");
 
     uint32 preAnnounceSeconds = sConfigMgr->GetOption<uint32>("ServerAutoShutdown.PreAnnounce.Seconds", 3600);
-    if (preAnnounceSeconds > DAY)
+    if (preAnnounceSeconds > Days(1).count())
     {
-        LOG_ERROR("modules", "> ServerAutoShutdown: Ahah, how could this happen? Time to preannouce more 1 day? (%u). Set to 1 hour (3600)", preAnnounceSeconds);
+        LOG_ERROR("module", "> ServerAutoShutdown: Ahah, how could this happen? Time to preannouce more 1 day? ({}). Set to 1 hour (3600)", preAnnounceSeconds);
         preAnnounceSeconds = 3600;
     }
 
@@ -140,19 +154,21 @@ void ServerAutoShutdown::Init()
         preAnnounceSeconds = diffToShutdown;
     }
 
-    LOG_INFO("modules", "> ServerAutoShutdown: Next time to pre annouce - %s", TimeToHumanReadable(timeToPreAnnounce).c_str());
-    LOG_INFO("modules", "> ServerAutoShutdown: Remaining time to pre annouce - %s", secsToTimeString(diffToPreAnnounce).c_str());
-    LOG_INFO("modules", " ");
+    LOG_INFO("module", "> ServerAutoShutdown: Next time to pre annouce - {}", Acore::Time::TimeToHumanReadable(Seconds(timeToPreAnnounce)));
+    LOG_INFO("module", "> ServerAutoShutdown: Remaining time to pre annouce - {}", Acore::Time::ToTimeString<Seconds>(timeToPreAnnounce));
+    LOG_INFO("module", " ");
+
+    StartPersistentGameEvents();
 
     // Add task for pre shutdown announce
     scheduler.Schedule(Seconds(diffToPreAnnounce), [preAnnounceSeconds](TaskContext /*context*/)
     {
         std::string preAnnounceMessageFormat = sConfigMgr->GetOption<std::string>("ServerAutoShutdown.PreAnnounce.Message", "[SERVER]: Automated (quick) server restart in %s");
-        std::string message = Acore::StringFormat(preAnnounceMessageFormat, secsToTimeString(preAnnounceSeconds));
+        std::string message = Acore::StringFormat(preAnnounceMessageFormat, Acore::Time::ToTimeString<Seconds>(preAnnounceSeconds, TimeOutput::Seconds, TimeFormat::FullText));
 
-        LOG_INFO("modules", "> %s", message.c_str());
+        LOG_INFO("module", "> {}", message);
 
-        sWorld->SendServerMessage(SERVER_MSG_STRING, message.c_str());
+        sWorld->SendServerMessage(SERVER_MSG_STRING, message);
         sWorld->ShutdownServ(preAnnounceSeconds, SHUTDOWN_MASK_RESTART, SHUTDOWN_EXIT_CODE);
     });
 }
@@ -164,4 +180,26 @@ void ServerAutoShutdown::OnUpdate(uint32 diff)
         return;
 
     scheduler.Update(diff);
+}
+
+void ServerAutoShutdown::StartPersistentGameEvents()
+{
+    std::string eventList = sConfigMgr->GetOption<std::string>("ServerAutoShutdown.StartEvents", "");
+
+    std::vector<std::string_view> tokens = Acore::Tokenize(eventList, ' ', false);
+    GameEventMgr::GameEventDataMap const& events = sGameEventMgr->GetEventMap();
+
+    for (auto token : tokens)
+    {
+        if (token.empty())
+        {
+            continue;
+        }
+
+        uint32 eventId = *Acore::StringTo<uint32>(token);
+        sGameEventMgr->StartEvent(eventId);
+
+        GameEventData const& eventData = events[eventId];
+        LOG_INFO("module", "> ServerAutoShutdown: Starting event {} ({}).", eventData.description, eventId);
+    }
 }

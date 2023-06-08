@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-          path: 'modules/mod-duel-reset'
+          path: 'modules/mod-pvpstats-announcer'
       - name: Cache
         uses: actions/cache@v1.1.2
         with:
