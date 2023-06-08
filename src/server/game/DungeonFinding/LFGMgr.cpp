@@ -41,7 +41,7 @@
 
 namespace lfg
 {
-    LFGMgr::LFGMgr(): m_lfgProposalId(1), m_options(sWorld->getIntConfig(CONFIG_LFG_OPTIONSMASK)), m_Testing(false)
+    LFGMgr::LFGMgr(): m_lfgProposalId(1), m_options(sWorld->getIntConfig(CONFIG_LFG_OPTIONSMASK)), m_Testing(false), m_isSoloLFG(false)
     {
         new LFGPlayerScript();
         new LFGGroupScript();
@@ -1835,7 +1835,7 @@ namespace lfg
             if (itPlayers->second.accept != LFG_ANSWER_AGREE)   // No answer (-1) or not accepted (0)
                 allAnswered = false;
 
-        if (!m_Testing && !allAnswered)
+        if (!m_Testing && !sLFGMgr->IsSoloLFG() && !allAnswered)
         {
             for (LfgProposalPlayerContainer::const_iterator it = proposal.players.begin(); it != proposal.players.end(); ++it)
                 SendLfgUpdateProposal(it->first, proposal);
@@ -2816,6 +2816,11 @@ namespace lfg
                 randomDungeons.insert(dungeon.Entry());
         }
         return randomDungeons;
+    }
+
+    void LFGMgr::ToggleSoloLFG()
+    {
+        m_isSoloLFG = !m_isSoloLFG;
     }
 
 } // namespace lfg
