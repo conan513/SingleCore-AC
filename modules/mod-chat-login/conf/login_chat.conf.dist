@@ -1,0 +1,11 @@
+[worldserver]
+
+#
+# The world and ID attributes can be found in the 'channels' table
+# in the characters database.  You may need to creatue the channel in-game
+# to make it available in this table.
+#
+
+LoginChat.enabled=true
+LoginChat.name=world
+LoginChat.id=9
