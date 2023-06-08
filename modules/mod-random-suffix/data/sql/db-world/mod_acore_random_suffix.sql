@@ -8197,7 +8197,7 @@ CREATE TABLE `item_enchantment_random_suffixes` (
   `EnchantQuality` int unsigned DEFAULT '0',
   `EnchantCategoryMask` int unsigned DEFAULT '0',
   PRIMARY KEY (`SuffixID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO item_enchantment_random_suffixes (SuffixID,MinLevel,MaxLevel,AttributeMask,ItemClass,ItemSubClassMask,EnchantQuality,EnchantCategoryMask)
 VALUES
 (1000,0,0,1,0,0,0,0),
