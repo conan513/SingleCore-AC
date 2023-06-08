@@ -18,7 +18,7 @@ public:
                 ChatHandler(pPlayer->GetSession()).SendSysMessage("This server is running the |cff4CFF00AccountMounts |rmodule.");
             }
             std::vector<uint32> Guids;
-            QueryResult result1 = CharacterDatabase.Query("SELECT guid, race FROM characters WHERE account = %u", pPlayer->GetSession()->GetAccountId());
+            QueryResult result1 = CharacterDatabase.Query("SELECT guid, race FROM characters WHERE account = {}", pPlayer->GetSession()->GetAccountId());
             if (!result1)
                 return;
 
@@ -38,7 +38,7 @@ public:
 
             for (auto& i : Guids)
             {
-                QueryResult result2 = CharacterDatabase.Query("SELECT spell FROM character_spell WHERE guid = %u", i);
+                QueryResult result2 = CharacterDatabase.Query("SELECT spell FROM character_spell WHERE guid = {}", i);
                 if (!result2)
                     continue;
 
