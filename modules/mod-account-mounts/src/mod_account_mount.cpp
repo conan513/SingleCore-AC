@@ -18,7 +18,7 @@ public:
                 ChatHandler(pPlayer->GetSession()).SendSysMessage("This server is running the |cff4CFF00AccountMounts |rmodule.");
             }
             std::vector<uint32> Guids;
-            QueryResult result1 = CharacterDatabase.PQuery("SELECT guid, race FROM characters WHERE account = %u", pPlayer->GetSession()->GetAccountId());
+            QueryResult result1 = CharacterDatabase.Query("SELECT guid, race FROM characters WHERE account = %u", pPlayer->GetSession()->GetAccountId());
             if (!result1)
                 return;
 
@@ -26,11 +26,11 @@ public:
             {
                 Field* fields = result1->Fetch();
     
-                //uint32 guid = fields[0].GetUInt32(); //unused variable
-                uint32 race = fields[1].GetUInt8();
+                //uint32 guid = fields[0].Get<uint32>(); //unused variable
+                uint32 race = fields[1].Get<uint8>();
 
                 if ((Player::TeamIdForRace(race) == Player::TeamIdForRace(pPlayer->getRace())) || !limitrace)
-                    Guids.push_back(result1->Fetch()[0].GetUInt32());
+                    Guids.push_back(result1->Fetch()[0].Get<uint32>());
 
             } while (result1->NextRow());
 
@@ -38,13 +38,13 @@ public:
 
             for (auto& i : Guids)
             {
-                QueryResult result2 = CharacterDatabase.PQuery("SELECT spell FROM character_spell WHERE guid = %u", i);
+                QueryResult result2 = CharacterDatabase.Query("SELECT spell FROM character_spell WHERE guid = %u", i);
                 if (!result2)
                     continue;
 
                 do
                 {
-                    Spells.push_back(result2->Fetch()[0].GetUInt32());
+                    Spells.push_back(result2->Fetch()[0].Get<uint32>());
                 } while (result2->NextRow());
             }
 
