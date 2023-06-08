@@ -125,8 +125,9 @@ uint32 GenerateEnchSuffixFactor(uint32 item_id)
 
     if (!itemProto)
         return 0;
-    if (!itemProto->RandomSuffix)
-        return 0;
+    // Disable this check to enable generating suffix factor for ALL items
+    // if (!itemProto->RandomSuffix)
+    //     return 0;
 
     RandomPropertiesPointsEntry const* randomProperty = sRandomPropertiesPointsStore.LookupEntry(itemProto->ItemLevel);
     if (!randomProperty)
@@ -141,7 +142,7 @@ uint32 GenerateEnchSuffixFactor(uint32 item_id)
         case INVTYPE_TABARD:
         case INVTYPE_AMMO:
         case INVTYPE_QUIVER:
-        case INVTYPE_RELIC:
+        // case INVTYPE_RELIC:
             return 0;
         // Select point coefficient
         case INVTYPE_HEAD:
@@ -175,6 +176,7 @@ uint32 GenerateEnchSuffixFactor(uint32 item_id)
         case INVTYPE_RANGED:
         case INVTYPE_THROWN:
         case INVTYPE_RANGEDRIGHT:
+        case INVTYPE_RELIC:
             suffixFactor = 4;
             break;
         default:
@@ -183,6 +185,8 @@ uint32 GenerateEnchSuffixFactor(uint32 item_id)
     // Select rare/epic modifier
     switch (itemProto->Quality)
     {
+        case ITEM_QUALITY_NORMAL:
+            return randomProperty->UncommonPropertiesPoints[suffixFactor];
         case ITEM_QUALITY_UNCOMMON:
             return randomProperty->UncommonPropertiesPoints[suffixFactor];
         case ITEM_QUALITY_RARE:
@@ -190,6 +194,7 @@ uint32 GenerateEnchSuffixFactor(uint32 item_id)
         case ITEM_QUALITY_EPIC:
             return randomProperty->EpicPropertiesPoints[suffixFactor];
         case ITEM_QUALITY_LEGENDARY:
+            return randomProperty->EpicPropertiesPoints[suffixFactor];
         case ITEM_QUALITY_ARTIFACT:
             return 0;                                       // not have random properties
         default:
