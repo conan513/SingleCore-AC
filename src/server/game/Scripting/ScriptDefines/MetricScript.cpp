@@ -15,12 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "boss_grobbulus.h"
+#include "ScriptMgr.h"
+#include "ScriptMgrMacros.h"
 
-void AddSC_boss_grobbulus()
+void ScriptMgr::OnMetricLogging()
 {
-    new boss_grobbulus();
-    new boss_grobbulus_poison_cloud();
-    new spell_grobbulus_mutating_injection();
-    new spell_grobbulus_poison();
+    ExecuteScript<MetricScript>([&](MetricScript* script)
+    {
+        script->OnMetricLogging();
+    });
 }
