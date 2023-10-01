@@ -1,0 +1,57 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+########################################
+# Auto Resurrect configuration
+########################################
+#
+#    AutoResurrect.Enable
+#        Description: Enable or Disable the Auto Resurrect mod
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+AutoResurrect.Enable = 0
+
+#
+#    AutoResurrect.Notification
+#        Description: Notify players about this module on login
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+AutoResurrect.Notification = 0
+
+#
+#    AutoResurrect.Dungeon
+#        Description: Auto resurrect in normal dungeons
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+AutoResurrect.Dungeon = 0
+
+#
+#    AutoResurrect.HeroicDungeon
+#        Description: Auto resurrect in heroic dungeons
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+AutoResurrect.HeroicDungeon = 0
+
+#
+#    AutoResurrect.Raid
+#        Description: Auto resurrect in raids
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+AutoResurrect.Raid = 0
+
+#
+#    AutoResurrect.HeroicRaid
+#        Description: Auto resurrect in heroic raids
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+AutoResurrect.HeroicRaid = 0
