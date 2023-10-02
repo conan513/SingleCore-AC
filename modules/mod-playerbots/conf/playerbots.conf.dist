@@ -40,7 +40,7 @@ AiPlayerbot.PreQuests = 0
 
 # Random bot count
 AiPlayerbot.MinRandomBots = 50
-AiPlayerbot.MaxRandomBots = 50
+AiPlayerbot.MaxRandomBots = 500
 AiPlayerbot.RandomBotMinLevel = 1
 AiPlayerbot.RandomBotMaxLevel = 80
 
@@ -109,7 +109,7 @@ AiPlayerbot.GearScoreCheck = 0
 AiPlayerbot.RandomBotQuestIds = "7848,3802,5505,6502,7761"
 
 # Randombots will group with nearby bots to do shared quests
-AiPlayerbot.RandomBotGroupNearby = 0
+AiPlayerbot.RandomBotGroupNearby = 1
 
 # Bots without a master will say their lines
 AiPlayerbot.RandomBotSayWithoutMaster = 0
@@ -121,7 +121,8 @@ AiPlayerbot.RandomBotSayWithoutMaster = 0
 AiPlayerbot.FreeMethodLoot = 0
 
 # Bots pick their quest reward (yes = picks first useful item, no = list all rewards, ask = pick useful item and lists if multiple)
-AiPlayerbot.AutoPickReward = no
+# Default: yes
+AiPlayerbot.AutoPickReward = yes
 
 # Bots equip upgrades (Bots will equip any item obtained from looting or a quest if they are upgrades)
 # Default: 0 (disabled)
@@ -152,11 +153,11 @@ AiPlayerbot.AutoLearnQuestSpells = 0
 
 # Bots automatically learn trainable spells on levelup
 # Default: 1 (enabled)
-AiPlayerbot.AutoLearnTrainerSpells = 1
+AiPlayerbot.AutoLearnTrainerSpells = 0
 
 # Bots automatically teleport to another place for leveling on levelup
-# Default: 1 (enabled)
-AiPlayerbot.AutoTeleportForLevel = 1
+# Default: 0 (disable)
+AiPlayerbot.AutoTeleportForLevel = 0
 
 # Bot automatically picks talent points on levelup
 # Default: 1 (enabled)
@@ -169,6 +170,10 @@ AiPlayerbot.AutoUpgradeEquip = 1
 # Random Bots will pick quests on their own and try to complete
 # Default: 1 (enabled)
 AiPlayerbot.AutoDoQuests = 1
+
+# Random Bots will do roll for loot
+# Default: 1 (enabled)
+AiPlayerbot.AutoRollForLoot = 1
 
 ##################################################################################
 #                                                                                #

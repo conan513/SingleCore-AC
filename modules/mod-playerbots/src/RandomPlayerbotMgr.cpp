@@ -974,6 +974,7 @@ void RandomPlayerbotMgr::Revive(Player* player)
 
 void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>& locs, bool hearth)
 {
+    std::string name = bot->GetName().c_str();
     if (bot->IsBeingTeleported())
         return;
 
@@ -983,15 +984,35 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
     if (bot->InBattlegroundQueue())
         return;
 
-    // if (bot->getLevel() < 5)
-    //     return;
+    if (bot->getLevel() <= 10)
+    {
+        LOG_DEBUG("playerbots", "Cannot teleport bot {} - level {} lower than 10", name, bot->getLevel());
+        return;
+    }
+
+    Group* group = bot->GetGroup();
+    ObjectGuid guid = bot->GetGUID();
+    if (group)
+    {
+        if (group->IsMember(guid) && !group->IsLeader(guid))
+            return;
+    }
+
+    if (group)
+    {
+        for (GroupReference* gr = group->GetFirstMember(); gr; gr = gr->next())
+        {
+            if (gr->GetSource()->IsPlayer())
+                return;
+        }
+    }
 
     // if (sPlayerbotAIConfig->randomBotRpgChance < 0)
     //     return;
 
     if (locs.empty())
     {
-        LOG_DEBUG("playerbots", "Cannot teleport bot {} - no locations available", bot->GetName().c_str());
+        LOG_DEBUG("playerbots", "Cannot teleport bot {} - no locations available", name);
         return;
     }
 
@@ -1008,7 +1029,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
     // Check locs again in case all possible locations were removed
     if (tlocs.empty())
     {
-        LOG_DEBUG("playerbots", "Cannot teleport bot {} - all locations removed by filter", bot->GetName().c_str());
+        LOG_DEBUG("playerbots", "Cannot teleport bot {} - all locations removed by filter", name);
         return;
     }
 
@@ -1030,12 +1051,11 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
     // LOG_INFO("playerbots", "Locs {} after remove too far away.", tlocs.size());
     if (tlocs.empty())
     {
-        LOG_DEBUG("playerbots", "Cannot teleport bot {} - no locations available", bot->GetName().c_str());
+        LOG_DEBUG("playerbots", "Cannot teleport bot {} - no locations available", name);
         return;
     }
 
-    PerformanceMonitorOperation* pmo = sPerformanceMonitor->start(PERF_MON_RNDBOT, "RandomTeleportByLocations");
-
+    PerformanceMonitorOperation *pmo = sPerformanceMonitor->start(PERF_MON_RNDBOT, "RandomTeleportByLocations");
     uint32 index = 0;
     for (uint32 i = 0; i < tlocs.size(); i++)
     {
@@ -1050,7 +1070,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
             Map* map = sMapMgr->FindMap(loc.GetMapId(), 0);
             if (!map)
                 continue;
-            
+
             AreaTableEntry const* zone = sAreaTableStore.LookupEntry(map->GetZoneId(bot->GetPhaseMask(), x, y, z));
             if (!zone)
                 continue;
@@ -1072,7 +1092,7 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
             z = 0.05f + ground;
 
             LOG_INFO("playerbots", "Random teleporting bot {} to {} {},{},{} ({}/{} locations)",
-                bot->GetName().c_str(), zone->area_name[0], x, y, z, attemtps, tlocs.size());
+                     bot->GetName().c_str(), zone->area_name[0], x, y, z, attemtps, tlocs.size());
 
             if (hearth)
             {
@@ -1085,6 +1105,17 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>&
                 botAI->Reset(true);
             bot->TeleportTo(loc.GetMapId(), x, y, z, 0);
             bot->SendMovementFlagUpdate();
+
+            if (group)
+            {
+                for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+                {
+                    if (ref->GetSource() == bot)
+                        continue;
+
+                    ref->GetSource()->TeleportTo(loc.GetMapId(), x + 5.0f, y + 5.0f, z + 2.0f, 0);
+                }
+            }
 
             if (pmo)
                 pmo->finish();
@@ -1206,8 +1237,7 @@ void RandomPlayerbotMgr::RandomTeleportForLevel(Player* bot)
         return;
 
     uint32 level = bot->getLevel();
-    uint8 race = bot->getRace();
-    LOG_INFO("playerbots", "Random teleporting bot {} for level {} ({} locations available)", bot->GetName().c_str(), bot->GetLevel(), locsPerLevelCache[level].size());
+    LOG_INFO("playerbots", "Preparing location({} locations available) to random teleporting bot {} for level {}", locsPerLevelCache[level].size(), bot->GetName().c_str(), bot->GetLevel());
     RandomTeleport(bot, locsPerLevelCache[level]);
 }
 
