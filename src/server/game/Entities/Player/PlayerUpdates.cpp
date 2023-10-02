@@ -412,6 +412,8 @@ void Player::Update(uint32 p_time)
         SetHasDelayedTeleport(false);
         TeleportTo(teleportStore_dest, teleportStore_options);
     }
+
+    sScriptMgr->OnAfterPlayerUpdate(this, p_time);
 }
 
 void Player::UpdateMirrorTimers()
