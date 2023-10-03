@@ -1,0 +1,138 @@
+[worldserver]
+
+#  11/18
+#
+#    AnnounceEnable
+#        Description: Enable the module announcing its presence.
+#        Default:     true  - (Enabled)
+#                     false - (Disabled)
+
+AnnounceEnable = true
+
+#
+#    ClassTrialEnable
+#        Description: Enable the application of class trials.
+#        Default:     true  - (Enabled)
+#                     false - (Disabled)
+
+ClassTrialEnable = true
+
+#
+#    TrialDungeonLimit
+#        Description: Limits the amount of dungeons able to be entered by a class trial character.
+#        Default:     0
+
+TrialDungeonLimit = 0
+
+#
+#    TrialRaidLimit
+#        Description: Limits the amount of raids able to be entered by a class trial character.
+#        Default:     0
+
+TrialRaidLimit = 0
+
+#
+#    TrialBattlegroundLimit
+#        Description: Limits the amount of battlegrounds able to be played by a class trial character.
+#        Default:     0
+
+TrialBattlegroundLimit = 0
+
+#
+#    TrialArenaLimit
+#        Description: Limits the amount of rated arenas able to be played by a class trial character.
+#        Default:     0
+
+TrialArenaLimit = 0
+
+#
+#    TrialQuestLimit
+#        Description: nyi
+#        Default:     0
+
+TrialQuestLimit = 0
+
+#
+#    TrialPlaytimeLimit
+#        Description: Limits playtime of a class trial character. Once exceeded, the character will be forcefully deleted at next log-in. (Measured in seconds)
+#        Default:     0
+
+TrialPlaytimeLimit = 0
+
+#
+#    TrialCreationLimitHour
+#        Description: nyi
+#        Default:     0
+
+TrialCreationLimitHour = 0
+
+#
+#    TrialCreationLimitWeek
+#        Description: nyi
+#        Default:     0
+
+TrialCreationLimitWeek = 0
+
+#
+#    AllowCustomize
+#        Description: Sets customization flag for class trial characters on each login.
+#        Default:     true  - (Enabled)
+#                     false - (Disabled)
+
+AllowCustomize = true
+
+#
+#    AllowRaceChange
+#        Description: Sets race change flag for class trial characters on each login.
+#        Default:     true  - (Enabled)
+#                     false - (Disabled)
+
+AllowRaceChange = true
+
+#
+#    RestrictRaidGroup
+#        Description: nyi
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictRaidGroup = false
+
+#
+#    RestrictGroup
+#        Description: nyi
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictGroup = false
+
+#
+#    RestrictMail
+#        Description: Class trial characters will not be able to send mail.
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictMail = false
+
+#
+#    RestrictRareLoot
+#        Description: nyi
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictRareLoot = false
+
+#
+#    RestrictGuild
+#        Description: nyi
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictGuild = false
+
+#
+#    RestrictTrade
+#        Description: Class trial characters will not be able to be traded or trade with other characters.
+#        Default:     false - (Disabled)
+#                     true  - (Enabled)
+
+RestrictTrade = false

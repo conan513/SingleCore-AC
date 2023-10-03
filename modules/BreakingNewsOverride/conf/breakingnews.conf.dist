@@ -1,0 +1,55 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+########################################
+# Breaking News configuration
+########################################
+#
+#    BreakingNews.Enable
+#        Description: Enable the Breaking News message on the character screen.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+BreakingNews.Enable = 0
+
+#
+#    BreakingNews.Title
+#        Description: The title that shows up above the breaking news body.
+#        Default:     "Breaking News"
+#
+
+BreakingNews.Title = "Breaking News"
+
+#
+#    BreakingNews.HtmlPath
+#        Description: The path to the html file to show as the breaking news body.
+#        Note: Can be absolute or relative.
+#        Default:     "./breakingnews.html"
+#
+
+BreakingNews.HtmlPath = "./breakingnews.html"
+
+#
+#    BreakingNews.Cache
+#        Description: Caches the breaking news on startup.
+#        Note: Setting this to 0 will pull the updated news from file every login.
+#                     0 - Disabled
+#        Default:     1 - Enabled
+#
+
+BreakingNews.Cache = 1
+
+#
+#    BreakingNews.Verbose
+#        Description: Enables verbose logs for debugging.
+#        Note: Don't leave this on in production.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+BreakingNews.Verbose = 0
+

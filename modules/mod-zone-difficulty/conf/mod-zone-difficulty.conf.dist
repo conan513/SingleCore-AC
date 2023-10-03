@@ -1,0 +1,70 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+########################################
+# ModZoneDifficulty
+########################################
+#
+#    ModZoneDifficulty.Enable
+#        Description: Enable my module.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ModZoneDifficulty.Enable = 1
+
+#
+#    ModZoneDifficulty.DebugInfo
+#        Description: Displays debug data for absorbs.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ModZoneDifficulty.DebugInfo = 0
+
+#
+#    ModZoneDifficulty.SpellBuff.OnlyBosses
+#        Description: Spell damage buffs will only affect bosses.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ModZoneDifficulty.SpellBuff.OnlyBosses = 0
+
+#
+#    ModZoneDifficulty.MeleeBuff.OnlyBosses
+#        Description: Melee damage buffs will only affect bosses.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ModZoneDifficulty.MeleeBuff.OnlyBosses = 0
+
+#
+#    ModZoneDifficulty.Mythicmode.Enable
+#        Description: Enable or disable the mythic mode.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+
+ModZoneDifficulty.Mythicmode.Enable = 0
+
+#
+#    ModZoneDifficulty.Mythicmode.HpModifier
+#        Description: Modifier for creature HP except bosses in mythic mode.
+#        Possible to override per creature by adding data to `zone_difficulty_mythicmode_creatureoverrides`.
+#        Default:     2.0 - 200% HP
+#
+
+ModZoneDifficulty.Mythicmode.HpModifier = 2.0
+
+#
+#    ModZoneDifficulty.Mythicmode.InNormalDungeons
+#        Description: Enable or disable mythic mode in non-heroic 5man dungeons.
+#        Dungeonmaster NPCs still need to be spawned. They only appear in heroic 5mans and raids by default.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+
+ModZoneDifficulty.Mythicmode.InNormalDungeons = 0

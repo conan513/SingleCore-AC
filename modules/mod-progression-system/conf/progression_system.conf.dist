@@ -1,0 +1,107 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+#
+#    ProgressionSystem.LoadScripts
+#        Description: Enable loading scripts from bracket modules
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+ProgressionSystem.LoadScripts = 1
+
+#
+#    ProgressionSystem.LoadDatabase
+#        Description: Enable loading SQL files from bracket modules
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+ProgressionSystem.LoadDatabase = 1
+
+#
+#    ProgressionSystem.ReapplyUpdates
+#        Description: Always reapply every SQL file on start up. Warning: impacts start up times.
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+ProgressionSystem.ReapplyUpdates = 0
+
+#
+#    ProgressionSystem.Bracket_X
+#        Description: Defines if the bracket should be loaded being 0 not loaded, 1 loaded.
+#        Default:     0 - Not loaded.
+#
+
+ProgressionSystem.Bracket_0       = 0
+ProgressionSystem.Bracket_1_19    = 0 # Shadowfang Keep, Deadmines, Wailing Caverns, Blackfathom Deeps, Ragefire Chasm
+ProgressionSystem.Bracket_20_29   = 0 # Stormwind Stockades, Razorfen Kraul, Gnomeregan
+ProgressionSystem.Bracket_30_39   = 0 # Uldaman, Razorfen Downs, Scarlet Monastery
+ProgressionSystem.Bracket_40_49   = 0 # Sunken Temple, Zul'Farrak, Maraudon
+ProgressionSystem.Bracket_50_59_1 = 0 # Blackrock Depths, Dire Maul, Scholomance, Stratholme 
+ProgressionSystem.Bracket_50_59_2 = 0 # Blackrock Spire attunement requirement
+ProgressionSystem.Bracket_60_1_1  = 0 # Blackrock Spire
+ProgressionSystem.Bracket_60_1_2  = 0 # Molten Core
+ProgressionSystem.Bracket_60_2_1  = 0 # Onyxia's Lair
+ProgressionSystem.Bracket_60_2_2  = 0 # Blackwing Lair
+ProgressionSystem.Bracket_60_3_1  = 0 # Zul'Gurub
+ProgressionSystem.Bracket_60_3_2  = 0 # AQ20
+ProgressionSystem.Bracket_60_3_3  = 0 # AQ40
+ProgressionSystem.Bracket_61_64   = 0 # 61-64 Dungeons
+ProgressionSystem.Bracket_65_69   = 0 # 65-69 Dungeons
+ProgressionSystem.Bracket_70_1_1  = 0 # Level 70, Flying, Normal Dungeons
+ProgressionSystem.Bracket_70_1_2  = 0 # Level 70, Heroics
+ProgressionSystem.Bracket_70_2_1  = 0 # Gruul's Lair, Magtheridon's Lair, Arena Season 1
+ProgressionSystem.Bracket_70_2_2  = 0 # Karazhan
+ProgressionSystem.Bracket_70_3_1  = 0 # Serpentshrine Cavern, Ogri'la
+ProgressionSystem.Bracket_70_3_2  = 0 # The Eye, Sha'tari Skyguard
+ProgressionSystem.Bracket_70_4_1  = 0 # Battle For Mount Hyjal, Arena Season 2, Netherwing
+ProgressionSystem.Bracket_70_4_2  = 0 # Black Temple
+ProgressionSystem.Bracket_70_5    = 0 # Zul'Aman, Arena Season 3
+ProgressionSystem.Bracket_70_6_1  = 0 # Isle of Quel'Danas, Magister's  Terrace
+ProgressionSystem.Bracket_70_6_2  = 0 # Sunwell Plateau, Arena Season 4
+ProgressionSystem.Bracket_71_74   = 0 # 71-74 Dungeons
+ProgressionSystem.Bracket_75_79   = 0 # 75-79 Dungeons
+ProgressionSystem.Bracket_80_1    = 0 # Heroic Dungeons, Naxxramas, Obsidian Sanctum, The Eye of Eternity, Vault of Archavon, Arena Season 5
+ProgressionSystem.Bracket_80_2    = 0 # Ulduar, Trial of the Champion, Arena Season 6
+ProgressionSystem.Bracket_80_3    = 0 # Onyxia's Lair, Trial of The Crusader, Arena Season 7
+ProgressionSystem.Bracket_80_4_1  = 0 # Icecrown Citadel, ICC Dungeons, Arena Season 8
+ProgressionSystem.Bracket_80_4_2  = 0 # Ruby Sanctum
+ProgressionSystem.Bracket_Custom  = 0
+
+#
+#
+#
+#    ProgressionSystem.60.MoltenCore.ManualRuneHandling
+#        Description: Defines whether Molten Core runes are handled manually (dousing through Aqual Quintessence) or automatic when bosses are defeated (WotLK default)
+#        Default:   1 - Enabled (requires dousing)
+#                   0 - Disabled (automatic, handled when bosses are defeated)
+#
+#
+
+ProgressionSystem.60.MoltenCore.ManualRuneHandling = 1
+
+#
+#    ProgressionSystem.60.MoltenCore.AqualEssenceCooldownReduction
+#        Description: Reduces the cooldown of Eternal Quintessences by the amount specified.
+#        Default:   0 - Disabled (1 hour cooldown)
+#                   60 - (No cooldown)
+#
+#
+
+ProgressionSystem.60.MoltenCore.AqualEssenceCooldownReduction = 0
+
+#
+#    ProgressionSystem.60.WorldBosses.KazzakPhasing
+#        Description: Enables phasing out players and boss when Lord Kazzak is engaged.
+#        Default:   1 - Enabled (Players and boss will be phased)
+#                   0 - Disabled
+#
+#
+
+ProgressionSystem.60.WorldBosses.KazzakPhasing = 1
+
