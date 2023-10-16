@@ -263,8 +263,7 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
 
     if (!player->InBattleground())
     {
-        engine->addStrategies("racials", "chat", "default", "cast time", "duel", "boost", "safe flee", nullptr);
-        engine->addStrategy("safe flee");
+        engine->addStrategies("racials", "chat", "default", "cast time", "duel", "boost", nullptr);
     }
 
     switch (player->getClass())
@@ -363,7 +362,6 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
             engine->addStrategy("boost");
             engine->addStrategy("dps assist");
             engine->removeStrategy("threat");
-            engine->addStrategy("safe flee");
             // engine-
             switch (player->getClass()) {
                 case CLASS_PRIEST: {
@@ -526,7 +524,7 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
     if (!player->InBattleground())
     {
         nonCombatEngine->addStrategies("nc", "food", "chat", "follow",
-            "default", "quest", "loot", "gather", "duel", "buff", "mount", "travel", nullptr);
+            "default", "quest", "loot", "gather", "duel", "buff", "mount", nullptr);
     }
 
     if ((facade->IsRealPlayer() || sRandomPlayerbotMgr->IsRandomBot(player)) && !player->InBattleground())
@@ -583,13 +581,13 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
                         // nonCombatEngine->addStrategy("group");
                         // nonCombatEngine->addStrategy("guild");
 
-                        if (sPlayerbotAIConfig->autoDoQuests)
-                        {
-                            // nonCombatEngine->addStrategy("travel");
-                            nonCombatEngine->addStrategy("rpg");
-                        } else {
-                            nonCombatEngine->addStrategy("move random");
-                        }
+                        // if (sPlayerbotAIConfig->autoDoQuests)
+                        // {
+                        //     // nonCombatEngine->addStrategy("travel");
+                        //     nonCombatEngine->addStrategy("rpg");
+                        // } else {
+                        //     nonCombatEngine->addStrategy("move random");
+                        // }
 
                         // if (masterBotAI)
                         //     nonCombatEngine->addStrategy("maintenance");

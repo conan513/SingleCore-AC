@@ -161,7 +161,6 @@ class PlayerbotAIConfig
         bool randomBotSayWithoutMaster;
         bool randomBotGroupNearby;
         uint32 tweakValue; //Debugging config
-        bool autoRollForLoot;
 
         uint32 randomBotArenaTeamCount;
         bool deleteRandomBotArenaTeams;
@@ -171,6 +170,12 @@ class PlayerbotAIConfig
         bool downgradeMaxLevelBot;
         bool equipmentPersistence;
         int32 equipmentPersistenceLevel;
+        int32 groupInvitationPermission;
+        bool botReviveWhenSummon;
+        bool autoInitOnly;
+        float autoInitEquipLevelLimitRatio;
+        int32 addClassCommand;
+
         std::string const GetTimestampStr();
         bool hasLog(std::string const fileName) { return std::find(allowedLogFiles.begin(), allowedLogFiles.end(), fileName) != allowedLogFiles.end(); };
         bool openLog(std::string const fileName, char const* mode = "a");

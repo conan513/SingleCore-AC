@@ -46,7 +46,7 @@ void RpgStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("rpg buy", NextAction::array(0, new NextAction("rpg buy", 1.030f), nullptr)));
     // triggers.push_back(new TriggerNode("rpg sell", NextAction::array(0, new NextAction("rpg sell", 1.100f), nullptr)));
     triggers.push_back(new TriggerNode("rpg repair", NextAction::array(0, new NextAction("rpg repair", 1.095f), nullptr)));
-    triggers.push_back(new TriggerNode("rpg train", NextAction::array(0, new NextAction("rpg train", 1.080f), nullptr)));
+    // triggers.push_back(new TriggerNode("rpg train", NextAction::array(0, new NextAction("rpg train", 1.080f), nullptr)));
     triggers.push_back(new TriggerNode("rpg heal", NextAction::array(0, new NextAction("rpg heal", 1.025f), nullptr)));
     triggers.push_back(new TriggerNode("rpg home bind", NextAction::array(0, new NextAction("rpg home bind", 1.060f), nullptr)));
     // triggers.push_back(new TriggerNode("rpg queue bg", NextAction::array(0, new NextAction("rpg queue bg", 1.085f), nullptr)));
