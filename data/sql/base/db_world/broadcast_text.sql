@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
--- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server version:               8.1.0 - MySQL Community Server - GPL
 -- Server OS:                    Win64
--- HeidiSQL Version:             12.0.0.6468
+-- HeidiSQL Version:             12.3.0.6589
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -19,8 +19,8 @@ DROP TABLE IF EXISTS `broadcast_text`;
 CREATE TABLE IF NOT EXISTS `broadcast_text` (
   `ID` int unsigned NOT NULL DEFAULT '0',
   `LanguageID` int DEFAULT NULL,
-  `MaleText` longtext COLLATE utf8mb4_unicode_ci,
-  `FemaleText` longtext COLLATE utf8mb4_unicode_ci,
+  `MaleText` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `FemaleText` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `EmoteID1` int DEFAULT NULL,
   `EmoteID2` int DEFAULT NULL,
   `EmoteID3` int DEFAULT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `broadcast_text` (
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table acore_world.broadcast_text: ~72,874 rows (approximately)
+-- Dumping data for table acore_world.broadcast_text: ~69 898 rows (approximately)
 DELETE FROM `broadcast_text`;
 INSERT INTO `broadcast_text` (`ID`, `LanguageID`, `MaleText`, `FemaleText`, `EmoteID1`, `EmoteID2`, `EmoteID3`, `EmoteDelay1`, `EmoteDelay2`, `EmoteDelay3`, `SoundEntriesId`, `EmotesID`, `Flags`, `VerifiedBuild`) VALUES
 	(1, 0, 'Help help!  I\'m being repressed!', '', 0, 0, 0, 0, 0, 0, 0, 0, 6, 18019),

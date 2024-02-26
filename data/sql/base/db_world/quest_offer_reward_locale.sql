@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
--- Server version:               8.0.29 - MySQL Community Server - GPL
+-- Server version:               8.1.0 - MySQL Community Server - GPL
 -- Server OS:                    Win64
--- HeidiSQL Version:             12.0.0.6468
+-- HeidiSQL Version:             12.3.0.6589
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -18,13 +18,13 @@
 DROP TABLE IF EXISTS `quest_offer_reward_locale`;
 CREATE TABLE IF NOT EXISTS `quest_offer_reward_locale` (
   `ID` int unsigned NOT NULL DEFAULT '0',
-  `locale` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `RewardText` text COLLATE utf8mb4_unicode_ci,
+  `locale` varchar(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `RewardText` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `VerifiedBuild` int DEFAULT NULL,
   PRIMARY KEY (`ID`,`locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table acore_world.quest_offer_reward_locale: ~48,984 rows (approximately)
+-- Dumping data for table acore_world.quest_offer_reward_locale: ~49 764 rows (approximately)
 DELETE FROM `quest_offer_reward_locale`;
 INSERT INTO `quest_offer_reward_locale` (`ID`, `locale`, `RewardText`, `VerifiedBuild`) VALUES
 	(1, 'frFR', 'Parlez à Kanrethad pour que vos talents, votre arme et votre monture vous soient rendus.', 18019),
@@ -5191,6 +5191,7 @@ INSERT INTO `quest_offer_reward_locale` (`ID`, `locale`, `RewardText`, `Verified
 	(1045, 'esES', 'Lo has hecho muy bien, mi amigo.$B$BEl bosque aún está contaminado pero al menos hemos hecho algo para devolverle parte de su gloria pasada. Si quieres volver aquí, siempre disfruto de la compañía de uno de los míos.$B$BCuídate. Quizás nuestras tribus vuelvan a encontrarse en tiempos menos violentos.', 0),
 	(1045, 'esMX', 'Lo has hecho muy bien, mi amigo.$B$BEl bosque aún está contaminado pero al menos hemos hecho algo para devolverle parte de su gloria pasada. Si quieres volver aquí, siempre disfruto de la compañía de uno de los míos.$B$BCuídate. Quizás nuestras tribus vuelvan a encontrarse en tiempos menos violentos.', 0),
 	(1045, 'frFR', 'Vous avez réussi, mon amie.$B$BLa forêt est toujours infestée, mais au moins nous avons contribué à lui rendre un peu de son ancienne gloire. Si vous souhaitez me revoir, j\'en serai ravi.$B$BBonne route. Peut-être qu\'un jour nos tribus se rencontreront à nouveau, dans des circonstances plus paisibles.', 18019),
+	(1045, 'ruRU', 'Славная работа, $N. Спасибо тебе.', 18019),
 	(1045, 'zhCN', '你干得很好，我的朋友。$B$B森林仍然受污染着，但至少我们向着恢复它往日荣耀的目标迈出了一小步。如果你愿意再回来找我的话，我会非常乐意和你在一起的。$B$B多多保重。也许我们的部族将在和平时期再次聚会。', 0),
 	(1046, 'deDE', 'Das ist also der Schädel des wildesten Furbolg vom Eschental?$B$BIch bin von Euren Fähigkeiten mehr als angetan, $N. Die Schildwachen können Euch nicht genug danken. Ich hoffe, wir können uns auch in Zukunft darauf berufen, dass Ihr unserem Volk helft.$B$BDiesen Schädel und Dartols Rute werde ich an einem Ehrenplatz aufbewahren, damit jeder sie bewundern kann.$B$BTeronis wäre stolz. Nochmals danke.', 0),
 	(1046, 'esES', '¿Así que esta es la calavera de la amenaza fúrbolg más feroz de Vallefresno?$B$BTus facultades son todo un portento, $n. Las centinelas no pueden agradecértelo lo suficiente. Espero que podamos volver a contar contigo en el futuro para ayudar a nuestro pueblo.$B$BPondré esta calavera y la vara de Dartol en un lugar de veneración para que los demás las vean.$B$BTeronis estaría orgulloso de ti. Gracias otra vez.', 0),
