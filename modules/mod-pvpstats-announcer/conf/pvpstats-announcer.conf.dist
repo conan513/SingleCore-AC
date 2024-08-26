@@ -1,0 +1,8 @@
+[worldserver]
+
+PvPstatsAnnouncer.Enabled=0
+PvPstatsAnnouncer.Limit=5
+PvPstatsAnnouncer.BracketId=1
+PvPstatsAnnouncer.RepeatMinutes=40
+PvPstatsAnnouncer.StartText="Top PvP players of the month:"
+PvPstatsAnnouncer.EndText="Check all PvP statistics at chromiecraft.com/PvPstats"

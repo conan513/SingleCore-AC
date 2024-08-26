@@ -1,0 +1,17 @@
+[worldserver]
+
+###################################################################################################
+#	Announce if a world boss killed by someone
+###################################################################################################
+
+# Enable the module? (1: true | 0: false)
+
+Boss.Announcer.Enable = 1
+
+# Announce the module when the player logs in?
+
+Boss.Announcer.Announce = 1
+
+# Remove Aura such as bloodlust debuff upon boss kill?
+
+Boss.Announcer.RemoveAuraUponKill = 0

@@ -1,0 +1,14 @@
+{
+  "name": "auctionator_marketprice",
+  "version": "1.0.0",
+  "description": "Market price utilities for mod-auctionator",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "James Huston",
+  "license": "MIT",
+  "dependencies": {
+    "csv": "^6.3.5"
+  }
+}
