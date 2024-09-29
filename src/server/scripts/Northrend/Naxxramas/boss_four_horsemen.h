@@ -146,7 +146,7 @@ public:
 
         void MoveToCorner()
         {
-            switch(me->GetEntry())
+            switch (me->GetEntry())
             {
                 case NPC_THANE_KORTHAZZ:
                     currentWaypoint = 0;
@@ -247,7 +247,7 @@ public:
 
         void KilledUnit(Unit* who) override
         {
-            if (who->GetTypeId() != TYPEID_PLAYER)
+            if (!who->IsPlayer())
                 return;
 
             Talk(SAY_SLAY);

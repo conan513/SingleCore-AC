@@ -623,9 +623,9 @@ class spell_q12274_a_fall_from_grace_costume : public SpellScript
 
     void HandleScript(SpellEffIndex  /*effIndex*/)
     {
-        if(Unit* target = GetHitUnit())
+        if (Unit* target = GetHitUnit())
         {
-            if(Player* p = target->ToPlayer())
+            if (Player* p = target->ToPlayer())
             {
                 p->CastSpell(p, p->getGender() == GENDER_FEMALE ? SPELL_SCARLET_RAVEN_PRIEST_IMAGE_FEMALE : SPELL_SCARLET_RAVEN_PRIEST_IMAGE_MALE, false);
             }
@@ -691,7 +691,7 @@ class spell_q11653_youre_not_so_big_now : public SpellScript
     {
         PreventHitDefaultEffect(effIndex);
         Unit* target = GetHitUnit();
-        if (!target || target->GetTypeId() != TYPEID_UNIT)
+        if (!target || !target->IsCreature())
             return;
 
         static uint32 const spellPlayer[5] =
@@ -809,7 +809,7 @@ class spell_q1846_bending_shinbone : public SpellScript
     {
         Item* target = GetHitItem();
         Unit* caster = GetCaster();
-        if (!target && caster->GetTypeId() != TYPEID_PLAYER)
+        if (!target && !caster->IsPlayer())
             return;
 
         uint32 const spellId = roll_chance_i(20) ? SPELL_BENDING_SHINBONE1 : SPELL_BENDING_SHINBONE2;
@@ -1014,7 +1014,7 @@ class spell_q11396_11399_scourging_crystal_controller_dummy : public SpellScript
     void HandleDummy(SpellEffIndex /*effIndex*/)
     {
         if (Unit* target = GetHitUnit())
-            if (target->GetTypeId() == TYPEID_UNIT)
+            if (target->IsCreature())
                 target->RemoveAurasDueToSpell(SPELL_FORCE_SHIELD_ARCANE_PURPLE_X3);
     }
 
@@ -1704,7 +1704,7 @@ class spell_q12277_wintergarde_mine_explosion : public SpellScript
         {
             if (Unit* caster = GetCaster())
             {
-                if (caster->GetTypeId() == TYPEID_UNIT)
+                if (caster->IsCreature())
                 {
                     if (Unit* owner = caster->GetOwner())
                     {
@@ -2018,7 +2018,7 @@ enum BearFlankMaster
 
         bool Load() override
         {
-            return GetCaster()->GetTypeId() == TYPEID_UNIT;
+            return GetCaster()->IsCreature();
         }
 
         void HandleScript(SpellEffIndex /*effIndex*/)
@@ -2079,7 +2079,7 @@ class spell_q12690_burst_at_the_seams : public SpellScript
 
     bool Load() override
     {
-        return GetCaster()->GetTypeId() == TYPEID_UNIT;
+        return GetCaster()->IsCreature();
     }
 
     void HandleKnockBack(SpellEffIndex /*effIndex*/)
@@ -2325,8 +2325,8 @@ class spell_q12919_gymers_throw : public SpellScript
 
         void HandleEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
         {
-            if(GetOwner())
-                if(Player* player = GetOwner()->ToPlayer())
+            if (GetOwner())
+                if (Player* player = GetOwner()->ToPlayer())
                     player->CompleteQuest(QUEST_CROW_TRANSFORM);
         }
 
