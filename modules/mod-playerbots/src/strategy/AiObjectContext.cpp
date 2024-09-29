@@ -9,6 +9,8 @@
 #include "ChatActionContext.h"
 #include "ChatTriggerContext.h"
 #include "Playerbots.h"
+#include "RaidIccActionContext.h"
+#include "RaidIccTriggerContext.h"
 #include "RaidUlduarTriggerContext.h"
 #include "RaidUlduarActionContext.h"
 #include "SharedValueContext.h"
@@ -17,13 +19,15 @@
 #include "ValueContext.h"
 #include "WorldPacketActionContext.h"
 #include "WorldPacketTriggerContext.h"
-#include "raids/RaidActionContext.h"
 #include "raids/RaidStrategyContext.h"
-#include "raids/RaidTriggerContext.h"
+#include "raids/blackwinglair/RaidBwlActionContext.h"
+#include "raids/blackwinglair/RaidBwlTriggerContext.h"
 #include "raids/naxxramas/RaidNaxxActionContext.h"
 #include "raids/naxxramas/RaidNaxxTriggerContext.h"
 #include "raids/moltencore/RaidMcActionContext.h"
 #include "raids/moltencore/RaidMcTriggerContext.h"
+#include "raids/aq20/RaidAq20ActionContext.h"
+#include "raids/aq20/RaidAq20TriggerContext.h"
 
 AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
 {
@@ -36,18 +40,22 @@ AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
     actionContexts.Add(new ActionContext());
     actionContexts.Add(new ChatActionContext());
     actionContexts.Add(new WorldPacketActionContext());
-    actionContexts.Add(new RaidActionContext());
+    actionContexts.Add(new RaidMcActionContext());
+    actionContexts.Add(new RaidBwlActionContext());
+    actionContexts.Add(new RaidAq20ActionContext());
     actionContexts.Add(new RaidNaxxActionContext());
     actionContexts.Add(new RaidUlduarActionContext());
-    actionContexts.Add(new RaidMcActionContext());
+    actionContexts.Add(new RaidIccActionContext());
 
     triggerContexts.Add(new TriggerContext());
     triggerContexts.Add(new ChatTriggerContext());
     triggerContexts.Add(new WorldPacketTriggerContext());
-    triggerContexts.Add(new RaidTriggerContext());
+    triggerContexts.Add(new RaidMcTriggerContext());
+    triggerContexts.Add(new RaidBwlTriggerContext());
+    triggerContexts.Add(new RaidAq20TriggerContext());
     triggerContexts.Add(new RaidNaxxTriggerContext());
     triggerContexts.Add(new RaidUlduarTriggerContext());
-    triggerContexts.Add(new RaidMcTriggerContext());
+    triggerContexts.Add(new RaidIccTriggerContext());
 
     valueContexts.Add(new ValueContext());
 

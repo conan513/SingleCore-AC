@@ -370,7 +370,7 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool /*minimal*/)
                 break;
         }
 
-        if (loginBots)
+        if (loginBots && botLoading.empty())
         {
             loginBots += updateBots;
             loginBots = std::min(loginBots, maxNewBots);
@@ -1014,32 +1014,35 @@ bool RandomPlayerbotMgr::ProcessBot(uint32 bot)
     if (isLogginIn)
         return false;
 
+    uint32 randomTime;
     if (!player)
     {
         AddPlayerBot(botGUID, 0);
-        SetEventValue(bot, "login", 1, sPlayerbotAIConfig->randomBotUpdateInterval);
+        SetEventValue(bot, "login", 1,
+                      std::max(1, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.2)));
 
-        uint32 randomTime =
-            urand(sPlayerbotAIConfig->minRandomBotReviveTime, sPlayerbotAIConfig->maxRandomBotReviveTime);
+        randomTime = urand(std::max(5, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval)),
+                                  std::max(15, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 2.2)));
         SetEventValue(bot, "update", 1, randomTime);
 
         // do not randomize or teleport immediately after server start (prevent lagging)
         if (!GetEventValue(bot, "randomize"))
         {
-            randomTime = urand(sPlayerbotAIConfig->randomBotUpdateInterval * 5,
-                               sPlayerbotAIConfig->randomBotUpdateInterval * 20);
-            ScheduleRandomize(bot, randomTime);
+            ScheduleRandomize(bot, std::max(3, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.5)));
         }
         if (!GetEventValue(bot, "teleport"))
         {
-            randomTime = urand(sPlayerbotAIConfig->randomBotUpdateInterval * 5,
-                               sPlayerbotAIConfig->randomBotUpdateInterval * 20);
+            randomTime = urand(std::max(7, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.8)),
+                               std::max(14, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 2)));
             ScheduleTeleport(bot, randomTime);
         }
         return true;
     }
 
     SetEventValue(bot, "login", 0, 0);
+
+    if (!player->IsInWorld())
+        return false;
 
     if (player->GetGroup() || player->HasUnitState(UNIT_STATE_IN_FLIGHT))
         return false;
@@ -1073,8 +1076,9 @@ bool RandomPlayerbotMgr::ProcessBot(uint32 bot)
         if (update)
             ProcessBot(player);
 
-        uint32 randomTime =
-            urand(sPlayerbotAIConfig->minRandomBotReviveTime, sPlayerbotAIConfig->maxRandomBotReviveTime);
+        randomTime = urand(
+            sPlayerbotAIConfig->minRandomBotReviveTime,
+            sPlayerbotAIConfig->maxRandomBotReviveTime);
         SetEventValue(bot, "update", 1, randomTime);
 
         return true;
@@ -1473,40 +1477,44 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
         } while (results->NextRow());
     }
     LOG_INFO("playerbots", "{} banker locations for level collected.", collected_locs);
+}
 
-    // temporary only use locsPerLevelCache, so disable rpgLocsCacheLevel cache
-
-    // LOG_INFO("playerbots", "Preparing RPG teleport caches for {} factions...", sFactionTemplateStore.GetNumRows());
-    // results = WorldDatabase.Query("SELECT map, position_x, position_y, position_z, r.race, r.minl, r.maxl FROM
-    // creature c INNER JOIN playerbots_rpg_races r ON c.id1 = r.entry "
-    //     "WHERE r.race < 15");
-    // if (results)
-    // {
-    //     do
-    //     {
-    //         Field* fields = results->Fetch();
-    //         uint16 mapId = fields[0].Get<uint16>();
-    //         float x = fields[1].Get<float>();
-    //         float y = fields[2].Get<float>();
-    //         float z = fields[3].Get<float>();
-    //         uint32 race = fields[4].Get<uint32>();
-    //         uint32 minl = fields[5].Get<uint32>();
-    //         uint32 maxl = fields[6].Get<uint32>();
-
-    //         for (uint32 level = 1; level < sPlayerbotAIConfig->randomBotMaxLevel + 1; level++)
-    //         {
-    //             if (level > maxl || level < minl)
-    //                 continue;
-
-    //             WorldLocation loc(mapId, x, y, z, 0);
-    //             for (uint32 r = 1; r < MAX_RACES; r++)
-    //             {
-    //                 if (race == r || race == 0)
-    //                     rpgLocsCacheLevel[r][level].push_back(loc);
-    //             }
-    //         }
-    //     } while (results->NextRow());
-    // }
+void RandomPlayerbotMgr::PrepareAddclassCache()
+{
+    int32 maxAccountId = sPlayerbotAIConfig->randomBotAccounts.back();
+    int32 minIdx =
+        sPlayerbotAIConfig->randomBotAccounts.size() - 1 >= sPlayerbotAIConfig->addClassAccountPoolSize
+            ? sPlayerbotAIConfig->randomBotAccounts.size() - sPlayerbotAIConfig->addClassAccountPoolSize : 0;
+    int32 minAccountId = sPlayerbotAIConfig->randomBotAccounts[minIdx];
+    if (minAccountId < 0)
+    {
+        LOG_ERROR("playerbots", "No available account for add class!");
+    }
+    int32 collected = 0;
+    for (uint8 claz = CLASS_WARRIOR; claz <= CLASS_DRUID; claz++)
+    {
+        if (claz == 10)
+            continue;
+        QueryResult results = CharacterDatabase.Query(
+            "SELECT guid, race FROM characters "
+            "WHERE account >= {} AND account <= {} AND class = '{}' AND online = 0 AND "
+            "guid NOT IN ( SELECT guid FROM guild_member ) "
+            "ORDER BY account DESC",
+            minAccountId, maxAccountId, claz);
+        if (results)
+        {
+            do
+            {
+                Field* fields = results->Fetch();
+                ObjectGuid guid = ObjectGuid(HighGuid::Player, fields[0].Get<uint32>());
+                uint32 race = fields[1].Get<uint32>();
+                bool isAlliance = race == 1 || race == 3 || race == 4 || race == 7 || race == 11;
+                addclassCache[GetTeamClassIdx(isAlliance, claz)].push_back(guid);
+                collected++;
+            } while (results->NextRow());
+        }
+    }
+    LOG_INFO("playerbots", "{} characters collected for addclass command.", collected);
 }
 
 void RandomPlayerbotMgr::RandomTeleportForLevel(Player* bot)
@@ -1860,6 +1868,7 @@ void RandomPlayerbotMgr::GetBots()
         PlayerbotsDatabase.GetPreparedStatement(PLAYERBOTS_SEL_RANDOM_BOTS_BY_OWNER_AND_EVENT);
     stmt->SetData(0, 0);
     stmt->SetData(1, "add");
+    uint32 maxAllowedBotCount = GetEventValue(0, "bot_count");
     if (PreparedQueryResult result = PlayerbotsDatabase.Query(stmt))
     {
         do
@@ -1868,6 +1877,9 @@ void RandomPlayerbotMgr::GetBots()
             uint32 bot = fields[0].Get<uint32>();
             if (GetEventValue(bot, "add"))
                 currentBots.push_back(bot);
+
+            if (currentBots.size() >= maxAllowedBotCount)
+                break;
         } while (result->NextRow());
     }
 }
@@ -2396,52 +2408,13 @@ void RandomPlayerbotMgr::PrintStats()
         else
             ++engine_dead;
         
-        uint8 spec = AiFactory::GetPlayerSpecTab(bot);
-        switch (bot->getClass())
-        {
-            case CLASS_DRUID:
-                if (spec == 2)
-                    ++heal;
-                else
-                    ++dps;
-                break;
-            case CLASS_PALADIN:
-                if (spec == 1)
-                    ++tank;
-                else if (spec == 0)
-                    ++heal;
-                else
-                    ++dps;
-                break;
-            case CLASS_PRIEST:
-                if (spec != 2)
-                    ++heal;
-                else
-                    ++dps;
-                break;
-            case CLASS_SHAMAN:
-                if (spec == 2)
-                    ++heal;
-                else
-                    ++dps;
-                break;
-            case CLASS_WARRIOR:
-                if (spec == 2)
-                    ++tank;
-                else
-                    ++dps;
-                break;
-            case CLASS_DEATH_KNIGHT:
-                if (spec == 0)
-                    tank++;
-                else
-                    dps++;
-                break;
-            default:
-                ++dps;
-                break;
-        }
-
+        if (botAI->IsHeal(bot, true))
+            ++heal;
+        else if (botAI->IsTank(bot, true))
+            ++tank;
+        else
+            ++dps;
+        
         if (TravelTarget* target = botAI->GetAiObjectContext()->GetValue<TravelTarget*>("travel target")->Get())
         {
             TravelState state = target->getTravelState();
@@ -2779,4 +2752,3 @@ ObjectGuid const RandomPlayerbotMgr::GetBattleMasterGUID(Player* bot, Battlegrou
 
     return battleMasterGUID;
 }
-
