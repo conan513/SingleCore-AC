@@ -22,12 +22,8 @@
 #include "Common.h"
 #include "Duration.h"
 #include "ObjectGuid.h"
-#include "QueryResult.h"
+#include "QueryHolder.h"
 #include "SharedDefines.h"
-#include <atomic>
-#include <list>
-#include <map>
-#include <set>
 #include <unordered_map>
 
 class WorldPacket;
@@ -309,6 +305,7 @@ enum WorldIntConfigs
     CONFIG_DEATH_SICKNESS_LEVEL,
     CONFIG_INSTANT_LOGOUT,
     CONFIG_DISABLE_BREATHING,
+    CONFIG_BATTLEGROUND_OVERRIDE_LOWLEVELS_MINPLAYERS,
     CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_SPAM_DELAY,
     CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_TIMER,
     CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER,
