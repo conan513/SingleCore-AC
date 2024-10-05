@@ -20,7 +20,7 @@ public:
     uint64 GetAffectedRows();
 
 protected:
-    bool _HandleMySQLErrno(uint32 errNo, uint8 attempts = 5) override;
+    bool _HandleMySQLErrno(uint32 errNo, char const* err = "", uint8 attempts = 5) override;
 };
 
 #endif

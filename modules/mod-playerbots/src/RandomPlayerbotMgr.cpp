@@ -320,7 +320,10 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool /*minimal*/)
     if (onlineBotCount < (uint32)(sPlayerbotAIConfig->minRandomBots * 90 / 100))
         onlineBotFocus = 25;
 
-    SetNextCheckDelay(sPlayerbotAIConfig->randomBotUpdateInterval * (onlineBotFocus + 25) * 10);
+    // when server is balancing bots then boost (decrease value of) the nextCheckDelay till
+    // onlineBotCount reached the AllowedBotCount.
+    uint32 updateIntervalTurboBoost = onlineBotCount < maxAllowedBotCount ? 1 : sPlayerbotAIConfig->randomBotUpdateInterval;
+    SetNextCheckDelay(updateIntervalTurboBoost * (onlineBotFocus + 25) * 10);
 
     PerformanceMonitorOperation* pmo = sPerformanceMonitor->start(
         PERF_MON_TOTAL,
@@ -961,8 +964,6 @@ void RandomPlayerbotMgr::CheckPlayers()
 void RandomPlayerbotMgr::ScheduleRandomize(uint32 bot, uint32 time)
 {
     SetEventValue(bot, "randomize", 1, time);
-    // SetEventValue(bot, "logout", 1, time + 30 + urand(sPlayerbotAIConfig->randomBotUpdateInterval,
-    // sPlayerbotAIConfig->randomBotUpdateInterval * 3));
 }
 
 void RandomPlayerbotMgr::ScheduleTeleport(uint32 bot, uint32 time)
@@ -1018,24 +1019,29 @@ bool RandomPlayerbotMgr::ProcessBot(uint32 bot)
     if (!player)
     {
         AddPlayerBot(botGUID, 0);
-        SetEventValue(bot, "login", 1,
-                      std::max(1, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.2)));
+        randomTime = urand(1, 2);
+        SetEventValue(bot, "login", 1, randomTime);
 
-        randomTime = urand(std::max(5, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval)),
-                                  std::max(15, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 2.2)));
+        randomTime = urand(
+            std::max(5, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.5)),
+            std::max(12, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 2)));
         SetEventValue(bot, "update", 1, randomTime);
 
         // do not randomize or teleport immediately after server start (prevent lagging)
         if (!GetEventValue(bot, "randomize"))
         {
-            ScheduleRandomize(bot, std::max(3, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.5)));
+            randomTime = urand(
+                3,std::max(4, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.4)));
+            ScheduleRandomize(bot, randomTime);
         }
         if (!GetEventValue(bot, "teleport"))
         {
-            randomTime = urand(std::max(7, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.8)),
-                               std::max(14, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 2)));
+            randomTime = urand(
+                std::max(7, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 0.7)),
+                std::max(14, static_cast<int>(sPlayerbotAIConfig->randomBotUpdateInterval * 1.4)));
             ScheduleTeleport(bot, randomTime);
         }
+
         return true;
     }
 
@@ -1091,8 +1097,9 @@ bool RandomPlayerbotMgr::ProcessBot(uint32 bot)
                  player->GetLevel(), player->GetName().c_str());
         LogoutPlayerBot(botGUID);
         currentBots.remove(bot);
-        SetEventValue(bot, "logout", 1,
-                      urand(sPlayerbotAIConfig->minRandomBotInWorldTime, sPlayerbotAIConfig->maxRandomBotInWorldTime));
+        SetEventValue(bot, "logout", 1, urand(
+            sPlayerbotAIConfig->minRandomBotInWorldTime, 
+            sPlayerbotAIConfig->maxRandomBotInWorldTime));
         return true;
     }
 
@@ -1109,16 +1116,16 @@ bool RandomPlayerbotMgr::ProcessBot(Player* player)
     if (player->InBattlegroundQueue())
         return false;
 
-    // if (player->isDead())
-    // return false;
+    // if death revive
     if (player->isDead())
     {
         if (!GetEventValue(bot, "dead"))
         {
-            uint32 randomTime =
-                urand(sPlayerbotAIConfig->minRandomBotReviveTime, sPlayerbotAIConfig->maxRandomBotReviveTime);
-            // LOG_INFO("playerbots", "Mark bot {} as dead, will be revived in {}s.", player->GetName().c_str(),
-            // randomTime);
+            uint32 randomTime = urand(
+                sPlayerbotAIConfig->minRandomBotReviveTime, 
+                sPlayerbotAIConfig->maxRandomBotReviveTime);
+            LOG_INFO("playerbots", "Mark bot {} as dead, will be revived in {}s.", 
+                player->GetName().c_str(), randomTime);
             SetEventValue(bot, "dead", 1, sPlayerbotAIConfig->maxRandomBotInWorldTime);
             SetEventValue(bot, "revive", 1, randomTime);
             return false;
@@ -1133,69 +1140,90 @@ bool RandomPlayerbotMgr::ProcessBot(Player* player)
         return false;
     }
 
+    // leave group if leader is rndbot
     Group* group = player->GetGroup();
     if (group && !group->isLFGGroup() && IsRandomBot(group->GetLeader()))
     {
         player->RemoveFromGroup();
         LOG_INFO("playerbots", "Bot {} remove from group since leader is random bot.", player->GetName().c_str());
     }
-    // GET_PLAYERBOT_AI(player)->GetAiObjectContext()->GetValue<bool>("random bot update")->Set(false);
 
-    // bool randomiser = true;
-    // if (player->GetGuildId())
-    // {
-    //     if (Guild* guild = sGuildMgr->GetGuildById(player->GetGuildId()))
-    //     {
-    //         if (guild->GetLeaderGUID() == player->GetGUID())
-    //         {
-    //             for (std::vector<Player*>::iterator i = players.begin(); i != players.end(); ++i)
-    //                 sGuildTaskMgr->Update(*i, player);
-    //         }
 
-    //         uint32 accountId = sCharacterCache->GetCharacterAccountIdByGuid(guild->GetLeaderGUID());
-    //         if (!sPlayerbotAIConfig->IsInRandomAccountList(accountId))
-    //         {
-    //             uint8 rank = player->GetRank();
-    //             randomiser = rank < 4 ? false : true;
-    //         }
-    //     }
-    // }
-
-    uint32 randomize = GetEventValue(bot, "randomize");
-    if (!randomize)
+    // only randomize and teleport idle bots
+    bool idleBot = false;
+    PlayerbotAI* botAI = GET_PLAYERBOT_AI(player);
+    if (botAI) 
     {
-        Randomize(player);
-        LOG_INFO("playerbots", "Bot #{} {}:{} <{}>: randomized", bot, player->GetTeamId() == TEAM_ALLIANCE ? "A" : "H",
-                 player->GetLevel(), player->GetName());
-        uint32 randomTime =
-            urand(sPlayerbotAIConfig->minRandomBotRandomizeTime, sPlayerbotAIConfig->maxRandomBotRandomizeTime);
-        ScheduleRandomize(bot, randomTime);
-        return true;
+        if (TravelTarget* target = botAI->GetAiObjectContext()->GetValue<TravelTarget*>("travel target")->Get())
+        {
+            if (target->getTravelState() == TravelState::TRAVEL_STATE_IDLE)
+            {
+                idleBot = true;
+            }
+        }
+        else 
+        {
+            idleBot = true;
+        }   
     }
-
-    // enable random teleport logic if no auto traveling enabled
-    // if (!sPlayerbotAIConfig->autoDoQuests)
-    // {
-    uint32 teleport = GetEventValue(bot, "teleport");
-    if (!teleport)
+    if (idleBot)
     {
-        LOG_INFO("playerbots", "Bot #{} <{}>: teleport for level and refresh", bot, player->GetName());
-        Refresh(player);
-        RandomTeleportForLevel(player);
-        uint32 time =
-            urand(sPlayerbotAIConfig->minRandomBotTeleportInterval, sPlayerbotAIConfig->maxRandomBotTeleportInterval);
-        ScheduleTeleport(bot, time);
-        return true;
-    }
-    // }
+        // randomize
+        uint32 randomize = GetEventValue(bot, "randomize");
+        if (!randomize)
+        {
+             // bool randomiser = true;
+            // if (player->GetGuildId())
+            // {
+            //     if (Guild* guild = sGuildMgr->GetGuildById(player->GetGuildId()))
+            //     {
+            //         if (guild->GetLeaderGUID() == player->GetGUID())
+            //         {
+            //             for (std::vector<Player*>::iterator i = players.begin(); i != players.end(); ++i)
+            //                 sGuildTaskMgr->Update(*i, player);
+            //         }
 
-    // uint32 changeStrategy = GetEventValue(bot, "change_strategy");
-    // if (!changeStrategy)
-    // {
-    //     LOG_INFO("playerbots", "Changing strategy for bot  #{} <{}>", bot, player->GetName().c_str());
-    //     ChangeStrategy(player);
-    //     return true;
-    // }
+            //         uint32 accountId = sCharacterCache->GetCharacterAccountIdByGuid(guild->GetLeaderGUID());
+            //         if (!sPlayerbotAIConfig->IsInRandomAccountList(accountId))
+            //         {
+            //             uint8 rank = player->GetRank();
+            //             randomiser = rank < 4 ? false : true;
+            //         }
+            //     }
+            // }
+            // if (randomiser)
+            // {
+            Randomize(player);
+            LOG_INFO("playerbots", "Bot #{} {}:{} <{}>: randomized", 
+                bot, player->GetTeamId() == TEAM_ALLIANCE ? "A" : "H", player->GetLevel(), player->GetName());
+            uint32 randomTime = urand(
+                sPlayerbotAIConfig->minRandomBotRandomizeTime, 
+                sPlayerbotAIConfig->maxRandomBotRandomizeTime); 
+            ScheduleRandomize(bot, randomTime);
+            return true;
+        }
+
+        // uint32 changeStrategy = GetEventValue(bot, "change_strategy");
+        // if (!changeStrategy)
+        // {
+        //     LOG_INFO("playerbots", "Changing strategy for bot  #{} <{}>", bot, player->GetName().c_str());
+        //     ChangeStrategy(player);
+        //     return true;
+        // }
+
+        uint32 teleport = GetEventValue(bot, "teleport");
+        if (!teleport)
+        {
+            LOG_INFO("playerbots", "Bot #{} <{}>: teleport for level and refresh", bot, player->GetName());
+            Refresh(player);
+            RandomTeleportForLevel(player);
+            uint32 time = urand(
+                sPlayerbotAIConfig->minRandomBotTeleportInterval, 
+                sPlayerbotAIConfig->maxRandomBotTeleportInterval);
+            ScheduleTeleport(bot, time);
+            return true;
+        }
+    }
 
     return false;
 }
@@ -1214,14 +1242,31 @@ void RandomPlayerbotMgr::Revive(Player* player)
 
 void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation>& locs, bool hearth)
 {
-    if (bot->InBattleground())
-        return;
+    // ignore when alrdy teleported or not in the world yet.
+    if (bot->IsBeingTeleported() || !bot->IsInWorld())
+        return; 
 
+    // ignore when in queue for battle grounds.
     if (bot->InBattlegroundQueue())
         return;
 
-    // if (bot->GetLevel() < 5)
-    //     return;
+    // ignore when in battle grounds or arena.
+    if (bot->InBattleground() || bot->InArena())
+        return;
+
+    // ignore when in group (e.g. world, dungeons, raids) and leader is not a player.
+    if (bot->GetGroup() && !bot->GetGroup()->IsLeader(bot->GetGUID()))
+        return;
+
+    PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot);
+    if (botAI)
+    {              
+        // ignore when in when taxi with boat/zeppelin and has players nearby
+        if (bot->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT) && 
+                bot->HasUnitState(UNIT_STATE_IGNORE_PATHFINDING) && 
+                    botAI->HasPlayerNearby())
+            return;
+    }
 
     // if (sPlayerbotAIConfig->randomBotRpgChance < 0)
     //     return;
