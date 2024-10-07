@@ -1,5 +1,4 @@
 #include "ChatTransmitterDatabaseConnection.h"
-#include "MySQLConnection.h"
 #include <mysql.h>
 #include <mysqld_error.h>
 
@@ -23,7 +22,7 @@ void ChatTransmitterDatabaseConnection::DoPrepareStatements()
 {
 }
 
-bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, char const* err, uint8 attempts)
+bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, uint8 attempts)
 {
     switch (errNo)
     {
@@ -32,7 +31,7 @@ bool ChatTransmitterDatabaseConnection::_HandleMySQLErrno(uint32 errNo, char con
         case ER_PARSE_ERROR:
             return false;
         default:
-            return MySQLConnection::_HandleMySQLErrno(errNo, err, attempts);
+            return MySQLConnection::_HandleMySQLErrno(errNo, attempts);
     }
 }
 

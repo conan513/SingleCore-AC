@@ -125,34 +125,26 @@ void GenericDruidNonCombatStrategy::InitTriggers(std::vector<TriggerNode*>& trig
 
     triggers.push_back(
         new TriggerNode("party member critical health",
-                        NextAction::array(0,
-                                          new NextAction("wild growth on party", ACTION_MEDIUM_HEAL + 7),
-                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 6),
-                                          new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 5),
-                                          nullptr)));
+                        NextAction::array(0, new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 5),
+                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 6), NULL)));
 
     triggers.push_back(
         new TriggerNode("party member low health",
-                        NextAction::array(0, 
-                                          new NextAction("wild growth on party", ACTION_MEDIUM_HEAL + 5),
-                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 4),
-                                          new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 3),
-                                          nullptr)));
+                        NextAction::array(0, new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 3),
+                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 4), NULL)));
 
     triggers.push_back(
         new TriggerNode("party member medium health",
-                        NextAction::array(0, new NextAction("wild growth on party", ACTION_MEDIUM_HEAL + 3),
-                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 2),
-                                          new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 1),
-                                          nullptr)));
+                        NextAction::array(0, new NextAction("rejuvenation on party", ACTION_MEDIUM_HEAL + 1),
+                                          new NextAction("regrowth on party", ACTION_MEDIUM_HEAL + 2), NULL)));
 
     triggers.push_back(
         new TriggerNode("party member almost full health",
-                        NextAction::array(0, new NextAction("wild growth on party", ACTION_LIGHT_HEAL + 3), new NextAction("rejuvenation on party", ACTION_LIGHT_HEAL + 2), NULL)));
+                        NextAction::array(0, new NextAction("rejuvenation on party", ACTION_LIGHT_HEAL + 2), NULL)));
 
     triggers.push_back(
         new TriggerNode("party member remove curse",
-                        NextAction::array(0, new NextAction("remove curse on party", ACTION_DISPEL + 7), nullptr)));
+                        NextAction::array(0, new NextAction("remove curse on party", ACTION_DISPEL + 7), NULL)));
 }
 
 GenericDruidBuffStrategy::GenericDruidBuffStrategy(PlayerbotAI* botAI) : NonCombatStrategy(botAI)

@@ -42,11 +42,11 @@ public:
     }
 };
 
-class CastChainHealAction : public HealPartyMemberAction
+class CastChainHealAction : public CastAoeHealSpellAction
 {
 public:
     CastChainHealAction(PlayerbotAI* botAI)
-        : HealPartyMemberAction(botAI, "chain heal", 15.0f, HealingManaEfficiency::HIGH)
+        : CastAoeHealSpellAction(botAI, "chain heal", 15.0f, HealingManaEfficiency::HIGH)
     {
     }
 };
@@ -335,7 +335,7 @@ public:
 class CastFlameShockAction : public CastDebuffSpellAction
 {
 public:
-    CastFlameShockAction(PlayerbotAI* botAI) : CastDebuffSpellAction(botAI, "flame shock", true, 6.0f) {}
+    CastFlameShockAction(PlayerbotAI* botAI) : CastDebuffSpellAction(botAI, "flame shock", true) {}
 };
 
 class CastEarthShockAction : public CastSpellAction

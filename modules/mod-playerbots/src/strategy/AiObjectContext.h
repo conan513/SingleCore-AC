@@ -10,7 +10,6 @@
 #include <string>
 
 #include "Common.h"
-#include "DynamicObject.h"
 #include "NamedObjectContext.h"
 #include "PlayerbotAIAware.h"
 #include "Strategy.h"

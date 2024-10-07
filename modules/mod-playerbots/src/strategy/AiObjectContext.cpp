@@ -28,9 +28,6 @@
 #include "raids/moltencore/RaidMcTriggerContext.h"
 #include "raids/aq20/RaidAq20ActionContext.h"
 #include "raids/aq20/RaidAq20TriggerContext.h"
-#include "dungeons/DungeonStrategyContext.h"
-#include "dungeons/wotlk/WotlkDungeonActionContext.h"
-#include "dungeons/wotlk/WotlkDungeonTriggerContext.h"
 
 AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
 {
@@ -39,7 +36,6 @@ AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
     strategyContexts.Add(new AssistStrategyContext());
     strategyContexts.Add(new QuestStrategyContext());
     strategyContexts.Add(new RaidStrategyContext());
-    strategyContexts.Add(new DungeonStrategyContext());
 
     actionContexts.Add(new ActionContext());
     actionContexts.Add(new ChatActionContext());
@@ -50,7 +46,6 @@ AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
     actionContexts.Add(new RaidNaxxActionContext());
     actionContexts.Add(new RaidUlduarActionContext());
     actionContexts.Add(new RaidIccActionContext());
-    actionContexts.Add(new WotlkDungeonUKActionContext());
 
     triggerContexts.Add(new TriggerContext());
     triggerContexts.Add(new ChatTriggerContext());
@@ -61,7 +56,6 @@ AiObjectContext::AiObjectContext(PlayerbotAI* botAI) : PlayerbotAIAware(botAI)
     triggerContexts.Add(new RaidNaxxTriggerContext());
     triggerContexts.Add(new RaidUlduarTriggerContext());
     triggerContexts.Add(new RaidIccTriggerContext());
-    triggerContexts.Add(new WotlkDungeonUKTriggerContext());
 
     valueContexts.Add(new ValueContext());
 

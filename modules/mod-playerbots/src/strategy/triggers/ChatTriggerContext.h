@@ -16,7 +16,6 @@ class ChatTriggerContext : public NamedObjectContext<Trigger>
 public:
     ChatTriggerContext()
     {
-        creators["open items"] = &ChatTriggerContext::open_items;
         creators["quests"] = &ChatTriggerContext::quests;
         creators["stats"] = &ChatTriggerContext::stats;
         creators["leave"] = &ChatTriggerContext::leave;
@@ -129,7 +128,6 @@ public:
     }
 
 private:
-    static Trigger* open_items(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "open items"); }
     static Trigger* ra(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "ra"); }
     static Trigger* range(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "range"); }
     static Trigger* flag(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "flag"); }

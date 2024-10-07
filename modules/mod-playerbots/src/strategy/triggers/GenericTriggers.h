@@ -459,16 +459,6 @@ protected:
     float balance;
 };
 
-class HealerShouldAttackTrigger : public Trigger
-{
-public:
-    HealerShouldAttackTrigger(PlayerbotAI* botAI)
-        : Trigger(botAI, "healer should attack", 1)
-    {
-    }
-
-    bool IsActive() override;
-};
 
 class RandomTrigger : public Trigger
 {

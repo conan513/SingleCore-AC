@@ -827,12 +827,11 @@ bool MovementAction::ReachCombatTo(Unit* target, float distance)
     float shortenTo = distance;
 
     // Avoid walking too far when moving towards each other
-    float disToGo = bot->GetExactDist(tx, ty, tz) - distance;
-    if (disToGo >= 10.0f)
-        shortenTo = disToGo / 2 + distance;
+    if (bot->GetDistance(tx, ty, tz) >= 10.0f)
+        shortenTo = std::max(distance, bot->GetDistance(tx, ty, tz) / 2);
 
-    // if (bot->GetExactDist(tx, ty, tz) <= shortenTo)
-    //     return false;
+    if (bot->GetExactDist(tx, ty, tz) <= shortenTo)
+        return false;
 
     path.ShortenPathUntilDist(G3D::Vector3(tx, ty, tz), shortenTo);
     G3D::Vector3 endPos = path.GetPath().back();
@@ -2314,7 +2313,7 @@ bool TankFaceAction::Execute(Event event)
     if (!bot->GetGroup())
         return false;
 
-    if (!bot->IsWithinMeleeRange(target) || target->isMoving())
+    if (!bot->IsWithinMeleeRange(target))
         return false;
 
     if (!AI_VALUE2(bool, "has aggro", "current target"))
@@ -2514,7 +2513,7 @@ bool SetBehindTargetAction::Execute(Event event)
     if (target->GetVictim() == bot)
         return false;
 
-    if (!bot->IsWithinMeleeRange(target) || target->isMoving())
+    if (!bot->IsWithinMeleeRange(target))
         return false;
 
     float deltaAngle = Position::NormalizeOrientation(target->GetOrientation() - target->GetAngle(bot));

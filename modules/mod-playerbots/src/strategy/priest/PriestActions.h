@@ -52,23 +52,10 @@ HEAL_PARTY_ACTION(CastGreaterHealOnPartyAction, "greater heal", 50.0f, HealingMa
 HEAL_PARTY_ACTION(CastPowerWordShieldOnPartyAction, "power word: shield", 15.0f, HealingManaEfficiency::VERY_HIGH);
 HEAL_PARTY_ACTION(CastFlashHealOnPartyAction, "flash heal", 15.0f, HealingManaEfficiency::LOW);
 HEAL_PARTY_ACTION(CastRenewOnPartyAction, "renew", 15.0f, HealingManaEfficiency::VERY_HIGH);
-// HEAL_PARTY_ACTION(CastPrayerOfMendingAction, "prayer of mending", 10.0f, HealingManaEfficiency::HIGH);
-class CastPrayerOfMendingAction : public HealPartyMemberAction
-{
-public:
-    CastPrayerOfMendingAction(PlayerbotAI* botAI) : HealPartyMemberAction(botAI, "prayer of mending", 10.0f, HealingManaEfficiency::HIGH, false) {}
-};
-
+HEAL_PARTY_ACTION(CastPrayerOfMendingAction, "prayer of mending", 15.0f, HealingManaEfficiency::MEDIUM);
 HEAL_PARTY_ACTION(CastBindingHealAction, "binding heal", 15.0f, HealingManaEfficiency::MEDIUM);
 HEAL_PARTY_ACTION(CastPrayerOfHealingAction, "prayer of healing", 15.0f, HealingManaEfficiency::MEDIUM);
-// AOE_HEAL_ACTION(CastCircleOfHealingAction, "circle of healing", 15.0f, HealingManaEfficiency::HIGH);
-class CastCircleOfHealingAction : public HealPartyMemberAction
-{
-public:
-    CastCircleOfHealingAction(PlayerbotAI* ai) : HealPartyMemberAction(ai, "circle of healing", 15.0f, HealingManaEfficiency::HIGH)
-    {
-    }
-};
+AOE_HEAL_ACTION(CastCircleOfHealingAction, "circle of healing", 15.0f, HealingManaEfficiency::HIGH);
 AOE_HEAL_ACTION(CastLightwellAction, "lightwell", 15.0f, HealingManaEfficiency::MEDIUM);
 
 SPELL_ACTION(CastSmiteAction, "smite");
@@ -81,13 +68,7 @@ CURE_PARTY_ACTION(CastCureDiseaseOnPartyAction, "cure disease", DISPEL_DISEASE);
 CURE_ACTION(CastAbolishDiseaseAction, "abolish disease");
 CURE_PARTY_ACTION(CastAbolishDiseaseOnPartyAction, "abolish disease", DISPEL_DISEASE);
 
-// DEBUFF_CHECKISOWNER_ACTION(CastHolyFireAction, "holy fire");
-class CastHolyFireAction : public CastDebuffSpellAction
-{
-public:
-    CastHolyFireAction(PlayerbotAI* botAI) : CastDebuffSpellAction(botAI, "holy fire", true, 0.0f) {}
-};
-
+DEBUFF_CHECKISOWNER_ACTION(CastHolyFireAction, "holy fire");
 // shadow 2.4.3
 // BUFF_ACTION(CastShadowfiendAction, "shadowfiend");
 SPELL_ACTION(CastShadowWordDeathAction, "shadow word: death");
@@ -175,22 +156,11 @@ public:
     virtual std::string const GetTargetName() { return "current target"; }
 };
 
-class CastPowerWordShieldOnAlmostFullHealthBelowAction : public HealPartyMemberAction
+class CastPowerWordShieldOnAlmostFullHealthBelow : public HealPartyMemberAction
 {
 public:
-    CastPowerWordShieldOnAlmostFullHealthBelowAction(PlayerbotAI* ai)
+    CastPowerWordShieldOnAlmostFullHealthBelow(PlayerbotAI* ai)
         : HealPartyMemberAction(ai, "power word: shield", 15.0f, HealingManaEfficiency::HIGH)
-    {
-    }
-    bool isUseful() override;
-    Unit* GetTarget() override;
-};
-
-class CastPowerWordShieldOnNotFullAction : public HealPartyMemberAction
-{
-public:
-    CastPowerWordShieldOnNotFullAction(PlayerbotAI* ai)
-        : HealPartyMemberAction(ai, "power word: shield", 5.0f, HealingManaEfficiency::HIGH)
     {
     }
     bool isUseful() override;
