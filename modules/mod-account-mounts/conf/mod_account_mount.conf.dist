@@ -1,0 +1,18 @@
+[worldserver]
+
+###################################################################################################
+#	Account Mounts module
+###################################################################################################
+
+# Enable the module? (1: true | 0: false)
+
+Account.Mounts.Enable = 1
+
+# Announce the module when the player logs in?
+
+Account.Mounts.Announce = 0
+
+# Excluded Spell IDs (comma-separated, no space). See example below
+# Account.Mounts.ExcludedSpellIDs = 470,578,6777
+
+Account.Mounts.ExcludedSpellIDs = 0
