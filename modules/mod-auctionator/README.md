@@ -1,4 +1,16 @@
-# mod-auctionator
+# ![logo](https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png) Azeroth Core Module
+
+## mod-auctionator
+![Latest Release](https://img.shields.io/github/v/release/araxiaonline/mod-auctionator?label=current%20version)
+![GitHub Release Date](https://img.shields.io/github/release-date/araxiaonline/mod-auctionator)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/araxiaonline/mod-auctionator/build-release.yml?branch=main&event=push&label=build%20status)
+
+<p align="left">
+  <img src="https://github.com/araxiaonline/docs/blob/main/docs/media/logo-sm.png?raw=true" alt="Araxia Online" width="70" style="vertical-align: middle;"/>
+  <span style="font-size: 20px; vertical-align: middle;" >Developed By Araxia Online</span>
+</p>
+
+## Description
 
 This mod is meant to keep a healthy auction house stocked on a low-pop server. It's in it's early phases of building/testing/configuration but keeps a LOT of stuff in the AH. Code is also a little rough right now but I haven't done c++ in 20+ years so I am getting there.
 

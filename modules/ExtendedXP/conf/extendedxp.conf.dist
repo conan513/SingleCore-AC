@@ -1,0 +1,93 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+########################################
+# Extended XP Config
+########################################
+#
+#    ExtendedXP.Enable
+#        Description: Enable the extended XP module.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ExtendedXP.Enable = 0
+
+#
+#    ExtendedXP.RareXP.Enable
+#        Description: Enables the rare XP reward.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ExtendedXP.RareXP.Enable = 0
+
+#
+#    ExtendedXP.RareXP.Multiplier
+#        Description: Sets the rare creature exp reward multiplier.
+#        Note: This multiplier is applied AFTER the server creature kill multiplier.
+#        Default:     3
+#		 Type:        float
+#
+
+ExtendedXP.RareXP.Multiplier = 3
+
+#
+#    ExtendedXP.GroupXP.Enable
+#        Description: Enables the increased group XP reward.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ExtendedXP.GroupXP.Enable = 0
+
+#
+#    ExtendedXP.GroupXP.Multiplier
+#        Description: Multiplies the rewarded XP based on the amount of players in range in group.
+#        Note: This multiplier is applied AFTER the server creature kill multiplier.
+#        Default:     0.33
+#		 Type:        float
+#
+
+ExtendedXP.GroupXP.Multiplier = 0.33
+
+#
+#    ExtendedXP.GroupXP.Cap
+#        Description: The maximum amount of times the above config can be multiplied (5 players).
+#        Default:     5
+#
+
+ExtendedXP.GroupXP.Cap = 5
+
+#
+#    ExtendedXP.AchievementXP.Enable
+#        Description: Enables the achievement XP reward.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ExtendedXP.AchievementXP.Enable = 0
+
+#
+#    ExtendedXP.AchievementXP.Percent
+#        Description: Sets the base XP percent rewarded for achievements.
+#        Note: This value is multiplied by the achievement points rewarded.
+#        For example: An achievement that rewards 10 points will rewards 15% exp (10 * 1.5).
+#        Default:     1.5
+#
+
+ExtendedXP.AchievementXP.Percent = 1.5
+
+#
+#    ExtendedXP.AchievementXP.ScaleLevel
+#        Description: Enables achievement xp scaling based on players level.
+#        Note: If you were to receive 15% exp from achievement, it would be calculated as so:
+#              (15 * (1 - (level(60) / 100)) = 6% exp gain.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+ExtendedXP.AchievementXP.ScaleLevel = 0
