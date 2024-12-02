@@ -1,6 +1,7 @@
 #include "AuctionatorBidder.h"
 #include "Auctionator.h"
 #include "ObjectMgr.h"
+#include "QueryResult.h"
 #include <random>
 
 

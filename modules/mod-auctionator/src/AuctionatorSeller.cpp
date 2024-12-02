@@ -4,6 +4,7 @@
 #include "Item.h"
 #include "DatabaseEnv.h"
 #include "PreparedStatement.h"
+#include "QueryResult.h"
 #include <random>
 
 
