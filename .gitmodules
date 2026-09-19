@@ -1,0 +1,3 @@
+[submodule "modules/mod-playerbots"]
+	path = modules/mod-playerbots
+	url = https://github.com/jealous-sound/mod-playerbots
