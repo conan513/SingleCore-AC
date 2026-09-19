@@ -185,6 +185,7 @@ public:
     [[nodiscard]] std::string const& GetPassword() const { return _password; }
     void SetPassword(std::string const& npassword) { _password = npassword; }
     [[nodiscard]] uint32 GetNumPlayers() const { return playersStore.size(); }
+    [[nodiscard]] bool IsMember(ObjectGuid guid) const { return IsOn(guid); }
     [[nodiscard]] uint8 GetFlags() const { return _flags; }
     [[nodiscard]] bool HasFlag(uint8 flag) const { return _flags & flag; }
 
